@@ -45,6 +45,11 @@ demo/*.mov
 
 # Scratch from tooling
 _remote_pull/
+frontend-prototype/
+stitch_extracted/
+
+# Playwright MCP debug output — never commit (was committed by mistake, see cleanup commit)
+.playwright-mcp/
 
 # Local source material (meeting notes, raw session recordings) — not for the public repo
 material/

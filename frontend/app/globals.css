@@ -61,7 +61,7 @@
 @layer base {
   :root {
     /* Warm paper neutrals, tinted off pure white. Ink-blue accent. */
-    --background: oklch(0.985 0.004 85);
+    --background: oklch(0.96 0.005 85);
     --foreground: oklch(0.21 0.012 250);
     --card: oklch(1 0.002 85);
     --card-foreground: var(--foreground);

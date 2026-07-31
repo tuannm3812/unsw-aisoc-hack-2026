@@ -41,6 +41,9 @@ interface GraphState {
   /** Live Coordinator → specialist narration for Align / Present / Review. */
   agentEvents: AgentActivityEvent[]
 
+  myTaskFilter: string | null
+  setMyTaskFilter: (userId: string | null) => void
+
   loading: boolean
   error: string | null
 
@@ -95,6 +98,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   lineageIds: new Set<string>(),
   draggingNodeId: null,
   agentEvents: [],
+
+  myTaskFilter: null,
+  setMyTaskFilter: (userId) => set({ myTaskFilter: userId }),
 
   loading: false,
   error: null,

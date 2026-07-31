@@ -73,6 +73,24 @@ const PR_BADGE_LABEL: Record<string, string> = {
   closed: "Closed",
 }
 
+const PRIORITY_COLORS: Record<string, string> = {
+  P0: "bg-destructive/15 text-destructive",
+  P1: "bg-warning/20 text-warning-foreground",
+  P2: "bg-info/15 text-info-foreground",
+  P3: "bg-secondary text-muted-foreground",
+  P4: "bg-secondary/50 text-muted-foreground/70",
+}
+
+function detectPriority(node: GraphNode): string | null {
+  const text = `${node.title} ${node.body}`.toLowerCase()
+  if (text.includes("p0") || text.includes("urgent") || text.includes("critical")) return "P0"
+  if (text.includes("p1") || text.includes("high") || text.includes("blocker")) return "P1"
+  if (text.includes("p2") || text.includes("medium")) return "P2"
+  if (text.includes("p3") || text.includes("low")) return "P3"
+  if (text.includes("p4") || text.includes("nice") || text.includes("later")) return "P4"
+  return null
+}
+
 function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData }) {
   const {
     node,
@@ -88,6 +106,7 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
   const Icon = meta.icon
   const isTask = node.kind === "task"
   const toReview = node.kind === "asset" ? pendingCandidates : 0
+  const priority = isTask ? detectPriority(node) : null
 
   return (
     <div
@@ -181,6 +200,11 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
 
           {isTask && (
             <>
+              {priority && (
+                <span className={cn("text-2xs rounded px-1.5 py-0.5 font-mono font-semibold", PRIORITY_COLORS[priority])}>
+                  {priority}
+                </span>
+              )}
               {assigneeName ? (
                 <span className="text-2xs text-muted-foreground truncate">{assigneeName}</span>
               ) : (

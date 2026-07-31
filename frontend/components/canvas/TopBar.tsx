@@ -14,11 +14,15 @@ export function TopBar({ user, health }: { user: CurrentUser | null; health: Hea
   const board = useGraphStore((state) => state.board)
   const members = useGraphStore((state) => state.members)
   const nodes = useGraphStore((state) => state.nodes)
+  const myTaskFilter = useGraphStore((state) => state.myTaskFilter)
+  const setMyTaskFilter = useGraphStore((state) => state.setMyTaskFilter)
 
   const taskCount = nodes.filter((node) => node.kind === "task").length
 
   async function signOut() {
     await api.logout().catch(() => undefined)
+    useGraphStore.getState().clearLineage()
+    useGraphStore.getState().setMyTaskFilter(null)
     router.push("/login")
   }
 
@@ -42,6 +46,20 @@ export function TopBar({ user, health }: { user: CurrentUser | null; health: Hea
       </div>
 
       <div className="ml-auto flex items-center gap-3">
+        {user && (
+          <button
+            type="button"
+            onClick={() => setMyTaskFilter(myTaskFilter === user.id ? null : user.id)}
+            className={cn(
+              "text-2xs rounded-lg px-2.5 py-1.5 font-medium transition-colors",
+              myTaskFilter === user.id
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent",
+            )}
+          >
+            My Tasks
+          </button>
+        )}
         <IntegrationDots health={health} />
 
         <div className="flex -space-x-1.5">

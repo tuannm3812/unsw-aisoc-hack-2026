@@ -1,8 +1,8 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { useReactFlow } from "@xyflow/react"
-import { FlaskConical, LayoutGrid, ListChecks, Ruler, Upload } from "lucide-react"
+import { BarChart3, FlaskConical, LayoutGrid, ListChecks, Loader2, Ruler, Upload, X } from "lucide-react"
 
 import {
   Select,
@@ -76,6 +76,37 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
   const arrangeLayout = useGraphStore((state) => state.arrangeLayout)
   const nodes = useGraphStore((state) => state.nodes)
   const fileInput = useRef<HTMLInputElement>(null)
+  const [reviewOpen, setReviewOpen] = useState(false)
+  const [reviewLoading, setReviewLoading] = useState(false)
+  const [reviewData, setReviewData] = useState<{
+    shipped: { title: string; assignee: string; summary: string }[]
+    blocked: { title: string; assignee: string; summary: string }[]
+    next: { title: string; assignee: string; summary: string }[]
+  } | null>(null)
+
+  async function handleSprintReview() {
+    setReviewLoading(true)
+    try {
+      // ponytail: demo mock — wire to /api/sprint-review when backend supports it
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      setReviewData({
+        shipped: [
+          { title: "Build 2-Step Checkout", assignee: "Marco", summary: "PaymentElement integration complete, saved-payment selector working E2E." },
+          { title: "Auth System Migration", assignee: "Aisha", summary: "Magic-link auth replaces OTP — clean migration for 100% of users." },
+        ],
+        blocked: [
+          { title: "Payment Selector UI", assignee: "Priya", summary: "Waiting on final design mockups — feedback sent, expecting final by EOD Friday." },
+        ],
+        next: [
+          { title: "PCI Compliance Audit", assignee: "Marco", summary: "External audit scheduled Aug 5. SAQ-A self-assessment + documentation." },
+          { title: "Onboarding Flow Rewrite", assignee: "Aisha", summary: "Move from 5-step to 2-step. Design specs finalised." },
+        ],
+      })
+      setReviewOpen(true)
+    } finally {
+      setReviewLoading(false)
+    }
+  }
 
   function centreOfView() {
     // Drop new nodes left of centre so the inspector does not cover them.
@@ -99,6 +130,7 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
   }
 
   return (
+    <>
     <div className="border-border bg-card/95 absolute bottom-5 left-5 z-10 flex items-center gap-1 rounded-xl border p-1.5 backdrop-blur">
       {ADD_BUTTONS.map(({ kind, label, icon: Icon, hint }) => (
         <Tooltip key={kind}>
@@ -187,6 +219,101 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
           </SelectContent>
         </Select>
       </div>
+
+      <span className="bg-border mx-1 h-6 w-px" />
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={handleSprintReview}
+            disabled={reviewLoading}
+            className="hover:bg-accent focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          >
+            {reviewLoading ? (
+              <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
+            ) : (
+              <BarChart3 className="size-3.5" strokeWidth={2} />
+            )}
+            Sprint Review
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top">Mistral summarises what shipped, what's blocked, what's next</TooltipContent>
+      </Tooltip>
     </div>
+
+    {/* Sprint Review Dialog */}
+    {reviewOpen && reviewData && (
+      <div className="border-border bg-card animate-rise fixed inset-4 z-50 flex flex-col overflow-hidden rounded-xl border shadow-xl md:inset-10 lg:inset-x-60">
+        <header className="border-border flex items-center justify-between border-b px-5 py-3.5">
+          <h2 className="text-sm font-semibold">Sprint Review</h2>
+          <button
+            type="button"
+            onClick={() => { setReviewOpen(false); setReviewData(null); }}
+            className="hover:bg-accent rounded-lg p-1.5 transition-colors"
+          >
+            <X className="size-4" />
+          </button>
+        </header>
+        <div className="thin-scrollbar flex-1 space-y-5 overflow-y-auto p-5">
+          {reviewData.shipped.length > 0 && (
+            <section>
+              <h3 className="text-xs font-semibold text-success uppercase tracking-[0.08em] mb-3">
+                Shipped ({reviewData.shipped.length})
+              </h3>
+              <div className="space-y-2">
+                {reviewData.shipped.map((item, i) => (
+                  <div key={i} className="bg-success/5 border-success/20 rounded-lg border p-3">
+                    <div className="mb-1 flex items-center gap-2 text-sm font-medium">
+                      {item.title}
+                      <span className="text-muted-foreground text-xs font-normal">— {item.assignee}</span>
+                    </div>
+                    <p className="text-muted-foreground text-xs">{item.summary}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+          {reviewData.blocked.length > 0 && (
+            <section>
+              <h3 className="text-xs font-semibold text-destructive uppercase tracking-[0.08em] mb-3">
+                Blocked ({reviewData.blocked.length})
+              </h3>
+              <div className="space-y-2">
+                {reviewData.blocked.map((item, i) => (
+                  <div key={i} className="bg-destructive/5 border-destructive/25 rounded-lg border p-3">
+                    <div className="mb-1 flex items-center gap-2 text-sm font-medium">
+                      {item.title}
+                      <span className="text-muted-foreground text-xs font-normal">— {item.assignee}</span>
+                    </div>
+                    <p className="text-muted-foreground text-xs">{item.summary}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+          {reviewData.next.length > 0 && (
+            <section>
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.08em] mb-3">
+                Next ({reviewData.next.length})
+              </h3>
+              <div className="space-y-2">
+                {reviewData.next.map((item, i) => (
+                  <div key={i} className="bg-accent/30 rounded-lg border p-3">
+                    <div className="mb-1 flex items-center gap-2 text-sm font-medium">
+                      {item.title}
+                      <span className="text-muted-foreground text-xs font-normal">— {item.assignee}</span>
+                    </div>
+                    <p className="text-muted-foreground text-xs">{item.summary}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
+    )}
+    {reviewOpen && <div className="fixed inset-0 z-40 bg-black/25 backdrop-blur-sm" onClick={() => { setReviewOpen(false); setReviewData(null); }} />}
+    </>
   )
 }
