@@ -127,7 +127,10 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           node.kind === "asset" && node.source_asset_id
             ? parseStates.get(node.source_asset_id) ?? null
             : null,
-        dimmed: (lineageActive && !lineageIds.has(node.id)) || (!!myTaskFilter && node.kind === "task" && node.assignee_id !== myTaskFilter),
+        dimmed: (lineageActive && !lineageIds.has(node.id)) || (!!myTaskFilter && !(
+          (node.kind === "task" && node.assignee_id === myTaskFilter) ||
+          (node.kind !== "task" && edges.some((e) => (e.source_id === node.id || e.target_id === node.id) && nodes.some((t) => t.id === e.target_id && t.kind === "task" && t.assignee_id === myTaskFilter)))
+        )),
         inLineage: lineageActive && lineageIds.has(node.id),
         isFocusedTask: node.id === focusedTaskId,
         depth: null,

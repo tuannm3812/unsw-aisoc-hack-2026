@@ -51,6 +51,7 @@ export default function BoardPage() {
         if (err instanceof ApiError && err.status === 401) router.replace("/login")
       })
     api.health().then(setHealth).catch(() => setHealth(null))
+    api.verifyMistral().then((v) => setHealth((h) => h ? { ...h, mistral_configured: v.ok } : h)).catch(() => {})
   }, [router])
 
   useEffect(() => {
