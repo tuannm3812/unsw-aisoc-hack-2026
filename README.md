@@ -98,6 +98,7 @@ Canvas (Next.js) ─── FastAPI ─── SQLite (system of record)
 | Inbound GitHub + Jira webhooks | Shipped (tunnel for Jira) |
 | Constraint checklist vs PR | Shipped |
 | Canvas UX: context menus, edge derivation, priority badges, My Tasks filter | Shipped — see `docs/FRONTEND_UPDATE.md` |
+| Pixel-brutalism visual retheme, effort/blocked/due-date badges, ancestor-count indicator, member-colour assignee chips | Shipped |
 | Own Atlassian 3LO / GitHub App OAuth | Cut — use Mistral connector OAuth |
 | Audio recordings / multiplayer | Cut |
 | Next monolith / Neon / Vercel Blob | Not used — FastAPI + SQLite + local uploads for a one-command local demo |
