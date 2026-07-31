@@ -27,34 +27,11 @@ export interface GraphNodeData extends Record<string, unknown> {
   depth: number | null
 }
 
-const KIND_META: Record<
-  NodeKind,
-  { label: string; icon: typeof FileText; accent: string; text: string }
-> = {
-  asset: {
-    label: "Source",
-    icon: FileText,
-    accent: "border-l-kind-asset",
-    text: "text-kind-asset",
-  },
-  finding: {
-    label: "Finding",
-    icon: FlaskConical,
-    accent: "border-l-kind-finding",
-    text: "text-kind-finding",
-  },
-  constraint: {
-    label: "Constraint",
-    icon: Ruler,
-    accent: "border-l-kind-constraint",
-    text: "text-kind-constraint",
-  },
-  task: {
-    label: "Task",
-    icon: ListChecks,
-    accent: "border-l-kind-task",
-    text: "text-kind-task",
-  },
+const KIND_META: Record<NodeKind, { label: string; icon: typeof FileText; text: string }> = {
+  asset:    { label: "Source",     icon: FileText,      text: "text-kind-asset" },
+  finding:  { label: "Finding",    icon: FlaskConical,   text: "text-kind-finding" },
+  constraint:{ label: "Constraint", icon: Ruler,         text: "text-kind-constraint" },
+  task:     { label: "Task",       icon: ListChecks,     text: "text-kind-task" },
 }
 
 // A merged pull request is the payoff of the whole demo, so it reads differently

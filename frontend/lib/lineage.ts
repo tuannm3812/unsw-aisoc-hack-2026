@@ -12,24 +12,21 @@ export function countAncestors(
   edges: GraphEdge[],
   max = 60,
 ): number {
-  const adjacency = new Map<string, string[]>()
+  // Walk backwards: ancestors are sources of edges that target the current node
+  const sourcesOf = new Map<string, string[]>()
   for (const e of edges) {
     if (!CONTEXT_RELATIONS.has(e.relation)) continue
-    const list = adjacency.get(e.source_id) ?? []
-    list.push(e.target_id)
-    adjacency.set(e.source_id, list)
+    const list = sourcesOf.get(e.target_id) ?? []
+    list.push(e.source_id)
+    sourcesOf.set(e.target_id, list)
   }
 
   const visited = new Set<string>()
   const queue = [taskId]
   while (queue.length > 0 && visited.size < max) {
     const current = queue.shift()!
-    const neighbours = adjacency.get(current) ?? []
-    for (const n of neighbours) {
-      if (!visited.has(n) && n !== taskId) {
-        visited.add(n)
-        queue.push(n)
-      }
+    for (const n of (sourcesOf.get(current) ?? [])) {
+      if (!visited.has(n) && n !== taskId) { visited.add(n); queue.push(n) }
     }
   }
   return visited.size
@@ -44,18 +41,18 @@ export function getAncestorIds(
   edges: GraphEdge[],
   max = 60,
 ): string[] {
-  const adjacency = new Map<string, string[]>()
+  const sourcesOf = new Map<string, string[]>()
   for (const e of edges) {
     if (!CONTEXT_RELATIONS.has(e.relation)) continue
-    const list = adjacency.get(e.source_id) ?? []
-    list.push(e.target_id)
-    adjacency.set(e.source_id, list)
+    const list = sourcesOf.get(e.target_id) ?? []
+    list.push(e.source_id)
+    sourcesOf.set(e.target_id, list)
   }
   const visited = new Set<string>()
   const queue = [taskId]
   while (queue.length > 0 && visited.size < max) {
     const current = queue.shift()!
-    for (const n of (adjacency.get(current) ?? [])) {
+    for (const n of (sourcesOf.get(current) ?? [])) {
       if (!visited.has(n) && n !== taskId) { visited.add(n); queue.push(n) }
     }
   }

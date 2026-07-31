@@ -1,4 +1,0 @@
-- generic [active]:
-  - generic [ref=f13e1]: var(--border)
-  - generic [ref=f13e2]: hardcoded
-  - generic [ref=f13e3]: toast-style

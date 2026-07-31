@@ -9,3 +9,6 @@ __pycache__/
 # SQLite WAL sidecar files
 *.db-wal
 *.db-shm
+
+# Playwright MCP debug artifacts
+.playwright-mcp/
