@@ -193,12 +193,9 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
 
   const onNodesChange = useCallback(
     (changes: NodeChange<FlowNode<GraphNodeData>>[]) => {
-      // Nodes are derived from the store, so a drag only has to update it locally.
-      // The write to the server happens once, on drag end.
+      // React Flow manages drag positions internally (zero store churn).
+      // Only track dimensions for the minimap.
       for (const change of changes) {
-        if (change.type === "position" && change.position) {
-          nudgeNode(change.id, change.position.x, change.position.y)
-        }
         if (change.type === "dimensions" && change.dimensions) {
           const { width, height } = change.dimensions
           setMeasured((previous) =>
