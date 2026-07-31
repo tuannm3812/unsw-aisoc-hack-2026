@@ -10,6 +10,7 @@
 | [`QA_PREP.md`](QA_PREP.md) | Answers to the technical questions judges are likely to ask — per Mistral's "explain how it was built" guidance. |
 | [`DESIGN_SPEC.md`](DESIGN_SPEC.md) | Original product design spec (Context Canvas). Compare with README "What shipped vs the design spec". |
 | [`CODING_STANDARDS.md`](CODING_STANDARDS.md) | Team coding standards for the actual shipped stack (Python/FastAPI backend, Next.js frontend). |
+| [`FRONTEND_UPDATE.md`](FRONTEND_UPDATE.md) | Canvas UX pass: context menus, edge derivation, priority badges, My Tasks filter, bug fixes with root cause. |
 
 **Reading order for a new teammate:** `STRATEGY.md` → root `README.md` → `DEMO.md` → `PITCH.md` → `QA_PREP.md` → design spec (intent) → coding standards.
 
