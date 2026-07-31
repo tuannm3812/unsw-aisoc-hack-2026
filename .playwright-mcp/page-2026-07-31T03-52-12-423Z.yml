@@ -1,0 +1,72 @@
+- generic [ref=f1e1]:
+  - generic [ref=f1e2]:
+    - application [ref=f1e3]:
+      - generic [ref=f1e5]:
+        - generic:
+          - generic:
+            - group [ref=f1e62]:
+              - generic [ref=f1e63]:
+                - generic [ref=f1e65]:
+                  - heading "User Feedback Summary" [level=3] [ref=f1e66]
+                  - generic [ref=f1e67]: INFO
+                - paragraph [ref=f1e68]: "60% of users drop off at step 3 of onboarding. Main complaints: too many steps, email verification is annoying, prefer social login."
+                - generic [ref=f1e69]:
+                  - button "Summarize" [active] [ref=f1e70]
+                  - button "Delete" [ref=f1e71]
+            - group [ref=f1e95]:
+              - generic [ref=f1e96]:
+                - generic [ref=f1e98]:
+                  - heading "Redesign Onboarding Flow" [level=3] [ref=f1e99]
+                  - generic [ref=f1e100]: TASK
+                - generic [ref=f1e101]:
+                  - generic [ref=f1e102]: 👤 张三
+                  - generic [ref=f1e103]: To Do
+                - generic [ref=f1e104]:
+                  - button "Generate Spec" [ref=f1e105]
+                  - button "Delete" [ref=f1e106]
+      - generic "Control Panel" [ref=f1e6]:
+        - button "Zoom In" [disabled]
+        - button "Zoom Out" [ref=f1e10] [cursor=pointer]
+        - button "Fit View" [ref=f1e13] [cursor=pointer]
+        - button "Toggle Interactivity" [ref=f1e16] [cursor=pointer]
+    - generic [ref=f1e21]:
+      - button "note_add Add Info" [ref=f1e22]:
+        - generic [ref=f1e23]: note_add
+        - generic [ref=f1e24]: Add Info
+      - button "assignment_add Add Task" [ref=f1e25]:
+        - generic [ref=f1e26]: assignment_add
+        - generic [ref=f1e27]: Add Task
+    - generic [ref=f1e29]:
+      - button "Canvas" [ref=f1e30]
+      - button "Gantt" [disabled] [ref=f1e31]
+      - button "List" [disabled] [ref=f1e32]
+    - generic [ref=f1e109]:
+      - generic [ref=f1e110]:
+        - heading "📋 Context Summary" [level=2] [ref=f1e111]
+        - button "close" [ref=f1e112]
+      - generic [ref=f1e113]:
+        - generic [ref=f1e114]:
+          - heading "Summary" [level=3] [ref=f1e115]
+          - paragraph [ref=f1e116]: "All connected nodes describe a user onboarding flow redesign with three key inputs: user feedback on current friction, competitor analysis showing best practices, and initial design mockups for the new version."
+        - generic [ref=f1e117]:
+          - heading "Key Points" [level=3] [ref=f1e118]
+          - list [ref=f1e119]:
+            - listitem [ref=f1e120]:
+              - generic [ref=f1e121]: •
+              - text: Users drop off at step 3 of current onboarding (60%+ drop rate)
+            - listitem [ref=f1e122]:
+              - generic [ref=f1e123]: •
+              - text: Competitor X uses progressive disclosure — 40% better retention
+            - listitem [ref=f1e124]:
+              - generic [ref=f1e125]: •
+              - text: Mockups propose a 2-step simplified flow with social login
+        - generic [ref=f1e126]:
+          - heading "Full Context" [level=3] [ref=f1e127]
+          - paragraph [ref=f1e128]: The team has identified that the current onboarding flow is too long (5 steps). User research from 200+ sessions shows that steps involving email verification and preference selection cause the most friction. Competitor analysis of 3 similar products reveals that progressive disclosure and social login are industry best practices. The design team has produced initial mockups for a 2-step onboarding that combines email verification with the first value-delivery moment.
+        - generic [ref=f1e129]:
+          - heading "Missing Info" [level=3] [ref=f1e130]
+          - list [ref=f1e131]:
+            - listitem [ref=f1e132]: ⚠ Technical feasibility of social login integration
+            - listitem [ref=f1e133]: ⚠ Timeline estimate for implementation
+  - button "Open Next.js Dev Tools" [ref=f1e38] [cursor=pointer]
+  - alert [ref=f1e42]

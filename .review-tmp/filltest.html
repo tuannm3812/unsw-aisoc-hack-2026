@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@keyframes nodePop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+.react-flow__node { animation: nodePop 0.15s steps(2) both; }
+</style>
+</head>
+<body>
+<div id="n" class="react-flow__node" style="position:absolute;transform:translate(120px,250px)">node</div>
+<script>
+window.__results = [];
+setTimeout(() => {
+  const el = document.getElementById('n');
+  window.__results.push(getComputedStyle(el).transform);
+  window.__results.push(el.style.transform);
+}, 600);
+</script>
+</body>
+</html>

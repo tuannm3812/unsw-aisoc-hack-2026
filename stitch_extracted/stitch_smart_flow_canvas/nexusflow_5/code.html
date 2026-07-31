@@ -1,0 +1,545 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>NexusFlow - AI Canvas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#4d44e3",
+                        "outline": "#777587",
+                        "on-error": "#ffffff",
+                        "primary": "#3525cd",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "outline-variant": "#c7c4d8",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#f7f9fb",
+                        "on-tertiary-container": "#ffd4a4",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f2f4f6",
+                        "tertiary-container": "#885500",
+                        "on-tertiary-fixed": "#2a1700",
+                        "tertiary": "#684000",
+                        "secondary-fixed": "#6ffbbe",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#6cf8bb",
+                        "primary-container": "#4f46e5",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "inverse-primary": "#c3c0ff",
+                        "on-surface-variant": "#464555",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed": "#002113",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#0f0069",
+                        "on-primary-container": "#dad7ff",
+                        "primary-fixed": "#e2dfff",
+                        "background": "#f7f9fb",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container": "#eceef0",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "tertiary-fixed": "#ffddb8",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary": "#006c49",
+                        "on-secondary-container": "#00714d",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "surface-dim": "#d8dadc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "canvas-margin": "32px",
+                        "unit": "4px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "xl": "48px",
+                        "lg": "24px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Geist"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Geist"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["10px", { "lineHeight": "12px", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .canvas-bg {
+            background-color: #f7f9fb;
+            background-image: radial-gradient(#c7c4d8 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .connection-line {
+            stroke: #4f46e5;
+            stroke-width: 2;
+            fill: none;
+        }
+        .connection-line-dashed {
+            stroke: #006c49;
+            stroke-width: 2;
+            stroke-dasharray: 4 4;
+            fill: none;
+        }
+        
+        /* Node Hover Effects */
+        .node-card {
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .node-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-hidden flex flex-col h-screen">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center px-lg py-sm w-full sticky top-0 z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md shadow-sm border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim"></span>
+</div>
+<div class="hidden md:flex gap-lg">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200 ease-in-out" href="#">Projects</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200 ease-in-out" href="#">Team</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200 ease-in-out" href="#">Reports</a>
+</div>
+<div class="flex items-center gap-sm">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-sm rounded-full">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-md py-sm rounded-lg hover:bg-primary-container transition-colors">
+                AI Auto-Breakdown
+            </button><button class="bg-secondary-container text-on-secondary-container font-label-md text-label-md px-md py-sm rounded-lg hover:bg-secondary-fixed transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">timeline</span>
+    AI Gantt
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-sm rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-sm rounded-full">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="group relative cursor-pointer ml-sm">
+<img alt="User Profile" class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A small, circular avatar portrait of a professional woman with glasses, smiling softly. Warm, modern lighting, professional minimalist aesthetic, high key lighting, crisp details, isolated on a light neutral background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtnhyslnmdFtf2mzsQeUk6D5mi5IVlkjpJ5Bw3y6LGUW9zpyGth2QmVnoWirUzw0IH5Dq8DzdGxQG6q2iwal32jpDACMBLWn9mB_-iSq2BKKx28ZtXsi4dnmCJrMHsmXV2XpmNf3IwXfztRKWZo3IM32vVTO5id4n3sm4j5NadAJhiCiSoEtjWKKrraw5ByvcjE2UlqQiAy7UHCrQ5neRzNUzWjTfSzrg4gtSnX-lgyB8E6u7kX1DG2w">
+<div class="absolute right-0 top-full mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 bg-surface-container-highest/90 backdrop-blur-xl border border-outline-variant rounded-lg shadow-xl p-sm pointer-events-none">
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-md font-bold text-on-surface">Workload</span>
+<span class="font-label-sm text-secondary">2 Active Tasks</span>
+</div>
+<div class="mb-xs">
+<div class="flex justify-between font-label-sm text-on-surface-variant mb-[2px]">
+<span class="">Capacity</span>
+<span class="">60%</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1">
+<div class="bg-secondary h-1 rounded-full" style="width: 60%"></div>
+</div>
+</div>
+<div>
+<span class="font-label-sm text-outline block mb-[2px]">Current Tasks:</span>
+<div class="flex flex-wrap gap-[2px]">
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-205</span>
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-301</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden relative">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-full p-md gap-sm fixed left-0 top-0 w-[280px] bg-surface-container-low/80 dark:bg-surface-container-highest/80 backdrop-blur-xl border-r border-outline-variant dark:border-outline shadow-md z-40 pt-24">
+<div class="mb-lg pb-md border-b border-outline-variant">
+<div class="flex items-center gap-sm mb-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary" data-icon="workspaces">workspaces</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface"></h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Active Sprint</p>
+</div>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-sm">
+<a class="flex items-center gap-sm p-sm bg-primary-container text-on-primary-container rounded-lg font-bold hover:bg-surface-container-high transition-all active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="space_dashboard">space_dashboard</span>
+                    Canvas
+                </a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-variant rounded-lg hover:bg-surface-container-high transition-all active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="view_kanban">view_kanban</span>
+                    Gantt
+                </a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-variant rounded-lg hover:bg-surface-container-high transition-all active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                    Dashboard
+                </a>
+</div>
+<button class="mt-auto mb-lg w-full bg-surface-container-highest text-on-surface py-sm rounded-lg border border-outline-variant hover:bg-surface-variant flex items-center justify-center gap-sm font-label-md text-label-md"><span class="material-symbols-outlined" data-icon="add">add</span>
+                New Project</button>
+<div class="border-t border-outline-variant pt-sm flex flex-col gap-sm">
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                    Help
+                </a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+</div>
+</nav>
+<!-- Main Canvas Area -->
+<main class="flex-1 relative md:ml-[280px] mr-[320px] canvas-bg overflow-auto" id="canvas-container">
+<!-- SVG for Connection Lines -->
+<svg class="absolute top-0 left-0 w-full h-full pointer-events-none z-0" style="min-width: 2000px; min-height: 2000px;">
+<!-- Delegation Line (Solid) -->
+<path class="connection-line" d="M 350 200 C 450 200, 450 400, 550 400"></path>
+<polygon fill="#4f46e5" points="545,395 555,400 545,405"></polygon>
+<!-- Knowledge Line (Dashed) -->
+<path class="connection-line-dashed" d="M 750 200 C 850 200, 650 400, 550 400"></path>
+<polygon fill="#006c49" points="555,395 545,400 555,405"></polygon>
+</svg>
+<div class="absolute w-[2000px] h-[2000px] z-10 p-canvas-margin"><div class="absolute top-[450px] left-[100px] w-[800px] bg-surface-container-lowest/90 backdrop-blur-xl border border-outline-variant rounded-xl shadow-lg overflow-hidden z-20">
+<div class="px-md py-sm border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">view_timeline</span>
+<h3 class="font-headline-md text-[16px] font-semibold text-on-surface">AI Generated Gantt Schedule</h3>
+</div>
+<button class="bg-primary text-on-primary px-sm py-1 rounded-lg font-label-md text-[12px] flex items-center gap-xs hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-[14px]">sync</span>
+            Sync with AI
+        </button>
+</div>
+<div class="p-md">
+<div class="grid grid-cols-12 gap-0 border-b border-outline-variant pb-xs mb-sm">
+<div class="col-span-2 font-label-sm text-outline uppercase">Task Name</div><div class="col-span-8 flex justify-between font-label-sm text-outline uppercase px-md" style="opacity: 0;">Assignee</div>
+<div class="col-span-9 flex justify-between font-label-sm text-outline uppercase px-md">
+<span class="">Week 1</span><span class="">Week 2</span><span class="">Week 3</span><span class="">Week 4</span>
+</div>
+</div>
+<div class="space-y-md">
+<div class="grid grid-cols-12 items-center"><div class="col-span-2 font-body-md text-on-surface truncate flex items-center gap-xs">Market Analysis Q3 <span class="text-[8px] bg-surface-variant text-on-surface-variant px-1 rounded border border-outline-variant flex items-center gap-[2px]"><span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-secondary"></span></span>NEX-101</span></div><div class="col-span-2 flex items-center gap-xs px-sm group relative cursor-pointer"><img alt="Sam Rivera" class="w-5 h-5 rounded-full border border-outline-variant object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJBMig3_3cDFcc51GitzTyUkJHR71B14Prb9Us9Z9FSo0imf8sJLDTH3o537C5u4mkzv9OdLJRwqMWwd9qoeHHAlpdzt63bQGPs-0rnUrE6ZSA0zfcNui6gN-VPi_NRyqoXKkYKWIVJis3Fkc2eyT1fimTsBo5RnTS2x0NPkhU0HuLpq7pWTjWkHJXt26iT7ckYda-eP8hLLTy7nlFzgz0zfAd_6ZLzzOL8GkOdus8L104rUPRqfJ3tg"><span class="font-label-md text-on-surface truncate">Sam Rivera</span>
+<div class="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 bg-surface-container-highest/90 backdrop-blur-xl border border-outline-variant rounded-lg shadow-xl p-sm pointer-events-none">
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-md font-bold text-on-surface">Workload</span>
+<span class="font-label-sm text-secondary">3 Active Tasks</span>
+</div>
+<div class="mb-xs">
+<div class="flex justify-between font-label-sm text-on-surface-variant mb-[2px]">
+<span class="">Capacity</span>
+<span class="">85%</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1">
+<div class="bg-secondary h-1 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+<div>
+<span class="font-label-sm text-outline block mb-[2px]">Current Tasks:</span>
+<div class="flex flex-wrap gap-[2px]">
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-101</span>
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-402</span>
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-505</span>
+</div>
+</div>
+</div>
+</div><div class="col-span-2 px-sm"><span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-secondary-container text-on-secondary-container"><span class="relative flex h-1.5 w-1.5 mr-1"><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-current"></span></span>Completed</span></div><div class="col-span-6 relative h-6 bg-surface-variant/30 rounded-full mx-md"><div class="absolute left-0 w-1/3 h-full bg-secondary rounded-full flex items-center px-2"><div class="w-full h-1 bg-white/30 rounded-full overflow-hidden"><div class="bg-white h-full" style="width: 100%"></div></div></div></div></div>
+<div class="grid grid-cols-12 items-center"><div class="col-span-2 font-body-md text-on-surface truncate flex items-center gap-xs">Update Pricing UI <span class="text-[8px] bg-surface-variant text-on-surface-variant px-1 rounded border border-outline-variant flex items-center gap-[2px]"><span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span></span>NEX-402</span></div><div class="col-span-2 flex items-center gap-xs px-sm group relative cursor-pointer"><img alt="Alex Mercer" class="w-5 h-5 rounded-full border border-outline-variant object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8kRzDfpcExI5X5OOi34OSVtlYAMtV0zrOBsT26aGzDGZrnqah1ChnVMX7sLAOIq9UuIbvnX6-1xXG1FSh_t_jjOoimsNcEkrHwxE-S9Pz63o94TR17r2_zyPn7DgAR6DAnruiPgrEnwmTLL7D7Y2Y1zbhu8JXWSdMvhUmMcF2BLNvcDqOcsKMVSm71p0E4TVTN4WTSyoU6n0tCAai8DcSmMFJpRR7BWxHKJKd5HmFcY0ICIS5SB3-RQ"><span class="font-label-md text-on-surface truncate">Alex Mercer</span>
+<div class="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 bg-surface-container-highest/90 backdrop-blur-xl border border-outline-variant rounded-lg shadow-xl p-sm pointer-events-none">
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-md font-bold text-on-surface">Workload</span>
+<span class="font-label-sm text-secondary">4 Active Tasks</span>
+</div>
+<div class="mb-xs">
+<div class="flex justify-between font-label-sm text-on-surface-variant mb-[2px]">
+<span class="">Capacity</span>
+<span class="">95%</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1">
+<div class="bg-error h-1 rounded-full" style="width: 95%"></div>
+</div>
+</div>
+<div>
+<span class="font-label-sm text-outline block mb-[2px]">Current Tasks:</span>
+<div class="flex flex-wrap gap-[2px]">
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-402</span>
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-405</span>
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-410</span>
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-412</span>
+</div>
+</div>
+</div>
+</div><div class="col-span-2 px-sm"><span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary-container text-on-primary-container"><span class="relative flex h-1.5 w-1.5 mr-1"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-current"></span></span>In Progress</span></div><div class="col-span-6 relative h-6 bg-surface-variant/30 rounded-full mx-md"><div class="absolute left-[35%] w-1/4 h-full bg-primary rounded-full flex items-center px-2"><div class="w-full h-1 bg-white/30 rounded-full overflow-hidden"><div class="bg-white h-full" style="width: 40%"></div></div></div></div></div>
+<div class="grid grid-cols-12 items-center"><div class="col-span-2 font-body-md text-on-surface truncate flex items-center gap-xs">Q4 Revenue Goal <span class="text-[8px] bg-surface-variant text-on-surface-variant px-1 rounded border border-outline-variant flex items-center gap-[2px]"><span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-error"></span></span>NEX-700</span></div><div class="col-span-2 flex items-center gap-xs px-sm group relative cursor-pointer"><img alt="Jordan Lee" class="w-5 h-5 rounded-full border border-outline-variant object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHinpIMqKtc-y3C-FX10p4ce-JLhoWDBRx1usJGAEj0_oLTALass6gHncduffHzAMJ_mgxAbOB2sfOs3Uyn2mvaZwgoR_X48SFghxB7Le-w8J7G75LE982jRq-fzyOI4d--DlpVqLlrH7YfjNG2lGZMOubUOznAIOimS0gQipC8lcMsjb6z0ePQC29uhtL6iENFYOMj38zLWcTdELDeRLzpUs1k8v1nTJXJZIbq5p1mG8Y1-cdIj1mlA"><span class="font-label-md text-on-surface truncate">Jordan Lee</span>
+<div class="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 bg-surface-container-highest/90 backdrop-blur-xl border border-outline-variant rounded-lg shadow-xl p-sm pointer-events-none">
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-md font-bold text-on-surface">Workload</span>
+<span class="font-label-sm text-secondary">5 Active Tasks</span>
+</div>
+<div class="mb-xs">
+<div class="flex justify-between font-label-sm text-on-surface-variant mb-[2px]">
+<span class="">Capacity</span>
+<span class="">100%</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1">
+<div class="bg-error h-1 rounded-full" style="width: 100%"></div>
+</div>
+</div>
+<div>
+<span class="font-label-sm text-outline block mb-[2px]">Current Tasks:</span>
+<div class="flex flex-wrap gap-[2px]">
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-700</span>
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-705</span>
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-712</span>
+</div>
+</div>
+</div>
+</div><div class="col-span-2 px-sm"><span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-error-container text-on-error-container"><span class="relative flex h-1.5 w-1.5 mr-1"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-current"></span></span>Delayed</span></div><div class="col-span-6 relative h-6 bg-surface-variant/30 rounded-full mx-md"><div class="absolute left-[65%] w-1/3 h-full bg-tertiary rounded-full flex items-center px-2"><div class="w-full h-1 bg-white/30 rounded-full overflow-hidden"><div class="bg-white h-full" style="width: 10%"></div></div></div></div></div>
+</div>
+</div>
+</div>
+<!-- Node: Research Type (Left) -->
+<div class="absolute top-[100px] left-[100px] w-[280px] bg-surface-container-lowest border border-outline-variant rounded-xl node-card overflow-hidden">
+<div class="px-md py-sm border-b border-outline-variant bg-surface-container-low flex justify-between items-center"><span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-secondary-container text-on-secondary-container mr-sm"><span class="relative flex h-1.5 w-1.5 mr-1"><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-current"></span></span>Completed</span>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="science">science</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Research Node</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]" data-icon="more_horiz">more_horiz</span></button>
+</div>
+<div class="p-md flex flex-col gap-sm">
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Market Analysis Q3</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">Competitor feature sets and pricing models.</p>
+<div class="flex flex-wrap gap-xs mt-xs"><span class="inline-flex items-center gap-xs px-xs py-[2px] rounded bg-surface-variant text-on-surface-variant font-label-sm text-label-sm border border-outline-variant"><span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-secondary"></span></span> Jira: NEX-101</span></div>
+<div class="border border-outline-variant rounded-lg p-sm bg-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-outline" data-icon="picture_as_pdf">picture_as_pdf</span>
+<div class="flex-1 overflow-hidden">
+<p class="font-label-sm text-label-sm truncate">Q3_Competitor_Report.pdf</p>
+<p class="text-[8px] text-outline">2.4 MB</p>
+</div>
+</div>
+<button class="mt-sm w-full bg-secondary-container text-on-secondary-container py-sm rounded-lg flex justify-center items-center gap-xs hover:bg-secondary-fixed transition-colors font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]" data-icon="auto_awesome">auto_awesome</span>
+                            Mistral Summarize
+                        </button>
+</div>
+</div>
+<!-- Node: Task Type (Right) -->
+<div class="absolute top-[300px] left-[550px] w-[280px] bg-surface-container-lowest border border-primary rounded-xl node-card overflow-hidden ring-2 ring-primary/20"><div class="px-md py-sm border-b border-outline-variant bg-surface-container-low flex justify-between items-center"><div class="flex items-center gap-xs"><span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary-container text-on-primary-container mr-xs"><span class="relative flex h-1.5 w-1.5 mr-1"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-current"></span></span>In Progress</span><span class="material-symbols-outlined text-primary text-[18px]" data-icon="task_alt">task_alt</span><span class="font-label-md text-label-md text-on-surface font-semibold">Implementation</span></div><button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]" data-icon="more_horiz">more_horiz</span></button></div><div class="p-md flex flex-col gap-sm"><h3 class="font-body-md text-body-md font-semibold text-on-surface">Update Pricing Tier UI</h3><p class="font-label-md text-label-md text-on-surface-variant">Implement changes based on the finalized Q3 market analysis.</p><div class="flex flex-wrap gap-xs mt-xs"><span class="inline-flex items-center gap-xs px-xs py-[2px] rounded bg-surface-variant text-on-surface-variant font-label-sm text-label-sm border border-outline-variant"><span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span></span> Jira: NEX-402</span><span class="inline-flex items-center gap-xs px-xs py-[2px] rounded bg-error-container text-on-error-container font-label-sm text-label-sm">High Priority</span></div><div class="mt-sm flex justify-between items-center pt-sm border-t border-outline-variant"><div class="flex items-center gap-sm group relative cursor-pointer"><img alt="Alex Mercer" class="w-6 h-6 rounded-full border border-outline-variant object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8kRzDfpcExI5X5OOi34OSVtlYAMtV0zrOBsT26aGzDGZrnqah1ChnVMX7sLAOIq9UuIbvnX6-1xXG1FSh_t_jjOoimsNcEkrHwxE-S9Pz63o94TR17r2_zyPn7DgAR6DAnruiPgrEnwmTLL7D7Y2Y1zbhu8JXWSdMvhUmMcF2BLNvcDqOcsKMVSm71p0E4TVTN4WTSyoU6n0tCAai8DcSmMFJpRR7BWxHKJKd5HmFcY0ICIS5SB3-RQ"><span class="font-label-sm text-on-surface-variant">Alex Mercer</span>
+<div class="absolute left-1/2 top-full mt-2 -translate-x-1/2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 bg-surface-container-highest/90 backdrop-blur-xl border border-outline-variant rounded-lg shadow-xl p-sm pointer-events-none">
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-md font-bold text-on-surface">Workload</span>
+<span class="font-label-sm text-secondary">4 Active Tasks</span>
+</div>
+<div class="mb-xs">
+<div class="flex justify-between font-label-sm text-on-surface-variant mb-[2px]">
+<span class="">Capacity</span>
+<span class="">95%</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1">
+<div class="bg-error h-1 rounded-full" style="width: 95%"></div>
+</div>
+</div>
+<div>
+<span class="font-label-sm text-outline block mb-[2px]">Current Tasks:</span>
+<div class="flex flex-wrap gap-[2px]">
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-402</span>
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-405</span>
+<span class="text-[8px] px-1 py-[1px] bg-surface-variant rounded border border-outline-variant text-on-surface-variant">NEX-410</span>
+</div>
+</div>
+</div>
+</div><div class="flex gap-xs"><span class="material-symbols-outlined text-outline text-[16px] hover:text-primary cursor-pointer" data-icon="chat">chat</span><span class="material-symbols-outlined text-outline text-[16px] hover:text-primary cursor-pointer" data-icon="mark_email_unread">mark_email_unread</span></div></div></div></div>
+<!-- Node: Goal Type (Top Right) -->
+<div class="absolute top-[100px] left-[650px] w-[280px] bg-surface-container-lowest border border-outline-variant rounded-xl node-card overflow-hidden">
+<div class="px-md py-sm border-b border-outline-variant bg-surface-container-low flex justify-between items-center"><span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-error-container text-on-error-container mr-sm"><span class="relative flex h-1.5 w-1.5 mr-1"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-current"></span></span>Delayed</span>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-tertiary text-[18px]" data-icon="flag">flag</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Strategic Goal</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]" data-icon="more_horiz">more_horiz</span></button>
+</div>
+<div class="p-md flex flex-col gap-sm">
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Increase Q4 Revenue</h3>
+<div class="flex flex-wrap gap-xs mt-xs"><span class="inline-flex items-center gap-xs px-xs py-[2px] rounded bg-surface-variant text-on-surface-variant font-label-sm text-label-sm border border-outline-variant"><span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-error"></span></span> Jira: NEX-700</span></div>
+<div class="bg-surface p-sm rounded-lg border border-outline-variant mt-xs">
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-xs">Progress</p>
+<div class="w-full bg-surface-variant rounded-full h-1.5">
+<div class="bg-tertiary h-1.5 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Suggestion Badge -->
+<div class="absolute top-[260px] left-[450px] bg-surface-container-lowest border border-secondary text-secondary rounded-full px-sm py-xs flex items-center gap-xs shadow-sm cursor-pointer hover:bg-secondary-container transition-colors group">
+<span class="material-symbols-outlined text-[14px]" data-icon="lightbulb">lightbulb</span>
+<span class="font-label-sm text-label-sm hidden group-hover:inline-block">Link Insights</span>
+</div>
+</div>
+</main>
+<!-- Right Side AI Agent Panel -->
+<aside class="w-[320px] fixed right-0 top-0 h-full bg-surface-container-highest/90 backdrop-blur-lg border-l border-outline-variant flex flex-col shadow-lg z-40 pt-20">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface/50">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="psychology">psychology</span>
+<h2 class="font-headline-md text-headline-md font-semibold">AI Agent</h2>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-[10px]">Active</span>
+</div>
+<div class="flex-1 overflow-y-auto p-md flex flex-col gap-lg">
+<!-- Context Map Section -->
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">Context Map</h3>
+<div class="bg-surface rounded-lg p-sm border border-outline-variant">
+<div class="flex items-center gap-sm mb-xs">
+<span class="material-symbols-outlined text-secondary text-[16px]" data-icon="schema">schema</span>
+<span class="font-body-md text-body-md font-medium text-on-surface">3 Nodes Connected</span>
+</div>
+<ul class="font-label-md text-label-md text-on-surface-variant pl-lg list-disc list-inside">
+<li class="">Market Analysis (Research)</li>
+<li class="">Pricing Tier UI (Task)</li>
+<li class="">Q4 Revenue (Goal)</li>
+</ul>
+</div>
+</div>
+<!-- Suggested Actions -->
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">Agentic Workflows</h3>
+<div class="flex flex-col gap-sm">
+<button class="w-full bg-surface hover:bg-surface-variant text-left p-sm rounded-lg border border-outline-variant transition-colors flex flex-col gap-xs">
+<div class="flex items-center gap-xs font-label-md text-label-md font-medium text-on-surface">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit_document">edit_document</span>
+                                Draft Release Notes
+                            </div>
+<span class="text-[10px] text-on-surface-variant">Uses Market Analysis + Task details</span>
+</button>
+<button class="w-full bg-surface hover:bg-surface-variant text-left p-sm rounded-lg border border-outline-variant transition-colors flex flex-col gap-xs">
+<div class="flex items-center gap-xs font-label-md text-label-md font-medium text-on-surface">
+<span class="material-symbols-outlined text-[16px]" data-icon="update">update</span>
+                                Update Jira Epic
+                            </div>
+<span class="text-[10px] text-on-surface-variant">Sync context to NEX-400</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-md border-t border-outline-variant bg-surface/50">
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg py-sm pl-sm pr-lg text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Ask AI about this context..." type="text">
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:text-primary-container">
+<span class="material-symbols-outlined text-[20px]" data-icon="send">send</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center p-sm bg-surface-container-highest/90 dark:bg-surface-container-high/90 backdrop-blur-lg rounded-t-xl border-t border-outline-variant shadow-lg">
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl p-xs scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="gesture">gesture</span>
+<span class="font-label-sm text-label-sm">Canvas</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-xs hover:bg-surface-container-highest scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="timeline">timeline</span>
+<span class="font-label-sm text-label-sm">Gantt</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-xs hover:bg-surface-container-highest scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="insert_chart">insert_chart</span>
+<span class="font-label-sm text-label-sm">Dashboard</span>
+</a>
+</nav>
+<script>
+        // Simple drag functionality for nodes (visual only)
+        const nodes = document.querySelectorAll('.node-card');
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+        let activeNode = null;
+
+        nodes.forEach(node => {
+            node.addEventListener('mousedown', dragStart);
+            node.addEventListener('mouseup', dragEnd);
+            node.addEventListener('mousemove', drag);
+        });
+
+        function dragStart(e) {
+            // Don't drag if clicking buttons or interactions inside
+            if(e.target.closest('button') || e.target.closest('.material-symbols-outlined')) return;
+            
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+            activeNode = e.currentTarget;
+            isDragging = true;
+            activeNode.style.cursor = 'grabbing';
+            activeNode.style.zIndex = '50';
+        }
+
+        function dragEnd() {
+            if (!activeNode) return;
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+            activeNode.style.cursor = 'default';
+            activeNode.style.zIndex = '';
+            activeNode = null;
+        }
+
+        function drag(e) {
+            if (isDragging && activeNode) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                xOffset = currentX;
+                yOffset = currentY;
+                setTranslate(currentX, currentY, activeNode);
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            // Using transform for temporary drag effect (lines won't update in this simple vanilla demo)
+            el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        }
+    </script>
+
+
+</body></html>

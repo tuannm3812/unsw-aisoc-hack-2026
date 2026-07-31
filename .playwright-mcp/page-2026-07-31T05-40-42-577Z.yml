@@ -1,0 +1,30 @@
+- generic [active] [ref=f18e1]:
+  - main [ref=f18e2]:
+    - generic [ref=f18e3]:
+      - generic [ref=f18e4]:
+        - generic [ref=f18e5]: Spatial Brain
+        - link "Sign in" [ref=f18e9] [cursor=pointer]:
+          - /url: /login
+      - generic [ref=f18e10]:
+        - paragraph [ref=f18e11]: Mistral × Atlassian
+        - heading "The reasoning between a paper and a pull request stops disappearing." [level=1] [ref=f18e12]
+        - paragraph [ref=f18e13]: A scientist’s finding, the constraint it implies, and the ticket an engineer picks up are the same object seen from different sides. Spatial Brain keeps them connected, so an agent can walk back from the task to the page it came from.
+        - generic [ref=f18e14]:
+          - link "Open the demo board" [ref=f18e15] [cursor=pointer]:
+            - /url: /login
+          - generic [ref=f18e18]: Three seeded accounts, no signup.
+      - generic [ref=f18e19]:
+        - generic [ref=f18e20]:
+          - generic [ref=f18e21]: "01"
+          - heading "Research lands" [level=2] [ref=f18e26]
+          - paragraph [ref=f18e27]: Drop the paper. Mistral pulls out findings and constraints, each holding the quote and page it came from.
+        - generic [ref=f18e28]:
+          - generic [ref=f18e29]: "02"
+          - heading "Work gets connected" [level=2] [ref=f18e37]
+          - paragraph [ref=f18e38]: Draw a task off the nodes that justify it. The connection is the handover, so nothing needs re-explaining.
+        - generic [ref=f18e39]:
+          - generic [ref=f18e40]: "03"
+          - heading "Code comes back" [level=2] [ref=f18e46]
+          - paragraph [ref=f18e47]: An agent reads the task's whole ancestry over MCP, opens a pull request, and it lands on the node and the Jira issue.
+  - region "Notifications (F8)":
+    - list

@@ -1,0 +1,78 @@
+- generic [ref=f1e1]:
+  - generic [ref=f1e2]:
+    - application [ref=f1e3]:
+      - generic [ref=f1e5]:
+        - generic:
+          - generic:
+            - group [ref=f1e62]:
+              - generic [ref=f1e63]:
+                - generic [ref=f1e65]:
+                  - heading "User Feedback Summary" [level=3] [ref=f1e66]
+                  - generic [ref=f1e67]: INFO
+                - paragraph [ref=f1e68]: "60% of users drop off at step 3 of onboarding. Main complaints: too many steps, email verification is annoying, prefer social login."
+                - generic [ref=f1e69]:
+                  - button "Summarize" [ref=f1e70]
+                  - button "Delete" [ref=f1e71]
+            - group [ref=f1e95]:
+              - generic [ref=f1e96]:
+                - generic [ref=f1e98]:
+                  - heading "Redesign Onboarding Flow" [level=3] [ref=f1e99]
+                  - generic [ref=f1e100]: TASK
+                - generic [ref=f1e101]:
+                  - generic [ref=f1e102]: 👤 张三
+                  - generic [ref=f1e103]: To Do
+                - generic [ref=f1e104]:
+                  - button "Generate Spec" [active] [ref=f1e105]
+                  - button "Delete" [ref=f1e106]
+      - generic "Control Panel" [ref=f1e6]:
+        - button "Zoom In" [disabled]
+        - button "Zoom Out" [ref=f1e10] [cursor=pointer]
+        - button "Fit View" [ref=f1e13] [cursor=pointer]
+        - button "Toggle Interactivity" [ref=f1e16] [cursor=pointer]
+    - generic [ref=f1e21]:
+      - button "note_add Add Info" [ref=f1e22]:
+        - generic [ref=f1e23]: note_add
+        - generic [ref=f1e24]: Add Info
+      - button "assignment_add Add Task" [ref=f1e25]:
+        - generic [ref=f1e26]: assignment_add
+        - generic [ref=f1e27]: Add Task
+    - generic [ref=f1e29]:
+      - button "Canvas" [ref=f1e30]
+      - button "Gantt" [disabled] [ref=f1e31]
+      - button "List" [disabled] [ref=f1e32]
+    - generic [ref=f1e109]:
+      - generic [ref=f1e110]:
+        - heading "📝 Task Spec" [level=2] [ref=f1e134]
+        - button "close" [ref=f1e112]
+      - generic [ref=f1e135]:
+        - generic [ref=f1e136]:
+          - heading "Title" [level=3] [ref=f1e137]
+          - paragraph [ref=f1e138]: Implement 2-Step Onboarding Flow
+        - generic [ref=f1e139]:
+          - heading "Description" [level=3] [ref=f1e140]
+          - paragraph [ref=f1e141]: Redesign the user onboarding flow from 5 steps to 2 steps. Replace email verification step with social login (Google + GitHub). Combine preference selection into the welcome screen as progressive disclosure.
+        - generic [ref=f1e142]:
+          - heading "Acceptance Criteria" [level=3] [ref=f1e143]
+          - list [ref=f1e144]:
+            - listitem [ref=f1e145]:
+              - generic [ref=f1e146]: ☐
+              - text: User can sign up with Google or GitHub OAuth
+            - listitem [ref=f1e147]:
+              - generic [ref=f1e148]: ☐
+              - text: Onboarding completes in 2 screens or less
+            - listitem [ref=f1e149]:
+              - generic [ref=f1e150]: ☐
+              - text: Email verification happens silently via OAuth token
+            - listitem [ref=f1e151]:
+              - generic [ref=f1e152]: ☐
+              - text: Drop-off rate at step 2 is under 20%
+            - listitem [ref=f1e153]:
+              - generic [ref=f1e154]: ☐
+              - text: Works on mobile and desktop
+        - generic [ref=f1e155]:
+          - heading "Technical Notes" [level=3] [ref=f1e156]
+          - paragraph [ref=f1e157]: "Use NextAuth.js for OAuth. Social login providers return verified email — skip separate email verification step. Store onboarding completion flag in user profile. Progressive disclosure: show 3 key preference toggles on welcome screen, rest in settings."
+        - generic [ref=f1e158]: HIGH Priority
+        - button "Apply & Save Task" [ref=f1e160]
+  - button "Open Next.js Dev Tools" [ref=f1e38] [cursor=pointer]
+  - alert [ref=f1e42]

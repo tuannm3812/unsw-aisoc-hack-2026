@@ -1,0 +1,72 @@
+- generic [ref=f9e1]:
+  - generic [ref=f9e2]:
+    - application [ref=f9e3]:
+      - generic "Control Panel" [ref=f9e6]:
+        - button "Zoom In" [ref=f9e7] [cursor=pointer]
+        - button "Zoom Out" [ref=f9e10] [cursor=pointer]
+        - button "Fit View" [ref=f9e13] [cursor=pointer]
+        - button "Toggle Interactivity" [ref=f9e16] [cursor=pointer]
+    - generic:
+      - generic:
+        - generic: ⚡
+        - heading "Start building your context canvas" [level=2]
+        - paragraph: Add context nodes for research, notes, and decisions. Connect them to task nodes and let Mistral synthesize what your team needs to know.
+        - generic:
+          - button "📄 Add Context Node" [ref=f9e20]
+          - button "📝 Add Task Node" [ref=f9e21]
+    - generic [ref=f9e23]:
+      - button "note_add Add Context" [ref=f9e24]:
+        - generic [ref=f9e25]: note_add
+        - generic [ref=f9e26]: Add Context
+      - button "assignment_add Add Task" [ref=f9e27]:
+        - generic [ref=f9e28]: assignment_add
+        - generic [ref=f9e29]: Add Task
+    - generic [ref=f9e31]:
+      - button "Canvas" [ref=f9e32]
+      - button "Sprint Review" [active] [ref=f9e33]
+    - generic [ref=f9e45]:
+      - generic [ref=f9e46]:
+        - heading "Sprint Review" [level=2] [ref=f9e47]
+        - button "close" [ref=f9e48]
+      - generic [ref=f9e49]: Demo data — connect backend for real AI results
+      - generic [ref=f9e50]:
+        - generic [ref=f9e51]:
+          - heading "Overview" [level=3] [ref=f9e52]
+          - paragraph [ref=f9e53]: Sprint 12 delivered the checkout-flow redesign and auth system migration. Two features shipped on time, one blocked waiting on design sign-off for the payment-method selector. Next sprint focuses on PCI compliance testing and the onboarding flow rewrite.
+        - generic [ref=f9e54]:
+          - heading "✅ Shipped (2)" [level=3] [ref=f9e55]
+          - generic [ref=f9e56]:
+            - generic [ref=f9e57]:
+              - generic [ref=f9e58]:
+                - generic [ref=f9e59]: Build 2-Step Checkout
+                - generic [ref=f9e60]: — 张三
+              - paragraph [ref=f9e61]: Deployed to staging. PaymentElement integration complete. Saved-payment selector working end-to-end.
+            - generic [ref=f9e62]:
+              - generic [ref=f9e63]:
+                - generic [ref=f9e64]: Auth System Migration
+                - generic [ref=f9e65]: — 李四
+              - paragraph [ref=f9e66]: Magic-link auth replaces email OTP. Migration ran clean for 100% of existing users.
+        - generic [ref=f9e67]:
+          - heading "🚫 Blocked (1)" [level=3] [ref=f9e68]
+          - generic [ref=f9e70]:
+            - generic [ref=f9e71]:
+              - generic [ref=f9e72]: Payment Method Selector UI
+              - generic [ref=f9e73]: — 王五
+              - generic [ref=f9e74]: In Progress
+            - paragraph [ref=f9e75]: Waiting on final design mockups from the design team. Figma file reviewed, feedback sent, expecting final version by EOD Friday.
+        - generic [ref=f9e76]:
+          - heading "🔜 Next (2)" [level=3] [ref=f9e77]
+          - generic [ref=f9e78]:
+            - generic [ref=f9e79]:
+              - generic [ref=f9e80]:
+                - generic [ref=f9e81]: PCI Compliance Audit
+                - generic [ref=f9e82]: — 张三
+              - paragraph [ref=f9e83]: External audit scheduled for Aug 5. Need to prepare documentation and run SAQ-A self-assessment.
+            - generic [ref=f9e84]:
+              - generic [ref=f9e85]:
+                - generic [ref=f9e86]: Onboarding Flow Rewrite
+                - generic [ref=f9e87]: — 李四
+              - paragraph [ref=f9e88]: Move from 5-step to 2-step onboarding. Design specs finalized in sprint 11, ready to implement.
+      - button "📄 Publish to Confluence" [ref=f9e90]
+  - button "Open Next.js Dev Tools" [ref=f9e39] [cursor=pointer]
+  - alert [ref=f9e43]

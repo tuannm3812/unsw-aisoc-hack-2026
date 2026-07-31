@@ -1,0 +1,3766 @@
+diff --git a/.gitignore b/.gitignore
+index d5d9e8f..d34d509 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -5,3 +5,7 @@ stitch_extracted/
+ __pycache__/
+ *.db
+ .env
++
++# SQLite WAL sidecar files
++*.db-wal
++*.db-shm
+diff --git a/backend/storage/spatial_brain.db-shm b/backend/storage/spatial_brain.db-shm
+deleted file mode 100644
+index dd1b1ea..0000000
+Binary files a/backend/storage/spatial_brain.db-shm and /dev/null differ
+diff --git a/backend/storage/spatial_brain.db-wal b/backend/storage/spatial_brain.db-wal
+deleted file mode 100644
+index cef4c3f..0000000
+Binary files a/backend/storage/spatial_brain.db-wal and /dev/null differ
+diff --git a/docs/FRONTEND_UPDATE.md b/docs/FRONTEND_UPDATE.md
+new file mode 100644
+index 0000000..3551543
+--- /dev/null
++++ b/docs/FRONTEND_UPDATE.md
+@@ -0,0 +1,158 @@
++# Frontend Update Report — 2026-07-31
++
++**Branch:** `main` | **Commit:** `54d2c7f` | **Files changed:** 41
++
++---
++
++## Summary
++
++The frontend (Next.js 15 + React Flow + Zustand + shadcn/ui) received a significant interaction layer upgrade. All changes are frontend-only — zero backend modifications required.
++
++---
++
++## Canvas Interactions
++
++### ⊕ Edge Derivation
++Hover any edge midpoint → click the ⊕ button → creates a "Branch Idea" finding node and automatically wires it via `derived_from`. The button is always subtly visible (25% opacity) and pops to full on hover.
++
++**Files:** `components/canvas/CustomEdge.tsx` (new), `components/canvas/Canvas.tsx`
++
++### Right-Click Context Menus
++
++Three surfaces, all using the same React Flow context menu pattern:
++
++| Surface | Menu items |
++|---------|-----------|
++| **Node right-click** | Create downstream nodes (Finding / Constraint / Task / Subtask, auto-wired with correct relation), Focus, Copy Task ID, Mark Done, Duplicate, Delete |
++| **Edge right-click** | Switch relation type (supports / constrains / derived from / implements), Delete edge |
++| **Canvas right-click** | Add Finding / Add Constraint / Add Task — free placement |
++
++**Files:** `components/canvas/NodeContextMenu.tsx` (new), `components/canvas/EdgeContextMenu.tsx` (new), `components/canvas/Canvas.tsx`
++
++### Drag-to-Create
++Drag a connection handle from any node → drop on empty canvas → the context menu appears at the drop point, offering connected creation with the correct relation type for the source node's kind.
++
++**How it works:** `onConnectStart` records the source node's ID and kind in a ref. `onConnectEnd` checks whether the drop target was the pane rather than a valid node. If yes and the event is a `MouseEvent` (touch-safe guard), the menu opens.
++
++**Files:** `components/canvas/Canvas.tsx`
++
++### My Tasks Filter
++TopBar now has a "My Tasks" toggle button. When active, all task nodes not assigned to the signed-in user render at 25% opacity with pointer-events disabled, making it visually obvious which tasks belong to you.
++
++State is cleared on sign-out to prevent cross-session leakage.
++
++**Files:** `components/canvas/TopBar.tsx`, `components/canvas/Canvas.tsx`, `stores/graphStore.ts`
++
++---
++
++## Inspector Panel (Right Sidebar)
++
++### Conflict Detector
++Task nodes in the Inspector now have a "Check Alignment" button in the Details tab (below the Status section) and a dedicated "Alignment" tab.
++
++Clicking it triggers a mock Mistral analysis that scans connected context nodes for contradictions and renders them as flagged pairs (Node A vs Node B) with descriptions. When the backend adds a `/api/check-alignment` endpoint, the mock is automatically replaced.
++
++**Files:** `components/canvas/Inspector.tsx`
++
++### AI Task Breakdown
++Task nodes now have a "Break into subtasks" button in the Details tab. It shows a Mistral‑suggested list of concrete subtasks with titles and descriptions.
++
++The mock data is display‑only (no store writes, no API calls — unlike the previous version which was corrected in code review).
++
++**Files:** `components/canvas/Inspector.tsx`
++
++### Sprint Review
++The Toolbar has a "Sprint Review" button (bar chart icon, rightmost position). Clicking it opens a full‑screen dialog with three sections — Shipped, Blocked, Next — each item showing assignee, title, and a one‑line summary. Mock data; replaceable with `/api/sprint-review`.
++
++**Files:** `components/canvas/Toolbar.tsx`
++
++---
++
++## Task Node Visuals
++
++### Priority Badges
++Task nodes auto‑detect priority from title and body text via keyword matching:
++
++| Matches | Badge |
++|---------|-------|
++| `P0`, `urgent`, `critical` | Red "P0" |
++| `P1`, `high`, `blocker` | Amber "P1" |
++| `P2`, `medium` | Blue "P2" |
++| `P3`, `low` | Gray "P3" |
++| `P4`, `nice`, `later` | Light gray "P4" |
++
++None of this touches the backend — the badge is rendered purely from client‑side text analysis.
++
++**Files:** `components/canvas/GraphNodeCard.tsx`
++
++---
++
++## Visual Polish
++
++- **Canvas contrast:** Light‑mode canvas background darkened from `oklch(0.985)` to `oklch(0.96)` — node cards now clearly separate from the dot‑grid background.
++- **Lineage dismiss:** A "Stop highlighting" button appears at the top center of the canvas whenever lineage tracing is active. Previously there was no way to clear the dimmed state without re‑selecting the task node.
++- **Self‑connection guard:** `isValidConnection` prevents accidental node‑to‑self wiring.
++- **Edge relation change rollback:** Switching an edge's relation now creates the new edge first, then deletes the original — if the new edge is rejected by the backend (e.g., cycle), the original edge survives.
++
++---
++
++## Bug Fixes
++
++| # | Severity | Issue | Fix |
++|---|:---:|------|------|
++| 1 | P0 | ⊕ derivation used `screenToFlowPosition` on already‑flow coordinates → branch nodes landed off‑screen whenever the viewport was panned/zoomed | Removed the double transform — use flow coordinates directly |
++| 2 | P0 | Task breakdown mock wrote 4 fabricated Stripe tasks into the real store and backend | Mock is now display‑only, no `addNode`/`addEdge` calls |
++| 3 | P0 | Edge relation change deleted the original edge before validating the new one → 400 error lost the edge permanently | Create new edge first, delete original only on success |
++| 4 | P0 | "Duplicate" on asset nodes POSTed `kind=asset` → backend 400 with no user feedback | Asset nodes are excluded from the Duplicate action |
++| 5 | P1 | Lineage highlighting had no dismiss path → entire canvas rendered at 25% opacity with no recovery | "Stop highlighting" button rendered on canvas when lineage is active |
++| 6 | P1 | Dragging a connection onto itself created a self‑link → backend 400 swallowed silently | `isValidConnection={source !== target}` guard |
++| 7 | P1 | `onConnectEnd` cast `TouchEvent` to `MouseEvent` → `clientX` was undefined on touch devices | `instanceof MouseEvent` guard before reading coordinates |
++| 8 | P1 | My Tasks filter state survived sign‑out → next user's board appeared dimmed or lineage‑locked | `clearLineage()` + `setMyTaskFilter(null)` on sign‑out |
++
++---
++
++## Files Created
++
++```
++frontend/
++  components/canvas/
++    CustomEdge.tsx          — ⊕ derivation edge component
++    EdgeContextMenu.tsx     — edge right-click menu
++    NodeContextMenu.tsx     — node/canvas right-click menu
++```
++
++## Files Modified
++
++```
++frontend/
++  app/
++    globals.css             — canvas background contrast
++  components/canvas/
++    Canvas.tsx              — edgeTypes, context menus, derivation, guards
++    GraphNodeCard.tsx       — priority badges
++    Inspector.tsx           — Conflict Detector, task breakdown, Alignment tab
++    Toolbar.tsx             — Sprint Review button + dialog
++    TopBar.tsx              — My Tasks filter, sign-out cleanup
++  stores/
++    graphStore.ts           — myTaskFilter state + setter
++```
++
++## What's NOT in this Update
++
++- **Backend:** Zero changes. All new features degrade gracefully to mock data when the backend is unreachable or the endpoint doesn't exist.
++- **Confluence publish button:** Removed — backend has no Confluence integration.
++- **Original Seed Data / Demo PDF / MCP Server / Jira Service:** Untouched.
++
++---
++
++## To Connect the Mock Features to Mistral
++
++Three endpoints exist in `frontend/lib/api.ts` that currently fall back to mock data. When the backend adds them, the UI will use real Mistral output automatically:
++
++| Client method | Backend endpoint needed | Mock behavior |
++|--------------|------------------------|---------------|
++| `api.checkAlignment(nodeId)` | `POST /api/check-alignment` | Shows one demo conflict |
++| `api.sprintReview()` | `POST /api/sprint-review` | Shows 5 demo items |
++| `api.breakDown(nodeId)` | `POST /api/break-down` | Shows 4 demo subtasks |
++
++No frontend code changes needed — just implement these three FastAPI routes.
+diff --git a/docs/superpowers/plans/2026-08-01-canvas-density.md b/docs/superpowers/plans/2026-08-01-canvas-density.md
+new file mode 100644
+index 0000000..6b319c4
+--- /dev/null
++++ b/docs/superpowers/plans/2026-08-01-canvas-density.md
+@@ -0,0 +1,42 @@
++# Canvas Information Density & Relation Editing — Implementation Plan
++
++**Goal:** Make task cards information-rich, edges first-class citizens, ⊕ derivation smarter, and Inspector properly structured.
++
++**Architecture:** Pure frontend + minimal backend additions (PATCH /edges, EdgeOut fields). No DB schema changes.
++
++**Priority order (impact ÷ cost):**
++
++---
++### Phase 1: Fix Fake Data (P0)
++
++- [x] **5.1** Replace Stripe/checkout mock data with retrieval-grounding content
++
++### Phase 2: Task Card Info (P0)
++
++- [ ] **1.1** Status pill on task cards
++- [ ] **1.4** Grounded-in-N count chip (BFS lineage count)
++- [ ] **1.5** Assignee initials chip
++- [ ] **1.2** PR badge
++- [ ] **1.3** Jira sync state indicator
++- [ ] **1.6** Relative time
++
++### Phase 3: Edge as First-Class (P1)
++
++- [ ] **2.1** Full relation labels
++- [ ] **2.5** Parallel edge label offset
++- [ ] **3.4** Remove assigned_to or use it
++
++### Phase 4: ⊕ Derivation Redo (P1)
++
++- [ ] **4.1** Mini-menu for kind selection
++- [ ] **4.3** Auto-select + edit after derive
++- [ ] **4.4** Collision-avoiding placement
++- [ ] **4.5** ⊕ only on edge hover
++
++### Phase 5: Inspector (P2)
++
++- [ ] **5.2** Alignment tab self-contained
++- [ ] **5.3** Details tab grouping
++- [ ] **5.4** Downstream dependencies
++- [ ] **5.5** Auto-lineage on task select
++- [ ] **5.6** Collapsible panel
+diff --git a/frontend/app/board/[boardId]/page.tsx b/frontend/app/board/[boardId]/page.tsx
+index 449c0a9..d86bd8a 100644
+--- a/frontend/app/board/[boardId]/page.tsx
++++ b/frontend/app/board/[boardId]/page.tsx
+@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
+ import { ReactFlowProvider } from "@xyflow/react"
+ import { Loader2 } from "lucide-react"
+ 
++import { ActivityPanel } from "@/components/canvas/ActivityPanel"
+ import { Canvas } from "@/components/canvas/Canvas"
+ import { Inspector } from "@/components/canvas/Inspector"
+ import { Toolbar } from "@/components/canvas/Toolbar"
+@@ -145,10 +146,17 @@ export default function BoardPage() {
+     <TooltipProvider delayDuration={350}>
+       <div className="flex h-dvh flex-col overflow-hidden">
+         <TopBar user={user} health={health} />
++        {health && (!health.mistral_configured || !health.jira_configured) && (
++          <div className="bg-warning/10 border-b-[3px] border-warning flex items-center gap-3 px-4 py-2">
++            <span className="text-xs">⚠️</span>
++            <span className="text-xs">Demo mode —{!health.mistral_configured && " Mistral not configured"} {!health.mistral_configured && !health.jira_configured && "·"} {!health.jira_configured && " Jira not configured"}. Set keys in .env for full features.</span>
++          </div>
++        )}
+         <div className="flex min-h-0 flex-1">
+           <ReactFlowProvider>
+             <div className="relative min-w-0 flex-1">
+               <Canvas activeRelation={activeRelation} onUpload={handleUpload} />
++              <ActivityPanel />
+               <Toolbar
+                 activeRelation={activeRelation}
+                 onRelationChange={setActiveRelation}
+diff --git a/frontend/app/globals.css b/frontend/app/globals.css
+index 8ce9864..cd2ed40 100644
+--- a/frontend/app/globals.css
++++ b/frontend/app/globals.css
+@@ -5,7 +5,11 @@
+ 
+ @theme inline {
+   --container-2xl: 1360px;
+-  --radius: 0.5rem;
++  --radius: 0;
++  --radius-sm: 0;
++  --radius-md: 0;
++  --radius-lg: 0;
++  --radius-xl: 0;
+ 
+   --color-background: var(--background);
+   --color-foreground: var(--foreground);
+@@ -39,12 +43,13 @@
+   --color-kind-constraint: var(--kind-constraint);
+   --color-kind-task: var(--kind-task);
+ 
+-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
++  --font-sans: var(--font-space-grotesk), system-ui, sans-serif;
+   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+-  --font-display: var(--font-instrument), Georgia, serif;
++  --font-display: var(--font-press-start), monospace;
++  --font-label: var(--font-press-start), monospace;
+ 
+-  --text-2xs: 0.6875rem;
+-  --text-xs: 0.75rem;
++  --text-2xs: 0.625rem;
++  --text-xs: 0.6875rem;
+   --text-sm: 0.8125rem;
+   --text-base: 0.9375rem;
+   --text-lg: 1.1875rem;
+@@ -60,79 +65,77 @@
+ 
+ @layer base {
+   :root {
+-    /* Warm paper neutrals, tinted off pure white. Ink-blue accent. */
+-    --background: oklch(0.96 0.005 85);
+-    --foreground: oklch(0.21 0.012 250);
+-    --card: oklch(1 0.002 85);
+-    --card-foreground: var(--foreground);
+-    --popover: oklch(1 0.002 85);
+-    --popover-foreground: var(--foreground);
+-
+-    --primary: oklch(0.4 0.078 248);
+-    --primary-foreground: oklch(0.985 0.004 85);
+-    --secondary: oklch(0.955 0.006 85);
+-    --secondary-foreground: oklch(0.28 0.014 250);
+-    --muted: oklch(0.945 0.006 85);
+-    --muted-foreground: oklch(0.5 0.012 250);
+-    --accent: oklch(0.94 0.012 248);
+-    --accent-foreground: oklch(0.3 0.05 248);
+-
+-    --destructive: oklch(0.53 0.18 22);
+-    --destructive-foreground: oklch(0.985 0.004 85);
+-    --success: oklch(0.52 0.11 152);
+-    --success-foreground: oklch(0.985 0.004 85);
+-    --warning: oklch(0.68 0.13 72);
+-    --warning-foreground: oklch(0.24 0.03 72);
+-    --info: oklch(0.55 0.1 248);
+-    --info-foreground: oklch(0.985 0.004 85);
+-
+-    --border: oklch(0.9 0.006 85);
+-    --border-strong: oklch(0.8 0.008 85);
+-    --input: oklch(0.88 0.006 85);
+-    --ring: oklch(0.4 0.078 248);
+-
+-    /* Node kinds. Asset stays neutral because it is raw material. */
+-    --kind-asset: oklch(0.47 0.014 250);
+-    --kind-finding: oklch(0.47 0.1 248);
+-    --kind-constraint: oklch(0.55 0.13 68);
+-    --kind-task: oklch(0.45 0.13 305);
++    --background: #F3EEE1;
++    --foreground: #1B1712;
++    --card: #fff;
++    --card-foreground: #1B1712;
++    --popover: #fff;
++    --popover-foreground: #1B1712;
++
++    --primary: #E10500;
++    --primary-foreground: #fff;
++    --secondary: #F3EEE1;
++    --secondary-foreground: #1B1712;
++    --muted: #EFE9DA;
++    --muted-foreground: #7A7266;
++    --accent: #F3EEE1;
++    --accent-foreground: #8B0000;
++
++    --destructive: #E10500;
++    --destructive-foreground: #fff;
++    --success: #3FA34D;
++    --success-foreground: #fff;
++    --warning: #FFAF00;
++    --warning-foreground: #1B1712;
++    --info: #F2A100;
++    --info-foreground: #1B1712;
++
++    --border: #1B1712;
++    --border-strong: #1B1712;
++    --input: #E4DCC7;
++    --ring: #E10500;
++
++    --kind-asset: #1B1712;
++    --kind-finding: #8A5C00;
++    --kind-constraint: #B34D00;
++    --kind-task: #C40400;
+   }
+ 
+   .dark {
+-    --background: oklch(0.19 0.008 250);
+-    --foreground: oklch(0.96 0.004 85);
+-    --card: oklch(0.23 0.009 250);
+-    --card-foreground: var(--foreground);
+-    --popover: oklch(0.24 0.009 250);
+-    --popover-foreground: var(--foreground);
+-
+-    --primary: oklch(0.72 0.1 248);
+-    --primary-foreground: oklch(0.18 0.01 250);
+-    --secondary: oklch(0.28 0.01 250);
+-    --secondary-foreground: oklch(0.96 0.004 85);
+-    --muted: oklch(0.28 0.01 250);
+-    --muted-foreground: oklch(0.68 0.01 250);
+-    --accent: oklch(0.31 0.024 248);
+-    --accent-foreground: oklch(0.9 0.03 248);
+-
+-    --destructive: oklch(0.62 0.18 22);
+-    --destructive-foreground: oklch(0.18 0.01 250);
+-    --success: oklch(0.66 0.13 152);
+-    --success-foreground: oklch(0.18 0.01 250);
+-    --warning: oklch(0.76 0.13 72);
+-    --warning-foreground: oklch(0.2 0.03 72);
+-    --info: oklch(0.68 0.11 248);
+-    --info-foreground: oklch(0.18 0.01 250);
+-
+-    --border: oklch(0.32 0.01 250);
+-    --border-strong: oklch(0.42 0.012 250);
+-    --input: oklch(0.34 0.01 250);
+-    --ring: oklch(0.72 0.1 248);
+-
+-    --kind-asset: oklch(0.72 0.016 250);
+-    --kind-finding: oklch(0.72 0.11 248);
+-    --kind-constraint: oklch(0.76 0.13 68);
+-    --kind-task: oklch(0.7 0.14 305);
++    --background: #1B1712;
++    --foreground: #F3EEE1;
++    --card: #2B2722;
++    --card-foreground: #F3EEE1;
++    --popover: #2B2722;
++    --popover-foreground: #F3EEE1;
++
++    --primary: #E10500;
++    --primary-foreground: #fff;
++    --secondary: #2B2722;
++    --secondary-foreground: #F3EEE1;
++    --muted: #3B3732;
++    --muted-foreground: #A69E8C;
++    --accent: #3B3732;
++    --accent-foreground: #F3EEE1;
++
++    --destructive: #E10500;
++    --destructive-foreground: #fff;
++    --success: #3FA34D;
++    --success-foreground: #fff;
++    --warning: #FFAF00;
++    --warning-foreground: #1B1712;
++    --info: #F2A100;
++    --info-foreground: #1B1712;
++
++    --border: #5C5647;
++    --border-strong: #7A7266;
++    --input: #3B3732;
++    --ring: #E10500;
++
++    --kind-asset: #C9BFA6;
++    --kind-finding: #F2A100;
++    --kind-constraint: #FF6A00;
++    --kind-task: #E10500;
+   }
+ }
+ 
+@@ -147,116 +150,143 @@
+     -webkit-font-smoothing: antialiased;
+   }
+ 
+-  ::-webkit-scrollbar {
+-    width: 9px;
+-    height: 9px;
+-  }
+-
+-  ::-webkit-scrollbar-track {
+-    @apply bg-transparent;
+-  }
+-
+-  ::-webkit-scrollbar-thumb {
+-    @apply bg-muted-foreground/25 rounded-full border-2 border-transparent bg-clip-padding;
+-  }
+-
+-  ::-webkit-scrollbar-thumb:hover {
+-    @apply bg-muted-foreground/45;
+-  }
+-
+-  input,
+-  textarea,
+-  select,
+-  button {
+-    border-radius: var(--radius);
+-  }
++  ::-webkit-scrollbar { width: 10px; height: 10px; }
++  ::-webkit-scrollbar-thumb { background: var(--muted-foreground); border: 2px solid var(--background); }
+ }
+ 
+ @utility bg-grid-paper {
+-  background-image: radial-gradient(circle, var(--border-strong) 1px, transparent 1px);
+-  background-size: 26px 26px;
++  background-image: radial-gradient(circle, #D8CEB4 1.4px, transparent 1.6px);
++  background-size: 20px 20px;
++  background-position: -2px -2px;
+ }
+ 
+ @utility thin-scrollbar {
+-  &::-webkit-scrollbar {
+-    width: 5px;
+-    height: 5px;
+-  }
+-
+-  &::-webkit-scrollbar-track {
+-    @apply bg-transparent;
+-  }
+-
+-  &::-webkit-scrollbar-thumb {
+-    @apply bg-muted-foreground/20 rounded-full;
+-  }
++  &::-webkit-scrollbar { width: 5px; height: 5px; }
++  &::-webkit-scrollbar-track { @apply bg-transparent; }
++  &::-webkit-scrollbar-thumb { @apply bg-muted-foreground/20 rounded-full; }
+ }
+ 
+ @keyframes accordion-down {
+   from { height: 0; }
+   to { height: var(--radix-accordion-content-height); }
+ }
+-
+ @keyframes accordion-up {
+   from { height: var(--radix-accordion-content-height); }
+   to { height: 0; }
+ }
+-
+ @keyframes rise {
+   from { opacity: 0; transform: translateY(6px); }
+   to { opacity: 1; transform: translateY(0); }
+ }
+-
+ @keyframes lineagePulse {
+   0%, 100% { stroke-opacity: 0.95; }
+   50% { stroke-opacity: 0.45; }
+ }
++@keyframes edgeDashWalk {
++  to { stroke-dashoffset: -36; }
++}
++@keyframes edgeDraw {
++  from { stroke-dashoffset: 200; }
++  to { stroke-dashoffset: 0; }
++}
++@keyframes nodePop {
++  0% { transform: scale(0); }
++  100% { transform: scale(1); }
++}
++@keyframes nodeDelete {
++  0% { transform: scale(1); opacity: 1; }
++  100% { transform: scale(0.8); opacity: 0; }
++}
++@keyframes menuPop {
++  0% { transform: scale(0.9); opacity: 0; }
++  100% { transform: scale(1); opacity: 1; }
++}
+ 
+ /* React Flow */
+ .react-flow__pane { cursor: grab; }
+ .react-flow__pane:active { cursor: grabbing; }
+ .react-flow__node { cursor: pointer; }
++.react-flow__node > * { animation: nodePop 0.15s steps(2) both; }
++.react-flow__node-dragging > * { transform: scale(1.03); }
++.react-flow__node-deleting > * { animation: nodeDelete 0.15s steps(2) forwards; }
+ .react-flow__handle { cursor: crosshair; }
+ 
++/* Edge draw animation */
++.react-flow__edge .react-flow__edge-path {
++  animation: edgeDraw 0.3s steps(4) both;
++}
++
++/* Pixel-active: button press effect */
++.pixel-btn:active {
++  transform: translate(2px, 2px);
++  transition: transform 0.06s steps(1);
++}
++
++/* My Tasks dim transition */
++.react-flow__node {
++  transition: opacity 0.2s steps(1);
++}
++
++/* Context menu */
++.animate-menu-pop {
++  animation: menuPop 0.1s steps(2) both;
++}
++
++/* Sprint Review modal */
++.animate-review-in {
++  animation: nodePop 0.15s steps(3) both;
++}
++
+ .react-flow__edge-path {
+   stroke: var(--border-strong);
+-  stroke-width: 1.5;
++  stroke-width: 2.5;
+ }
+-
+ .react-flow__edge.lineage .react-flow__edge-path {
+   stroke: var(--primary);
+   stroke-width: 2.5;
+   animation: lineagePulse 1.6s ease-in-out infinite;
+ }
+-
+ .react-flow__edge.dimmed .react-flow__edge-path {
+   stroke-opacity: 0.25;
+ }
+-
+-.react-flow__attribution {
+-  display: none;
++.react-flow__edge.edge-active .react-flow__edge-path {
++  stroke-dasharray: 8 4 2 4;
++  animation: edgeDashWalk 0.6s linear infinite;
++}
++.react-flow__edge.edge-open .react-flow__edge-path {
++  stroke-dasharray: 4 4;
+ }
++.react-flow__edge.edge-done .react-flow__edge-path {
++  stroke-dasharray: none;
++}
++
++.react-flow__attribution { display: none; }
+ 
+-/* Minimap nodes are plain SVG rects, so they are coloured by class rather than
+-   through the nodeColor prop, which cannot resolve a CSS variable. */
+-.react-flow__minimap-node.mm-asset { fill: var(--kind-asset); }
+-.react-flow__minimap-node.mm-finding { fill: var(--kind-finding); }
+-.react-flow__minimap-node.mm-constraint { fill: var(--kind-constraint); }
+-.react-flow__minimap-node.mm-task { fill: var(--kind-task); }
++.react-flow__minimap-node.mm-asset { fill: var(--kind-asset); stroke: var(--border); stroke-width: 1.5; }
++.react-flow__minimap-node.mm-finding { fill: var(--kind-finding); stroke: var(--border); stroke-width: 1.5; }
++.react-flow__minimap-node.mm-constraint { fill: var(--kind-constraint); stroke: var(--border); stroke-width: 1.5; }
++.react-flow__minimap-node.mm-task { fill: var(--kind-task); stroke: var(--border); stroke-width: 1.5; }
+ 
+ .react-flow__controls-button {
+   background: var(--card);
+-  border-bottom: 1px solid var(--border);
++  border-bottom: 2px solid var(--border);
+   fill: var(--muted-foreground);
+ }
+-
+ .react-flow__controls-button:hover {
+   background: var(--accent);
+   fill: var(--foreground);
+ }
+ 
++/* Toast pixel styling */
++[data-sonner-toaster] [data-sonner-toast] {
++  border-radius: 0 !important;
++  border: 3px solid var(--border) !important;
++  box-shadow: 3px 3px 0 var(--border) !important;
++}
++
+ @media (prefers-reduced-motion: reduce) {
+-  .react-flow__edge.lineage .react-flow__edge-path { animation: none; }
++  .react-flow__edge.lineage .react-flow__edge-path,
++  .react-flow__edge.edge-active .react-flow__edge-path { animation: none; }
+   [class*="transition-"] { transition-duration: 0.01ms !important; }
+   @keyframes rise { from, to { opacity: 1; transform: none; } }
+ }
+diff --git a/frontend/app/layout.tsx b/frontend/app/layout.tsx
+index 465055c..a88e689 100644
+--- a/frontend/app/layout.tsx
++++ b/frontend/app/layout.tsx
+@@ -1,26 +1,28 @@
+ import type { Metadata } from "next"
+-import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google"
++import { Space_Grotesk, JetBrains_Mono, Press_Start_2P } from "next/font/google"
+ 
+ import { Toaster } from "@/components/ui/toaster"
+ 
+ import "./globals.css"
+ 
+-const inter = Inter({
++const spaceGrotesk = Space_Grotesk({
+   subsets: ["latin"],
+-  variable: "--font-inter",
++  weight: ["400", "500", "600", "700"],
++  variable: "--font-space-grotesk",
+   display: "swap",
+ })
+ 
+ const jetbrains = JetBrains_Mono({
+   subsets: ["latin"],
++  weight: ["400", "500", "600"],
+   variable: "--font-jetbrains",
+   display: "swap",
+ })
+ 
+-const instrument = Instrument_Serif({
++const pressStart = Press_Start_2P({
+   subsets: ["latin"],
+   weight: "400",
+-  variable: "--font-instrument",
++  variable: "--font-press-start",
+   display: "swap",
+ })
+ 
+@@ -32,7 +34,7 @@ export const metadata: Metadata = {
+ 
+ export default function RootLayout({ children }: { children: React.ReactNode }) {
+   return (
+-    <html lang="en" className={`${inter.variable} ${jetbrains.variable} ${instrument.variable}`}>
++    <html lang="en" className={`${spaceGrotesk.variable} ${jetbrains.variable} ${pressStart.variable}`}>
+       <body className="min-h-dvh antialiased">
+         {children}
+         <Toaster />
+diff --git a/frontend/app/login/page.tsx b/frontend/app/login/page.tsx
+index 91f4f13..56e0358 100644
+--- a/frontend/app/login/page.tsx
++++ b/frontend/app/login/page.tsx
+@@ -52,7 +52,7 @@ export default function LoginPage() {
+           <span className="text-sm font-medium tracking-tight">Spatial Brain</span>
+         </div>
+ 
+-        <h1 className="font-display mt-8 text-3xl leading-tight tracking-tight">
++        <h1 className="mt-8 text-3xl leading-tight tracking-tight font-bold">
+           Pick who you are on the team.
+         </h1>
+         <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
+diff --git a/frontend/app/page.tsx b/frontend/app/page.tsx
+index 481d6d6..522c9b0 100644
+--- a/frontend/app/page.tsx
++++ b/frontend/app/page.tsx
+@@ -21,63 +21,62 @@ const chain = [
+ 
+ export default function Home() {
+   return (
+-    <main className="relative min-h-dvh overflow-hidden">
++    <main className="relative min-h-dvh overflow-hidden bg-[#F3EEE1]">
+       <div className="bg-grid-paper pointer-events-none absolute inset-0 opacity-60" />
+ 
+       <div className="relative mx-auto flex min-h-dvh max-w-5xl flex-col px-6 py-10 sm:px-10">
+         <header className="flex items-center justify-between">
+-          <div className="flex items-center gap-2.5">
+-            <span className="bg-primary flex size-7 items-center justify-center rounded-md">
+-              <span className="bg-primary-foreground size-2 rounded-full" />
++          <div className="flex items-center gap-3">
++            <span className="bg-[#F3EEE1] flex size-9 items-center justify-center rounded-none border-[3px] border-[#1B1712] shadow-[3px_3px_0_#1B1712]">
++              <span className="bg-[#E10500] size-2.5" />
+             </span>
+-            <span className="text-sm font-medium tracking-tight">Spatial Brain</span>
++            <span className="font-[family-name:var(--font-label)] text-[10px] tracking-[0.05em]">SPATIAL BRAIN</span>
+           </div>
+           <Link
+             href="/login"
+-            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
++            className="font-[family-name:var(--font-label)] text-[9px] bg-transparent border-[3px] border-[#1B1712] shadow-[3px_3px_0_#1B1712] px-4 py-2 text-[#1B1712] hover:bg-[#F3EEE1] pixel-btn"
+           >
+-            Sign in
++            SIGN IN
+           </Link>
+         </header>
+ 
+         <div className="flex flex-1 flex-col justify-center py-16">
+-          <p className="text-muted-foreground text-xs font-medium tracking-[0.14em] uppercase">
+-            Mistral × Atlassian
++          <p className="font-[family-name:var(--font-label)] text-[10px] text-[#E10500] tracking-[0.1em] flex items-center gap-3">
++            <span className="inline-block w-5 h-2.5 bg-[#FFAF00]" />
++            MISTRAL &times; ATLASSIAN
+           </p>
+-          <h1 className="font-display mt-5 max-w-3xl text-4xl leading-[1.05] tracking-tight text-balance sm:text-5xl">
++          <h1 className="font-[family-name:var(--font-sans)] mt-5 max-w-3xl text-4xl leading-[1.04] font-bold tracking-[-0.02em] text-balance sm:text-5xl">
+             The reasoning between a paper and a pull request stops disappearing.
+           </h1>
+-          <p className="text-muted-foreground mt-6 max-w-xl text-lg leading-relaxed">
++          <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#5C5647]">
+             A scientist&rsquo;s finding, the constraint it implies, and the ticket an engineer
+             picks up are the same object seen from different sides. Spatial Brain keeps them
+             connected, so an agent can walk back from the task to the page it came from.
+           </p>
+ 
+-          <div className="mt-10 flex flex-wrap items-center gap-3">
++          <div className="mt-10 flex flex-wrap items-center gap-4">
+             <Link
+               href="/login"
+-              className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-ring inline-flex h-10 items-center gap-2 rounded-lg px-5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
++              className="font-[family-name:var(--font-label)] text-[11px] text-white bg-[#E10500] border-[3px] border-[#1B1712] shadow-[5px_5px_0_#1B1712] px-5 py-4 inline-flex items-center gap-3 hover:bg-[#c40400] pixel-btn"
+             >
+-              Open the demo board
++              OPEN THE DEMO BOARD
+               <ArrowRight className="size-4" />
+             </Link>
+-            <span className="text-muted-foreground text-sm">
++            <span className="font-[family-name:var(--font-mono)] text-[13px] text-[#7A7266]">
+               Three seeded accounts, no signup.
+             </span>
+           </div>
+         </div>
+ 
+-        <div className="border-border grid gap-px border-t pt-px sm:grid-cols-3">
++        <div className="border-t-[3px] border-[#1B1712] pt-[30px] grid sm:grid-cols-3 gap-[26px]">
+           {chain.map(({ icon: Icon, label, copy }, index) => (
+-            <div key={label} className="pt-7 sm:pr-8">
+-              <div className="flex items-center gap-2.5">
+-                <Icon className="text-muted-foreground size-4" strokeWidth={1.75} />
+-                <span className="text-2xs text-muted-foreground font-mono tabular-nums">
+-                  0{index + 1}
+-                </span>
++            <div key={label} className="border-l-[3px] border-[#E4DCC7] pl-4">
++              <div className="flex items-center gap-[10px]">
++                <span className="bg-[#FFAF00] w-[30px] h-[30px] border-[3px] border-[#1B1712] flex items-center justify-center"><Icon className="size-4" /></span>
++                <span className="font-[family-name:var(--font-label)] text-[10px] text-[#B4A98C]">0{index + 1}</span>
+               </div>
+-              <h2 className="mt-3 text-sm font-medium">{label}</h2>
+-              <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">{copy}</p>
++              <h2 className="mt-[14px] text-[15px] font-semibold">{label}</h2>
++              <p className="text-[#6B6455] mt-2 text-[13.5px] leading-[1.55]">{copy}</p>
+             </div>
+           ))}
+         </div>
+diff --git a/frontend/components/canvas/ActivityPanel.tsx b/frontend/components/canvas/ActivityPanel.tsx
+new file mode 100644
+index 0000000..860d9c2
+--- /dev/null
++++ b/frontend/components/canvas/ActivityPanel.tsx
+@@ -0,0 +1,58 @@
++"use client"
++
++import { useState } from "react"
++import { Activity, X } from "lucide-react"
++
++interface ActivityItem {
++  action: string
++  detail: string
++  who: string
++  when: string
++}
++
++export function ActivityPanel() {
++  const [open, setOpen] = useState(false)
++
++  // ponytail: demo mock — wire to GET /api/boards/{id}/activity when backed
++  const activities: ActivityItem[] = [
++    { action: "PR reported", detail: "Pull request #14 merged — source-span citation component", who: "Marco", when: "2 min ago" },
++    { action: "Node created", detail: "Constraint: 'Every claim must cite a source span'", who: "Aisha", when: "8 min ago" },
++    { action: "Edge connected", detail: "supports: 'Retrieval latency' → 'Cite source span'", who: "Priya", when: "15 min ago" },
++    { action: "Document parsed", detail: "retrieval-grounding-study.pdf — 3 findings, 2 constraints", who: "Mistral", when: "20 min ago" },
++    { action: "Task assigned", detail: "'Add inline source spans' assigned to Marco — Jira SB-142", who: "Priya", when: "25 min ago" },
++    { action: "Agent queried", detail: "spatial_get_task_context called for task 'Add inline source spans'", who: "Cursor Agent", when: "30 min ago" },
++  ]
++
++  if (!open) {
++    return (
++      <button onClick={() => setOpen(true)}
++        className="border-border bg-card absolute right-4 top-[70px] z-20 flex size-9 items-center justify-center rounded-none border-[3px] shadow-[2px_2px_0_#1B1712] hover:bg-accent pixel-btn"
++        title="Activity log">
++        <Activity className="size-4" strokeWidth={2} />
++      </button>
++    )
++  }
++
++  return (
++    <div className="border-border bg-card animate-menu-pop absolute right-4 top-[70px] z-20 w-72 rounded-none border-[3px] shadow-[3px_3px_0_#1B1712]">
++      <header className="border-border flex items-center justify-between border-b-[3px] px-3.5 py-2.5">
++        <span className="font-[family-name:var(--font-label)] text-[9px]">ACTIVITY LOG</span>
++        <button onClick={() => setOpen(false)} className="hover:bg-accent rounded p-0.5">
++          <X className="size-3.5" />
++        </button>
++      </header>
++      <div className="thin-scrollbar max-h-80 space-y-0.5 overflow-y-auto p-0.5">
++        {activities.map((a, i) => (
++          <div key={i} className="hover:bg-accent/50 rounded px-3 py-2">
++            <div className="flex items-center justify-between">
++              <span className="text-2xs font-medium">{a.action}</span>
++              <span className="text-2xs text-muted-foreground font-mono">{a.when}</span>
++            </div>
++            <p className="text-muted-foreground mt-0.5 text-2xs">{a.detail}</p>
++            <span className="text-muted-foreground/70 mt-0.5 block text-2xs">— {a.who}</span>
++          </div>
++        ))}
++      </div>
++    </div>
++  )
++}
+diff --git a/frontend/components/canvas/Canvas.tsx b/frontend/components/canvas/Canvas.tsx
+index 62fd2e2..cbca61d 100644
+--- a/frontend/components/canvas/Canvas.tsx
++++ b/frontend/components/canvas/Canvas.tsx
+@@ -18,6 +18,7 @@ import {
+ } from "@xyflow/react"
+ 
+ import { useToast } from "@/components/ui/use-toast"
++import { getAncestorIds } from "@/lib/lineage"
+ import { RELATION_LABEL, type NodeKind, type RelationType } from "@/lib/types"
+ import { useGraphStore } from "@/stores/graphStore"
+ 
+@@ -46,13 +47,14 @@ interface CanvasProps {
+ 
+ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
+   const wrapper = useRef<HTMLDivElement>(null)
+-  const { screenToFlowPosition } = useReactFlow()
++  const { screenToFlowPosition, setCenter } = useReactFlow()
+   const { toast } = useToast()
+   const [dragOver, setDragOver] = useState(false)
+   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string; kind: string; isTask?: boolean; isDone?: boolean } | null>(null)
+   const [edgeMenu, setEdgeMenu] = useState<{ x: number; y: number; edgeId: string; relation: string } | null>(null)
+   // ponytail: kind is string not NodeKind because "" signals canvas context menu
+   const connectingSource = useRef<{ nodeId: string; kind: NodeKind } | null>(null)
++  const taskStatusMapPrev = useRef<{ map: Map<string, string>; len: number; ids: string[]; stats: string[] } | null>(null)
+ 
+   const nodes = useGraphStore((state) => state.nodes)
+   const edges = useGraphStore((state) => state.edges)
+@@ -63,6 +65,8 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
+   const lineageIds = useGraphStore((state) => state.lineageIds)
+ 
+   const select = useGraphStore((state) => state.select)
++  const focusLineage = useGraphStore((state) => state.focusLineage)
++  const clearLineage = useGraphStore((state) => state.clearLineage)
+   const myTaskFilter = useGraphStore((state) => state.myTaskFilter)
+   const nudgeNode = useGraphStore((state) => state.nudgeNode)
+   const persistPosition = useGraphStore((state) => state.persistPosition)
+@@ -75,11 +79,11 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
+   const addNode = useGraphStore((state) => state.addNode)
+ 
+   const handleDerive = useCallback(
+-    (edgeId: string, position: { x: number; y: number }) => {
+-      // position is already in flow coordinates from EdgeLabelRenderer via getSmoothStepPath
++    (edgeId: string, kind: "finding" | "constraint" | "task", position: { x: number; y: number }) => {
+       const edge = edges.find((e) => e.id === edgeId)
+       if (!edge) return
+-      void addNode("finding", "Branch Idea", position.x, position.y + 40).then((newNode) => {
++      const titles: Record<string, string> = { finding: "New finding", constraint: "New constraint", task: "New task" }
++      void addNode(kind, titles[kind], position.x, position.y + 50).then((newNode) => {
+         if (newNode) void addEdge(edge.source_id, newNode.id, "derived_from")
+       })
+     },
+@@ -131,10 +135,41 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
+     }))
+   }, [nodes, members, assets, selectedNodeId, lineageActive, lineageIds, focusedTaskId, measured])
+ 
++  // Precompute task statuses — avoids O(E×N) on every drag frame
++  const taskStatusMap = useMemo(() => {
++    const prev = taskStatusMapPrev.current
++    const same = prev && nodes.length === prev.len && nodes.every((n, i) => n.id === prev.ids[i] && n.task_status === prev.stats[i])
++    if (same) return prev.map
++    const map = new Map(nodes.filter((n) => n.kind === "task").map((n) => [n.id, n.task_status]))
++    taskStatusMapPrev.current = { map, len: nodes.length, ids: nodes.map((n) => n.id), stats: nodes.map((n) => n.task_status) }
++    return map
++  }, [nodes])
++
+   const flowEdges = useMemo<FlowEdge[]>(
+-    () =>
+-      edges.map((edge) => {
++    () => {
++      // Role colours: scientist (derived_from) → teal, PM (supports/constrains) → indigo, engineer (implements) → purple
++      const relationColor = (rel: string) => {
++        if (rel === "derived_from") return "#00b894"
++        if (rel === "implements") return "#7c3aed"
++        return "#4f46e5" // supports, constrains
++      }
++      // Pipeline status from target task: done → solid, in_progress/assigned → dash-dot, open → dotted
++      return edges.map((edge) => {
++        const targetStatus = taskStatusMap.get(edge.target_id) ?? ""
++        const isTaskTarget = taskStatusMap.has(edge.target_id)
+         const inLineage = lineageActive && lineageIds.has(edge.source_id) && lineageIds.has(edge.target_id)
++        const color = relationColor(edge.relation)
++        const isActive = isTaskTarget && (targetStatus === "in_progress" || targetStatus === "assigned")
++        const isOpen = isTaskTarget && targetStatus === "open"
++        const isDone = isTaskTarget && (targetStatus === "done" || targetStatus === "in_review")
++
++        const classes = [
++          lineageActive ? (inLineage ? "lineage" : "dimmed") : "",
++          isActive && !inLineage ? "edge-active" : "",
++          isOpen && !inLineage ? "edge-open" : "",
++          isDone && !inLineage ? "edge-done" : "",
++        ].filter(Boolean).join(" ")
++
+         return {
+           id: edge.id,
+           source: edge.source_id,
+@@ -142,7 +177,9 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
+           type: "custom",
+           data: { onDerive: handleDerive, edgeRelation: edge.relation },
+           label: RELATION_LABEL[edge.relation],
+-          className: lineageActive ? (inLineage ? "lineage" : "dimmed") : undefined,
++          className: classes || undefined,
++          style: inLineage ? undefined : { stroke: color, strokeWidth: isActive ? 3.5 : 2.5 },
++          markerEnd: { type: "arrowclosed", color },
+           labelBgPadding: [5, 2] as [number, number],
+           labelBgBorderRadius: 4,
+           labelStyle: {
+@@ -152,18 +189,16 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
+           },
+           labelBgStyle: { fill: "var(--background)", fillOpacity: 0.92 },
+         }
+-      }),
+-    [edges, lineageActive, lineageIds],
++      })
++    },
++    [edges, taskStatusMap, handleDerive, lineageActive, lineageIds],
+   )
+ 
+   const onNodesChange = useCallback(
+     (changes: NodeChange<FlowNode<GraphNodeData>>[]) => {
+-      // Nodes are derived from the store, so a drag only has to update it locally.
+-      // The write to the server happens once, on drag end.
++      // React Flow manages drag positions internally (zero store churn).
++      // Only track dimensions for the minimap.
+       for (const change of changes) {
+-        if (change.type === "position" && change.position) {
+-          nudgeNode(change.id, change.position.x, change.position.y)
+-        }
+         if (change.type === "dimensions" && change.dimensions) {
+           const { width, height } = change.dimensions
+           setMeasured((previous) =>
+@@ -227,7 +262,16 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
+           setDragging(null)
+           void persistPosition(node.id, node.position.x, node.position.y)
+         }}
+-        onNodeClick={(_, node) => select(node.id)}
++        onNodeClick={(_, node) => {
++          select(node.id)
++          const graphNode = (node.data as GraphNodeData).node
++          if (graphNode.kind === "task") {
++            const ancestorIds = getAncestorIds(node.id, nodes, edges)
++            focusLineage(node.id, ancestorIds)
++          } else {
++            clearLineage()
++          }
++        }}
+         onNodeContextMenu={(event, node) => {
+           event.preventDefault()
+           const graphNode = (node.data as GraphNodeData).node
+@@ -313,8 +357,8 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
+           onCreate={handleContextMenuAction}
+           onDelete={() => { removeNode(contextMenu.nodeId); setContextMenu(null); }}
+           onFocus={() => {
+-            const nodeEl = document.querySelector(`.react-flow__node[data-id="${contextMenu.nodeId}"]`)
+-            if (nodeEl) nodeEl.scrollIntoView({ behavior: "smooth", block: "center" })
++            const node = nodes.find((n) => n.id === contextMenu.nodeId)
++            if (node) setCenter(node.x + 132, node.y + 50, { duration: 300 })
+             setContextMenu(null)
+           }}
+           onCopyId={() => {
+diff --git a/frontend/components/canvas/CustomEdge.tsx b/frontend/components/canvas/CustomEdge.tsx
+index afe16dc..9b2264a 100644
+--- a/frontend/components/canvas/CustomEdge.tsx
++++ b/frontend/components/canvas/CustomEdge.tsx
+@@ -1,5 +1,6 @@
+ "use client"
+ 
++import { useState } from "react"
+ import {
+   BaseEdge,
+   EdgeLabelRenderer,
+@@ -16,38 +17,41 @@ export function CustomEdge({
+   sourcePosition,
+   targetPosition,
+   data,
++  style,
++  markerEnd,
+ }: EdgeProps) {
++  const [menuOpen, setMenuOpen] = useState(false)
+   const [edgePath, labelX, labelY] = getSmoothStepPath({
+-    sourceX,
+-    sourceY,
+-    sourcePosition,
+-    targetX,
+-    targetY,
+-    targetPosition,
++    sourceX, sourceY, sourcePosition,
++    targetX, targetY, targetPosition,
+   })
+ 
+   const onDerive = (data as Record<string, unknown> | undefined)
+-    ?.onDerive as ((edgeId: string, position: { x: number; y: number }) => void) | undefined
++    ?.onDerive as ((edgeId: string, kind: "finding" | "constraint" | "task", position: { x: number; y: number }) => void) | undefined
+ 
+   return (
+     <>
+-      <BaseEdge id={id} path={edgePath} />
++      <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
+       <EdgeLabelRenderer>
+-        <button
+-          className="nodrag nopan absolute cursor-pointer rounded-full bg-primary text-primary-foreground flex size-5 items-center justify-center text-[11px] font-bold leading-none opacity-25 transition-all hover:scale-125 hover:opacity-100 hover:shadow-lg"
+-          style={{
+-            left: labelX,
+-            top: labelY,
+-            transform: "translate(-50%, -50%)",
+-          }}
+-          onClick={(e) => {
+-            e.stopPropagation()
+-            onDerive?.(id, { x: labelX, y: labelY })
+-          }}
+-          title="Branch from here"
+-        >
+-          ⊕
+-        </button>
++        {!menuOpen && (
++          <button
++            className="nodrag nopan absolute cursor-pointer rounded-full bg-primary text-primary-foreground flex size-5 items-center justify-center text-[11px] font-bold leading-none opacity-[0.01] hover:opacity-100 hover:scale-125 transition-all"
++            style={{ left: labelX, top: labelY, transform: "translate(-50%, -50%)" }}
++            onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
++            title="Branch from here"
++          >⊕</button>
++        )}
++        {menuOpen && (
++          <div className="nodrag nopan absolute z-50 min-w-[140px] rounded-none border-[3px] border-[#1B1712] bg-white shadow-[3px_3px_0_#1B1712] py-0.5"
++            style={{ left: labelX, top: labelY, transform: "translate(-50%, -50%)" }}>
++            {(["finding", "constraint", "task"] as const).map((kind) => (
++              <button key={kind} className="hover:bg-accent flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs"
++                onClick={(e) => { e.stopPropagation(); onDerive?.(id, kind, { x: labelX, y: labelY }); setMenuOpen(false) }}>
++                {kind === "finding" ? "Add Finding" : kind === "constraint" ? "Add Constraint" : "Create Task"}
++              </button>
++            ))}
++          </div>
++        )}
+       </EdgeLabelRenderer>
+     </>
+   )
+diff --git a/frontend/components/canvas/EdgeContextMenu.tsx b/frontend/components/canvas/EdgeContextMenu.tsx
+index 9bb99e4..4680444 100644
+--- a/frontend/components/canvas/EdgeContextMenu.tsx
++++ b/frontend/components/canvas/EdgeContextMenu.tsx
+@@ -32,7 +32,7 @@ export function EdgeContextMenu({ x, y, currentRelation, onClose, onDelete, onCh
+   return (
+     <div
+       ref={menuRef}
+-      className="border-border bg-card animate-rise fixed z-50 min-w-[200px] overflow-hidden rounded-lg border py-1 shadow-lg"
++      className="border-border bg-card animate-menu-pop fixed z-50 min-w-[200px] overflow-hidden rounded-none border-[3px] py-1 shadow-[3px_3px_0_var(--border)]"
+       style={{ left: x, top: y }}
+     >
+       <p className="text-muted-foreground px-3.5 py-1.5 text-2xs font-medium tracking-[0.08em] uppercase">
+diff --git a/frontend/components/canvas/GraphNodeCard.tsx b/frontend/components/canvas/GraphNodeCard.tsx
+index 187bb3f..a9cd40e 100644
+--- a/frontend/components/canvas/GraphNodeCard.tsx
++++ b/frontend/components/canvas/GraphNodeCard.tsx
+@@ -1,6 +1,6 @@
+ "use client"
+ 
+-import { memo } from "react"
++import { memo, useMemo } from "react"
+ import { Handle, Position, type NodeProps } from "@xyflow/react"
+ import {
+   FileText,
+@@ -13,6 +13,8 @@ import {
+ } from "lucide-react"
+ 
+ import { cn } from "@/lib/utils"
++import { countAncestors } from "@/lib/lineage"
++import { useGraphStore } from "@/stores/graphStore"
+ import type { GraphNode, NodeKind, ParseState } from "@/lib/types"
+ 
+ export interface GraphNodeData extends Record<string, unknown> {
+@@ -95,18 +97,25 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
+   const Icon = meta.icon
+   const isTask = node.kind === "task"
+   const priority = isTask ? detectPriority(node) : null
++  const storeNodes = useGraphStore((s) => s.nodes)
++  const storeEdges = useGraphStore((s) => s.edges)
++  const groundedCount = useMemo(
++    () => isTask ? countAncestors(node.id, storeNodes, storeEdges) : 0,
++    [node.id, isTask, storeNodes, storeEdges],
++  )
+ 
+   return (
+     <div
+       className={cn(
+-        "group bg-card w-[264px] rounded-xl border border-l-3 transition-[opacity,box-shadow,border-color] duration-200",
+-        meta.accent,
++        "group bg-card w-[264px] rounded-none border-[3px] border-border shadow-[3px_3px_0_#1B1712] transition-[opacity,box-shadow,border-color] duration-200",
+         dimmed && "pointer-events-none opacity-25",
+-        inLineage && !isFocusedTask && "ring-primary/60 border-primary/30 ring-2",
++        inLineage && !isFocusedTask && "ring-primary ring-2",
+         isFocusedTask && "ring-primary ring-2",
+         selected && !inLineage && "ring-ring ring-2",
+       )}
+     >
++      <div className="bg-kind-asset h-[4px] w-full -mx-0 -mt-0 mb-2 rounded-none"
++        style={{ backgroundColor: `var(--kind-${node.kind})` }} />
+       <Handle
+         type="target"
+         position={Position.Left}
+@@ -169,15 +178,22 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
+ 
+           {isTask && (
+             <>
++              {/* Status pill */}
++              <span className={cn("text-2xs rounded px-1.5 py-0.5 font-medium", node.task_status === "done" || node.task_status === "in_review" ? "bg-success/15 text-success" : node.task_status === "in_progress" || node.task_status === "assigned" ? "bg-info/15 text-info" : "bg-muted text-muted-foreground")}>
++                {(node.task_status || "open").replace(/_/g, " ")}
++              </span>
++              {groundedCount > 0 && (
++                <span className="text-2xs text-muted-foreground font-mono">grounded in {groundedCount}</span>
++              )}
+               {priority && (
+               <span className={cn("text-2xs rounded px-1.5 py-0.5 font-mono font-semibold", PRIORITY_COLORS[priority])}>
+                 {priority}
+               </span>
+             )}
+             {assigneeName ? (
+-                <span className="text-2xs text-muted-foreground truncate">{assigneeName}</span>
++                <span className="bg-accent text-accent-foreground text-2xs rounded px-1.5 py-0.5 font-medium" title={assigneeName}>{assigneeName.charAt(0)}</span>
+               ) : (
+-                <span className="text-2xs text-muted-foreground/70">Unassigned</span>
++                <span className="text-2xs text-muted-foreground/70">—</span>
+               )}
+ 
+               <span className="ml-auto flex shrink-0 items-center gap-1.5">
+diff --git a/frontend/components/canvas/Inspector.tsx b/frontend/components/canvas/Inspector.tsx
+index 8c6d64e..0adde0b 100644
+--- a/frontend/components/canvas/Inspector.tsx
++++ b/frontend/components/canvas/Inspector.tsx
+@@ -283,10 +283,10 @@ function TaskInspector({ node }: { node: GraphNode }) {
+       // ponytail: demo mock — wire to Mistral API when backend supports it
+       await new Promise((resolve) => setTimeout(resolve, 1200))
+       const subtasksList = [
+-        { title: "Implement Stripe PaymentElement integration", body: "Replace current payment form with Stripe PaymentElement. Handle card validation, error states, and 3D Secure flow." },
+-        { title: "Build saved-payment selector UI", body: "Design and implement the saved-card picker component. Show last-4 digits, brand icon, and expiry. Support add/remove." },
+-        { title: "Migrate address autofill from account profile", body: "Pre-fill step 1 with user's saved address. Handle multi-address accounts and billing/shipping toggle." },
+-        { title: "Add analytics tracking for checkout funnel", body: "Instrument each step with custom events. Track drop-off rates, time-to-complete, and payment method selection." },
++        { title: "Instrument retrieval latency pipeline", body: "Add tracing spans to measure p50/p95/p99 at each stage: query parsing, embedding lookup, reranking, source-span assembly." },
++        { title: "Build source-span citation UI", body: "Render inline citations with page numbers and quote previews. Support hover-to-preview and click-to-scroll-to-source." },
++        { title: "Implement cross-finding contradiction detection", body: "Mistral-powered check that flags when two connected findings make incompatible claims, with node-pair citation." },
++        { title: "Design reviewer trust A/B test", body: "Protocol comparing answers with and without inline source spans. Metrics: rejection rate, time-to-verify, confidence score." },
+       ]
+       setSubtasks(subtasksList)
+     } catch {
+@@ -408,25 +408,6 @@ function TaskInspector({ node }: { node: GraphNode }) {
+           )}
+         </section>
+ 
+-        <section>
+-          <h3 className="text-2xs text-muted-foreground mb-2.5 font-medium tracking-[0.08em] uppercase">
+-            Alignment
+-          </h3>
+-          <Button
+-            size="sm"
+-            variant="outline"
+-            onClick={checkAlignment}
+-            disabled={checkingAlignment}
+-            className="h-8 gap-2 text-xs"
+-          >
+-            {checkingAlignment && <Loader2 className="size-3.5 animate-spin" />}
+-            Check Alignment
+-          </Button>
+-          <p className="text-muted-foreground mt-2 text-xs leading-relaxed">
+-            Mistral scans connected context for contradictions that could derail this task.
+-          </p>
+-        </section>
+-
+         <JiraBlock node={node} />
+         <PullRequestBlock node={node} />
+       </TabsContent>
+@@ -509,6 +490,19 @@ function TaskInspector({ node }: { node: GraphNode }) {
+         value="alignment"
+         className="thin-scrollbar mt-0 flex-1 space-y-5 overflow-y-auto px-5 py-5"
+       >
++        <Button
++          size="sm"
++          variant="outline"
++          onClick={checkAlignment}
++          disabled={checkingAlignment}
++          className="h-8 gap-2 text-xs w-full"
++        >
++          {checkingAlignment && <Loader2 className="size-3.5 animate-spin" />}
++          Scan for contradictions
++        </Button>
++        {!alignResult && !checkingAlignment && (
++          <p className="text-muted-foreground text-xs">Mistral scans connected context for contradictions that could derail this task.</p>
++        )}
+         {alignResult ? (
+           alignResult.conflicts.length > 0 ? (
+             <div className="space-y-4">
+diff --git a/frontend/components/canvas/NodeContextMenu.tsx b/frontend/components/canvas/NodeContextMenu.tsx
+index a9b9960..c02a3a0 100644
+--- a/frontend/components/canvas/NodeContextMenu.tsx
++++ b/frontend/components/canvas/NodeContextMenu.tsx
+@@ -42,7 +42,7 @@ export function NodeContextMenu({
+   return (
+     <div
+       ref={menuRef}
+-      className="border-border bg-card animate-rise fixed z-50 min-w-[180px] overflow-hidden rounded-lg border py-1 shadow-lg"
++      className="border-border bg-card animate-menu-pop fixed z-50 min-w-[180px] overflow-hidden rounded-none border-[3px] py-1 shadow-[3px_3px_0_#1B1712]"
+       style={{ left: x, top: y }}
+     >
+       {/* Create actions — node or canvas */}
+diff --git a/frontend/components/canvas/Toolbar.tsx b/frontend/components/canvas/Toolbar.tsx
+index 62b47c9..c8910b8 100644
+--- a/frontend/components/canvas/Toolbar.tsx
++++ b/frontend/components/canvas/Toolbar.tsx
+@@ -76,6 +76,7 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
+   const addNode = useGraphStore((state) => state.addNode)
+   const nodes = useGraphStore((state) => state.nodes)
+   const fileInput = useRef<HTMLInputElement>(null)
++  const [expanded, setExpanded] = useState(false)
+   const [reviewOpen, setReviewOpen] = useState(false)
+   const [reviewLoading, setReviewLoading] = useState(false)
+   const [reviewData, setReviewData] = useState<{
+@@ -91,15 +92,15 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
+       await new Promise((resolve) => setTimeout(resolve, 800))
+       setReviewData({
+         shipped: [
+-          { title: "Build 2-Step Checkout", assignee: "张工", summary: "PaymentElement integration complete, saved-payment selector working E2E." },
+-          { title: "Auth System Migration", assignee: "李工", summary: "Magic-link auth replaces OTP — clean migration for 100% of users." },
++          { title: "Retrieval latency instrumentation", assignee: "Marco", summary: "Instrumentation across three pilot teams confirmed retrieval dominates 68% of end-to-end latency. Findings flagged for the answer renderer." },
++          { title: "Source-span citation in answers", assignee: "Marco", summary: "Every generated claim now carries an inline source span. Reviewers verify 11 of 12 now pass source checks (up from 2 of 9)." },
+         ],
+         blocked: [
+-          { title: "Payment Selector UI", assignee: "王工", summary: "Waiting on final design mockups — feedback sent, expecting final by EOD Friday." },
++          { title: "Cross-document contradiction detection", assignee: "Aisha", summary: "Mistral OCR extraction on the July 28 meeting notes conflicts with the design decision log on auth strategy. Blocked until the team aligns." },
+         ],
+         next: [
+-          { title: "PCI Compliance Audit", assignee: "张工", summary: "External audit scheduled Aug 5. SAQ-A self-assessment + documentation." },
+-          { title: "Onboarding Flow Rewrite", assignee: "李工", summary: "Move from 5-step to 2-step. Design specs finalised." },
++          { title: "Semantic retrieval pipeline", assignee: "Marco", summary: "Replace keyword retrieval with dense embeddings. Target: sub-200ms p95 latency with 90%+ precision@5." },
++          { title: "Reviewer trust study", assignee: "Aisha", summary: "Analyse the shadowing data from the sprint to quantify how source-span presence changes rejection rate. Six sessions recorded." },
+         ],
+       })
+       setReviewOpen(true)
+@@ -123,7 +124,12 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
+ 
+   return (
+     <>
+-    <div className="border-border bg-card/95 absolute bottom-5 left-5 z-10 flex items-center gap-1 rounded-xl border p-1.5 backdrop-blur">
++    {!expanded && (
++      <button onClick={() => setExpanded(true)} className="border-border bg-card absolute bottom-5 left-5 z-10 flex size-11 items-center justify-center rounded-none border-[3px] shadow-[3px_3px_0_#1B1712] text-lg font-bold pixel-btn" title="Open toolbar">+</button>
++    )}
++    {expanded && (
++    <div className="border-border bg-card absolute bottom-5 left-5 z-10 flex items-center gap-1 rounded-none border-[3px] shadow-[3px_3px_0_#1B1712] p-1.5">
++      <button onClick={() => setExpanded(false)} className="hover:bg-accent flex h-8 items-center rounded-none border-[2px] border-[#1B1712] px-2 text-xs font-bold pixel-btn" title="Collapse">×</button>
+       {ADD_BUTTONS.map(({ kind, label, icon: Icon, hint }) => (
+         <Tooltip key={kind}>
+           <TooltipTrigger asChild>
+@@ -216,10 +222,11 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
+         <TooltipContent side="top">Mistral summarises what shipped, what's blocked, what's next</TooltipContent>
+       </Tooltip>
+     </div>
++    )}
+ 
+     {/* Sprint Review Dialog */}
+     {reviewOpen && reviewData && (
+-      <div className="border-border bg-card animate-rise fixed inset-4 z-50 flex flex-col overflow-hidden rounded-xl border shadow-xl md:inset-10 lg:inset-x-60">
++      <div className="border-border bg-card animate-review-in fixed inset-4 z-50 flex flex-col overflow-hidden rounded-none border-[3px] shadow-[5px_5px_0_#1B1712] md:inset-10 lg:inset-x-60">
+         <header className="border-border flex items-center justify-between border-b px-5 py-3.5">
+           <h2 className="text-sm font-semibold">Sprint Review</h2>
+           <button
+diff --git a/frontend/lib/lineage.ts b/frontend/lib/lineage.ts
+new file mode 100644
+index 0000000..f77e16c
+--- /dev/null
++++ b/frontend/lib/lineage.ts
+@@ -0,0 +1,77 @@
++import type { GraphEdge, GraphNode } from "./types"
++
++const CONTEXT_RELATIONS = new Set(["derived_from", "supports", "constrains", "implements"])
++
++/**
++ * BFS count of upstream ancestors reachable via context relations.
++ * Cycle-safe, deduplicated, matches backend lineage._walk semantics.
++ */
++export function countAncestors(
++  taskId: string,
++  nodes: GraphNode[],
++  edges: GraphEdge[],
++  max = 60,
++): number {
++  const adjacency = new Map<string, string[]>()
++  for (const e of edges) {
++    if (!CONTEXT_RELATIONS.has(e.relation)) continue
++    const list = adjacency.get(e.source_id) ?? []
++    list.push(e.target_id)
++    adjacency.set(e.source_id, list)
++  }
++
++  const visited = new Set<string>()
++  const queue = [taskId]
++  while (queue.length > 0 && visited.size < max) {
++    const current = queue.shift()!
++    const neighbours = adjacency.get(current) ?? []
++    for (const n of neighbours) {
++      if (!visited.has(n) && n !== taskId) {
++        visited.add(n)
++        queue.push(n)
++      }
++    }
++  }
++  return visited.size
++}
++
++/**
++ * Return the IDs of all upstream ancestors reachable via context relations.
++ */
++export function getAncestorIds(
++  taskId: string,
++  nodes: GraphNode[],
++  edges: GraphEdge[],
++  max = 60,
++): string[] {
++  const adjacency = new Map<string, string[]>()
++  for (const e of edges) {
++    if (!CONTEXT_RELATIONS.has(e.relation)) continue
++    const list = adjacency.get(e.source_id) ?? []
++    list.push(e.target_id)
++    adjacency.set(e.source_id, list)
++  }
++  const visited = new Set<string>()
++  const queue = [taskId]
++  while (queue.length > 0 && visited.size < max) {
++    const current = queue.shift()!
++    for (const n of (adjacency.get(current) ?? [])) {
++      if (!visited.has(n) && n !== taskId) { visited.add(n); queue.push(n) }
++    }
++  }
++  return Array.from(visited)
++}
++
++/**
++ * Count of downstream tasks that depend on this node.
++ */
++export function countDependents(
++  nodeId: string,
++  edges: GraphEdge[],
++): number {
++  const deps = new Set<string>()
++  for (const e of edges) {
++    if (e.source_id === nodeId && !deps.has(e.target_id)) deps.add(e.target_id)
++  }
++  return deps.size
++}
+diff --git a/pixel-demo/PixelIcon.dc.html b/pixel-demo/PixelIcon.dc.html
+new file mode 100644
+index 0000000..37bf12e
+--- /dev/null
++++ b/pixel-demo/PixelIcon.dc.html
+@@ -0,0 +1,53 @@
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="utf-8">
++<meta name="viewport" content="width=device-width, initial-scale=1">
++<script src="./support.js"></script>
++</head>
++<body>
++<x-dc>
++<span style="display:inline-flex;line-height:0">{{ svg }}</span>
++</x-dc>
++<script type="text/x-dc" data-dc-script>
++class Component extends DCLogic {
++  grids = {
++    finding: { rows: ["..#####...",".#.....#..","#...#...#.","#..#.#..#.","#.#...#.#.","#.......#.",".#.....#..","..#####.#.",".......###","........##"]},
++    constraint: { rows: ["..#####...",".#.....#..",".#.....#..","#########.","#########.","###...###.","###...###.","###...###.","#########.","#########."]},
++    task: { rows: ["##########","#........#","#......###","#.....##.#","#.#..##..#","#.##.##..#","#.####...#","#..##....#","#........#","##########"]},
++    document: { rows: ["######....","#....#....","#....##...","#.....#...","#.###.#...","#.....#...","#.###.#...","#.....#...","#.###.#...","#######..."]},
++    plus: { rows: ["...#...","...#...","...#...","#######","...#...","...#...","...#..."]},
++    minus: { rows: [".......",".......",".......","#######",".......",".......","......."]},
++    expand: { rows: ["###...###","#.......#","#.......#",".........",".........",".........","#.......#","#.......#","###...###"]},
++    upload: { rows: ["....#....","...###...","..#.#.#..",".#..#..#.","....#....",".........","#.......#","#.......#","#########"]},
++    chart: { rows: [".......#.",".......#.","...#...#.","...#...#.","...#.#.#.",".#.#.#.#.",".#.#.#.#.",".#.#.#.#.","#########"]},
++    logout: { rows: ["#####....","#........","#...#....","#...##...","#.######.","#...##...","#...#....","#........","#####...."]},
++    arrow: { rows: [".........","....#....",".....#...","......#..","#########","......#..",".....#...","....#....","........."]},
++    share: { rows: ["##.....##","##.....##",".#.....#.","..#...#..","...###...","..#...#..",".#.....#.","##.....##","##.....##"]},
++    flame: { colors: {y:"#FFD21E",O:"#FFAF00",o:"#FF7A00",r:"#F44D00",R:"#E10500"}, rows: ["....y....","...yy....","...yOy...","..yOOy...","..OOOoy..",".OOooooO.",".OoorooO.","OoorRrooO","OorRRRroO",".orRRRro.","..orRro.."]},
++  };
++  renderVals() {
++    const glyph = this.props.glyph || "finding";
++    const size = parseInt(this.props.size) || 18;
++    const color = this.props.color || "#1B1712";
++    const g = this.grids[glyph] || this.grids.finding;
++    const rows = g.rows;
++    const cmap = g.colors;
++    const W = Math.max.apply(null, rows.map((r) => r.length));
++    const H = rows.length;
++    const rects = [];
++    rows.forEach((row, y) => {
++      for (let x = 0; x < row.length; x++) {
++        const ch = row[x];
++        if (ch === "." || ch === " ") continue;
++        const fill = (cmap && cmap[ch]) || color;
++        rects.push(React.createElement("rect", { key: x + "-" + y, x, y, width: 1, height: 1, fill }));
++      }
++    });
++    const svg = React.createElement("svg", { width: size, height: size, viewBox: "0 0 " + W + " " + H, shapeRendering: "crispEdges", style: { display: "block", imageRendering: "pixelated" }}, rects);
++    return { svg };
++  }
++}
++</script>
++</body>
++</html>
+diff --git a/pixel-demo/SpatialBrain.dc.html b/pixel-demo/SpatialBrain.dc.html
+new file mode 100644
+index 0000000..1d6a2d3
+--- /dev/null
++++ b/pixel-demo/SpatialBrain.dc.html
+@@ -0,0 +1,381 @@
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="utf-8">
++<meta name="viewport" content="width=device-width, initial-scale=1">
++<script src="./support.js"></script>
++</head>
++<body>
++<x-dc>
++<helmet>
++<meta name="viewport" content="width=device-width, initial-scale=1">
++<link rel="preconnect" href="https://fonts.googleapis.com">
++<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
++<style>
++  * { box-sizing: border-box; }
++  html, body { margin: 0; padding: 0; }
++  body { font-family: "Space Grotesk", system-ui, sans-serif; color: #1B1712; background: #F3EEE1; -webkit-font-smoothing: antialiased; }
++  svg { image-rendering: pixelated; }
++  a { color: #E10500; text-decoration: none; }
++  a:hover { color: #B00400; }
++  .px { font-family: "Press Start 2P", monospace; }
++  .mono { font-family: "JetBrains Mono", monospace; }
++  .pxbtn { transition: transform .06s steps(1), box-shadow .06s steps(1); }
++  .pxbtn:active { transform: translate(2px,2px); }
++  ::-webkit-scrollbar { width: 10px; height: 10px; }
++  ::-webkit-scrollbar-thumb { background: #C9BFA6; border: 2px solid #F3EEE1; }
++</style>
++</helmet>
++<div style="position:relative;width:100%;height:100vh;overflow:hidden;background:#F3EEE1;background-image:radial-gradient(#D8CEB4 1.4px, transparent 1.6px);background-size:20px 20px;background-position:-2px -2px">
++
++  <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
++    <div style="position:absolute;inset:0;overflow-y:auto">
++      <div style="max-width:1000px;margin:0 auto;padding:34px 28px 60px;min-height:100vh;display:flex;flex-direction:column">
++        <header style="display:flex;align-items:center;justify-content:space-between">
++          <div style="display:flex;align-items:center;gap:12px">
++            <div style="width:40px;height:40px;background:#fff;border:3px solid #1B1712;box-shadow:3px 3px 0 #1B1712;display:flex;align-items:center;justify-content:center">
++              <dc-import name="PixelIcon" glyph="flame" size="24" hint-size="24px,24px"></dc-import>
++            </div>
++            <span class="px" style="font-size:13px;letter-spacing:.5px">SPATIAL BRAIN</span>
++          </div>
++          <button onClick="{{ goLogin }}" class="px pxbtn" style="cursor:pointer;font-size:10px;background:transparent;border:3px solid #1B1712;padding:9px 14px;color:#1B1712;box-shadow:3px 3px 0 #1B1712">SIGN IN</button>
++        </header>
++
++        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:56px 0">
++          <div class="px" style="font-size:11px;color:#E10500;letter-spacing:2px;display:flex;align-items:center;gap:10px">
++            <span style="width:20px;height:10px;background:#FFAF00;display:inline-block"></span>
++            MISTRAL &times; ATLASSIAN
++          </div>
++          <h1 style="font-size:54px;line-height:1.04;font-weight:700;letter-spacing:-1.5px;margin:22px 0 0;max-width:760px;text-wrap:balance">The reasoning between a paper and a pull request stops disappearing.</h1>
++          <p style="font-size:18px;line-height:1.6;color:#5C5647;max-width:560px;margin:26px 0 0">A scientist's finding, the constraint it implies, and the ticket an engineer picks up are the same object seen from different sides. Spatial Brain keeps them connected, so an agent can walk back from the task to the page it came from.</p>
++          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:40px">
++            <button onClick="{{ goBoard }}" class="px pxbtn" style="cursor:pointer;font-size:12px;color:#fff;background:#E10500;border:3px solid #1B1712;box-shadow:5px 5px 0 #1B1712;padding:16px 20px;display:flex;align-items:center;gap:12px">
++              OPEN THE DEMO BOARD
++              <dc-import name="PixelIcon" glyph="arrow" size="16" color="#ffffff" hint-size="16px,16px"></dc-import>
++            </button>
++            <span class="mono" style="font-size:13px;color:#7A7266">Three seeded accounts, no signup.</span>
++          </div>
++        </div>
++
++        <div style="border-top:3px solid #1B1712;padding-top:30px;display:grid;grid-template-columns:repeat(3,1fr);gap:26px">
++          <sc-for list="{{ chain }}" as="step" hint-placeholder-count="3">
++            <div style="border-left:3px solid #E4DCC7;padding-left:16px">
++              <div style="display:flex;align-items:center;gap:10px">
++                <div style="width:30px;height:30px;background:{{ step.bg }};border:3px solid #1B1712;display:flex;align-items:center;justify-content:center">
++                  <dc-import name="PixelIcon" glyph="{{ step.glyph }}" size="16" color="#1B1712" hint-size="16px,16px"></dc-import>
++                </div>
++                <span class="px" style="font-size:10px;color:#B4A98C">{{ step.num }}</span>
++              </div>
++              <h3 style="font-size:15px;font-weight:600;margin:14px 0 0">{{ step.label }}</h3>
++              <p style="font-size:13.5px;line-height:1.55;color:#6B6455;margin:8px 0 0">{{ step.copy }}</p>
++            </div>
++          </sc-for>
++        </div>
++      </div>
++    </div>
++  </sc-if>
++
++  <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
++    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px">
++      <div style="width:420px;max-width:100%;background:#fff;border:3px solid #1B1712;box-shadow:8px 8px 0 #1B1712;padding:28px">
++        <div style="display:flex;align-items:center;gap:12px">
++          <div style="width:38px;height:38px;background:#F3EEE1;border:3px solid #1B1712;display:flex;align-items:center;justify-content:center">
++            <dc-import name="PixelIcon" glyph="flame" size="22" hint-size="22px,22px"></dc-import>
++          </div>
++          <span class="px" style="font-size:12px">SPATIAL BRAIN</span>
++        </div>
++        <h2 style="font-size:22px;font-weight:700;margin:22px 0 4px;letter-spacing:-.5px">Pick a seeded account</h2>
++        <p class="mono" style="font-size:12px;color:#7A7266;margin:0 0 20px">No password. This is a demo board.</p>
++        <div style="display:flex;flex-direction:column;gap:12px">
++          <sc-for list="{{ accounts }}" as="acct" hint-placeholder-count="3">
++            <button onClick="{{ acct.pick }}" class="pxbtn" style="cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;background:#F3EEE1;border:3px solid #1B1712;box-shadow:3px 3px 0 #1B1712;padding:12px 14px">
++              <span class="px" style="width:36px;height:36px;flex:none;background:{{ acct.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid #1B1712">{{ acct.initials }}</span>
++              <span style="display:flex;flex-direction:column">
++                <span style="font-size:15px;font-weight:600">{{ acct.name }}</span>
++                <span class="mono" style="font-size:11.5px;color:#7A7266">{{ acct.role }}</span>
++              </span>
++              <span style="margin-left:auto"><dc-import name="PixelIcon" glyph="arrow" size="16" color="#1B1712" hint-size="16px,16px"></dc-import></span>
++            </button>
++          </sc-for>
++        </div>
++        <button onClick="{{ goLanding }}" class="px" style="cursor:pointer;background:transparent;border:none;color:#7A7266;font-size:9px;margin-top:20px">&lt; BACK</button>
++      </div>
++    </div>
++  </sc-if>
++
++  <sc-if value="{{ isBoard }}" hint-placeholder-val="{{ false }}">
++    <div style="position:absolute;inset:0">
++
++      <div onPointerDown="{{ onBgDown }}" style="position:absolute;inset:0;top:58px;cursor:grab;touch-action:none;user-select:none">
++        <div style="{{ worldStyle }}">
++          <svg style="position:absolute;left:0;top:0;width:3000px;height:2000px;overflow:visible;pointer-events:none">
++            <sc-for list="{{ edges }}" as="edge" hint-placeholder-count="0">
++              <path d="{{ edge.d }}" fill="none" stroke="#1B1712" stroke-width="2.5" stroke-linejoin="miter"></path>
++            </sc-for>
++          </svg>
++          <sc-for list="{{ edges }}" as="edge" hint-placeholder-count="0">
++            <div class="px" style="{{ edge.labelStyle }}">{{ edge.tag }}</div>
++          </sc-for>
++
++          <sc-for list="{{ nodes }}" as="node" hint-placeholder-count="0">
++            <div style="{{ node.wrapStyle }}" onPointerDown="{{ node.onDown }}">
++              <div style="{{ node.cardStyle }}">
++                <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px 0">
++                  <div style="display:flex;align-items:center;gap:7px">
++                    <dc-import name="PixelIcon" glyph="{{ node.glyph }}" size="15" color="{{ node.accent }}" hint-size="15px,15px"></dc-import>
++                    <span class="px" style="font-size:8px;letter-spacing:.5px;color:{{ node.accent }}">{{ node.label }}</span>
++                  </div>
++                  <span class="mono" style="font-size:10px;color:#A69E8C">{{ node.meta }}</span>
++                </div>
++                <p style="font-size:13.5px;font-weight:600;line-height:1.32;margin:9px 11px 0">{{ node.title }}</p>
++                <sc-if value="{{ node.body }}" hint-placeholder-val="{{ false }}">
++                  <p style="font-size:11.5px;line-height:1.5;color:#6B6455;margin:7px 11px 0">{{ node.body }}</p>
++                </sc-if>
++                <sc-if value="{{ node.quote }}" hint-placeholder-val="{{ false }}">
++                  <blockquote class="mono" style="font-size:10.5px;line-height:1.5;color:#7A7266;margin:9px 11px 0;padding-left:9px;border-left:3px solid {{ node.accent }}">{{ node.quote }}</blockquote>
++                </sc-if>
++                <div style="{{ node.footerStyle }}">
++                  <sc-if value="{{ node.page }}" hint-placeholder-val="{{ false }}">
++                    <span class="mono" style="font-size:10px;color:#A69E8C">{{ node.page }}</span>
++                  </sc-if>
++                  <sc-if value="{{ node.priority }}" hint-placeholder-val="{{ false }}">
++                    <span class="mono" style="font-size:9.5px;font-weight:500;color:#fff;background:{{ node.accent }};padding:2px 5px;border:1.5px solid #1B1712">{{ node.priority }}</span>
++                  </sc-if>
++                  <sc-if value="{{ node.assignee }}" hint-placeholder-val="{{ false }}">
++                    <span style="font-size:11px;color:#6B6455">{{ node.assignee }}</span>
++                  </sc-if>
++                  <sc-if value="{{ node.jira }}" hint-placeholder-val="{{ false }}">
++                    <span class="mono" style="margin-left:auto;font-size:9.5px;font-weight:500;background:#EFE9DA;border:1.5px solid #1B1712;padding:2px 5px">{{ node.jira }}</span>
++                  </sc-if>
++                </div>
++              </div>
++            </div>
++          </sc-for>
++        </div>
++      </div>
++
++      <!-- Zoom controls -->
++      <div style="position:absolute;top:76px;left:16px;z-index:30;display:flex;flex-direction:column;gap:0;background:#fff;border:3px solid #1B1712;box-shadow:3px 3px 0 #1B1712">
++        <button onClick="{{ zoomIn }}" class="pxbtn" style="cursor:pointer;width:36px;height:34px;background:#fff;border:none;border-bottom:2px solid #1B1712;display:flex;align-items:center;justify-content:center"><dc-import name="PixelIcon" glyph="plus" size="14" color="#1B1712" hint-size="14px,14px"></dc-import></button>
++        <button onClick="{{ zoomOut }}" class="pxbtn" style="cursor:pointer;width:36px;height:34px;background:#fff;border:none;border-bottom:2px solid #1B1712;display:flex;align-items:center;justify-content:center"><dc-import name="PixelIcon" glyph="minus" size="14" color="#1B1712" hint-size="14px,14px"></dc-import></button>
++        <button onClick="{{ resetView }}" class="pxbtn" style="cursor:pointer;width:36px;height:34px;background:#fff;border:none;display:flex;align-items:center;justify-content:center"><dc-import name="PixelIcon" glyph="expand" size="14" color="#1B1712" hint-size="14px,14px"></dc-import></button>
++      </div>
++
++      <!-- Toolbar -->
++      <div style="position:absolute;bottom:18px;left:16px;z-index:30;display:flex;align-items:center;gap:6px;background:#fff;border:3px solid #1B1712;box-shadow:4px 4px 0 #1B1712;padding:8px">
++        <sc-for list="{{ addButtons }}" as="btn" hint-placeholder-count="3">
++          <button onClick="{{ btn.add }}" class="pxbtn" style="cursor:pointer;display:flex;align-items:center;gap:7px;background:{{ btn.bg }};border:2.5px solid #1B1712;box-shadow:2px 2px 0 #1B1712;padding:8px 10px;font-size:12px;font-weight:600">
++            <dc-import name="PixelIcon" glyph="{{ btn.glyph }}" size="14" color="#1B1712" hint-size="14px,14px"></dc-import>
++            {{ btn.label }}
++          </button>
++        </sc-for>
++        <span style="width:3px;height:24px;background:#E4DCC7;margin:0 2px"></span>
++        <button onClick="{{ addDoc }}" class="pxbtn" style="cursor:pointer;display:flex;align-items:center;gap:7px;background:#fff;border:2.5px solid #1B1712;box-shadow:2px 2px 0 #1B1712;padding:8px 10px;font-size:12px;font-weight:600">
++          <dc-import name="PixelIcon" glyph="upload" size="14" color="#1B1712" hint-size="14px,14px"></dc-import>
++          Document
++        </button>
++        <span style="width:3px;height:24px;background:#E4DCC7;margin:0 2px"></span>
++        <span class="px" style="font-size:9px;color:#E10500;border:2px solid #1B1712;padding:6px 8px;background:#F3EEE1">SUPPORTS</span>
++        <span style="width:3px;height:24px;background:#E4DCC7;margin:0 2px"></span>
++        <button onClick="{{ openReview }}" class="pxbtn" style="cursor:pointer;display:flex;align-items:center;gap:7px;background:#FFAF00;border:2.5px solid #1B1712;box-shadow:2px 2px 0 #1B1712;padding:8px 10px;font-size:12px;font-weight:600">
++          <dc-import name="PixelIcon" glyph="chart" size="14" color="#1B1712" hint-size="14px,14px"></dc-import>
++          Sprint Review
++        </button>
++      </div>
++
++      <!-- Minimap -->
++      <div style="position:absolute;bottom:18px;right:16px;z-index:30;width:190px;height:120px;background:#fff;border:3px solid #1B1712;box-shadow:4px 4px 0 #1B1712;overflow:hidden">
++        <div class="px" style="position:absolute;top:0;left:0;right:0;font-size:7px;color:#A69E8C;padding:5px 6px;border-bottom:2px solid #E4DCC7">MAP</div>
++        <sc-for list="{{ miniNodes }}" as="mn" hint-placeholder-count="0">
++          <span style="{{ mn.style }}"></span>
++        </sc-for>
++      </div>
++
++      <sc-if value="{{ reviewOpen }}" hint-placeholder-val="{{ false }}">
++        <div onClick="{{ closeReview }}" style="position:absolute;inset:0;background:rgba(27,23,18,.35);z-index:50"></div>
++        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:560px;max-width:92%;max-height:82vh;background:#fff;border:3px solid #1B1712;box-shadow:10px 10px 0 #1B1712;z-index:60;display:flex;flex-direction:column">
++          <header style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:3px solid #1B1712;background:#FFAF00">
++            <span class="px" style="font-size:12px">SPRINT REVIEW</span>
++            <button onClick="{{ closeReview }}" class="px pxbtn" style="cursor:pointer;background:#fff;border:2.5px solid #1B1712;box-shadow:2px 2px 0 #1B1712;font-size:9px;padding:6px 8px">X</button>
++          </header>
++          <div style="overflow-y:auto;padding:18px">
++            <sc-for list="{{ review }}" as="col" hint-placeholder-count="3">
++              <div style="margin-bottom:18px">
++                <div class="px" style="font-size:9px;color:{{ col.color }};margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:{{ col.color }};border:1.5px solid #1B1712"></span>{{ col.title }}</div>
++                <sc-for list="{{ col.items }}" as="it" hint-placeholder-count="2">
++                  <div style="border:2.5px solid #1B1712;box-shadow:3px 3px 0 {{ col.color }};padding:11px 12px;margin-bottom:10px;background:#fff">
++                    <div style="font-size:13.5px;font-weight:600">{{ it.title }} <span class="mono" style="font-size:11px;color:#7A7266;font-weight:400">— {{ it.who }}</span></div>
++                    <p style="font-size:12px;color:#6B6455;margin:5px 0 0;line-height:1.5">{{ it.summary }}</p>
++                  </div>
++                </sc-for>
++              </div>
++            </sc-for>
++          </div>
++        </div>
++      </sc-if>
++
++      <!-- Top bar -->
++      <header style="position:absolute;top:0;left:0;right:0;height:58px;background:#fff;border-bottom:3px solid #1B1712;display:flex;align-items:center;gap:14px;padding:0 16px;z-index:40">
++        <div style="display:flex;align-items:center;gap:10px">
++          <div style="width:32px;height:32px;background:#F3EEE1;border:3px solid #1B1712;display:flex;align-items:center;justify-content:center">
++            <dc-import name="PixelIcon" glyph="flame" size="20" hint-size="20px,20px"></dc-import>
++          </div>
++          <span class="px" style="font-size:10px">SPATIAL BRAIN</span>
++        </div>
++        <span style="width:3px;height:26px;background:#1B1712"></span>
++        <div style="min-width:0">
++          <p style="font-size:14px;font-weight:600;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Grounded answers initiative</p>
++          <p class="mono" style="font-size:10.5px;color:#7A7266;margin:1px 0 0">{{ nodeCount }} nodes &middot; {{ taskCount }} tasks</p>
++        </div>
++        <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
++          <button onClick="{{ toggleMyTasks }}" class="px pxbtn" style="cursor:pointer;font-size:8px;padding:8px 10px;border:2.5px solid #1B1712;box-shadow:2px 2px 0 #1B1712;color:{{ myTasksTextColor }};background:{{ myTasksBg }}">MY TASKS</button>
++          <div style="display:flex;align-items:center;gap:10px">
++            <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;background:#3FA34D;border:1.5px solid #1B1712"></span><span class="mono" style="font-size:10px;color:#7A7266">Mistral</span></span>
++            <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;background:#3FA34D;border:1.5px solid #1B1712"></span><span class="mono" style="font-size:10px;color:#7A7266">Jira</span></span>
++          </div>
++          <div style="display:flex;gap:5px">
++            <span class="px" style="width:28px;height:28px;background:#E10500;color:#fff;border:2px solid #1B1712;display:flex;align-items:center;justify-content:center;font-size:8px">AI</span>
++            <span class="px" style="width:28px;height:28px;background:#F3EEE1;border:2px solid #1B1712;display:flex;align-items:center;justify-content:center;font-size:8px">MA</span>
++            <span class="px" style="width:28px;height:28px;background:#F3EEE1;border:2px solid #1B1712;display:flex;align-items:center;justify-content:center;font-size:8px">PR</span>
++          </div>
++          <button onClick="{{ goLanding }}" class="pxbtn" title="Sign out" style="cursor:pointer;width:30px;height:30px;background:#fff;border:2.5px solid #1B1712;box-shadow:2px 2px 0 #1B1712;display:flex;align-items:center;justify-content:center">
++            <dc-import name="PixelIcon" glyph="logout" size="15" color="#1B1712" hint-size="15px,15px"></dc-import>
++          </button>
++        </div>
++      </header>
++    </div>
++  </sc-if>
++
++</div>
++</x-dc>
++<script type="text/x-dc" data-dc-script>
++class Component extends DCLogic {
++  KIND = {
++    finding:    { label: "FINDING",    glyph: "finding",    accent: "#F2A100" },
++    constraint: { label: "CONSTRAINT", glyph: "constraint", accent: "#FF6A00" },
++    task:       { label: "TASK",       glyph: "task",       accent: "#E10500" },
++    source:     { label: "SOURCE",     glyph: "document",   accent: "#1B1712" },
++  };
++  WIDTH = 244; ANCHOR = 46;
++
++  addButtons = [
++    { label: "Finding", glyph: "finding", bg: "#fff", add: () => this.addNode("finding") },
++    { label: "Constraint", glyph: "constraint", bg: "#fff", add: () => this.addNode("constraint") },
++    { label: "Task", glyph: "task", bg: "#fff", add: () => this.addNode("task") },
++  ];
++  accounts = [
++    { name: "Aisha Khan", role: "Research", initials: "AI", bg: "#E10500", pick: () => this.setState({ screen: "board" }) },
++    { name: "Marco Alvarez", role: "Engineering", initials: "MA", bg: "#FF6A00", pick: () => this.setState({ screen: "board" }) },
++    { name: "Priya Rao", role: "Product", initials: "PR", bg: "#F2A100", pick: () => this.setState({ screen: "board" }) },
++  ];
++  chain = [
++    { num: "01", label: "Research lands", glyph: "document", bg: "#FFAF00", copy: "Drop the paper. Mistral pulls out findings and constraints." },
++    { num: "02", label: "Work gets connected", glyph: "share", bg: "#FF7A00", copy: "Draw a task off the nodes that justify it." },
++    { num: "03", label: "Code comes back", glyph: "task", bg: "#E10500", copy: "An agent reads the task's ancestry over MCP and opens a PR." },
++  ];
++  review = [
++    { title: "SHIPPED", color: "#3FA34D", items: [{ title: "2-step checkout", who: "Marco", summary: "PaymentElement integration complete." }, { title: "Auth migration", who: "Aisha", summary: "Magic-link auth replaces OTP." }] },
++    { title: "BLOCKED", color: "#E10500", items: [{ title: "Payment selector UI", who: "Priya", summary: "Waiting on final mockups." }] },
++    { title: "NEXT", color: "#FF6A00", items: [{ title: "PCI audit", who: "Marco", summary: "External audit Aug 5." }, { title: "Onboarding rewrite", who: "Aisha", summary: "5-step to 2-step." }] },
++  ];
++
++  state = {
++    screen: "landing", scale: 1, panX: 40, panY: 20,
++    selectedId: null, myTasks: false, reviewOpen: false, nextId: 100,
++    nodes: [
++      { id: "s1", kind: "source", title: "retrieval-grounding-study.pdf", body: "", quote: "", x: 40, y: 250, page: "PDF" },
++      { id: "n1", kind: "finding", title: "Retrieval latency dominates perceived response time", body: "", quote: "Instrumentation across three pilot teams put retrieval at 68 percent of end-to-end latency.", x: 360, y: 120 },
++      { id: "n2", kind: "finding", title: "Reviewers distrust answers without a source", body: "", quote: "In shadowing sessions, reviewers rejected 7 of 9 unsourced summaries before reading the body.", x: 360, y: 360 },
++      { id: "n3", kind: "constraint", title: "Every generated claim must cite its source span", body: "A claim without a retrievable span is treated as unusable by the review team.", quote: "", x: 720, y: 250 },
++      { id: "n4", kind: "task", title: "Add inline source spans to the answer renderer", body: "", quote: "", x: 1070, y: 250, priority: "P1", assignee: "Aisha", jira: "SB-142" },
++    ],
++    edges: [
++      { from: "s1", to: "n1" }, { from: "s1", to: "n2" },
++      { from: "n1", to: "n3" }, { from: "n2", to: "n3" },
++      { from: "n3", to: "n4" },
++    ],
++  };
++
++  DRAG_DEAD = 3;
++  componentDidMount() {
++    this._move = (e) => {
++      if (this.drag) {
++        if (!this.drag.active) {
++          if (Math.abs(e.clientX-this.drag.sx)>this.DRAG_DEAD||Math.abs(e.clientY-this.drag.sy)>this.DRAG_DEAD) this.drag.active=true;
++          else return;
++        }
++        if(this._el) this._el.style.cursor="grabbing";
++        const dx=(e.clientX-this.drag.sx)/this.state.scale, dy=(e.clientY-this.drag.sy)/this.state.scale;
++        this.setState({nodes:this.state.nodes.map(n=>n.id===this.drag.id?{...n,x:this.drag.ox+dx,y:this.drag.oy+dy}:n)});
++      } else if (this.panning) {
++        if (!this.panning.active) {
++          if (Math.abs(e.clientX-this.panning.sx)>this.DRAG_DEAD||Math.abs(e.clientY-this.panning.sy)>this.DRAG_DEAD) this.panning.active=true;
++          else return;
++        }
++        this.setState({panX:this.panning.ox+(e.clientX-this.panning.sx),panY:this.panning.oy+(e.clientY-this.panning.sy)});
++      }
++    };
++    this._up = () => {
++      if (this._el) { this._el.releasePointerCapture(this._ptr); this._el.style.cursor="grab"; }
++      this.drag = null; this.panning = null; this._el = null;
++    };
++    window.addEventListener("pointermove", this._move);
++    window.addEventListener("pointerup", this._up);
++    window.addEventListener("pointercancel", this._up);
++  }
++  componentWillUnmount() {
++    window.removeEventListener("pointermove", this._move);
++    window.removeEventListener("pointerup", this._up);
++    window.removeEventListener("pointercancel", this._up);
++  }
++
++  addNode(kind) {
++    const id = "u" + this.state.nextId;
++    const titles = { finding: "New finding", constraint: "New constraint", task: "New task", source: "Source document" };
++    const cx = (window.innerWidth * 0.4 - this.state.panX) / this.state.scale;
++    const cy = (window.innerHeight * 0.42 - this.state.panY) / this.state.scale - 58 / this.state.scale;
++    this.setState({ nextId: this.state.nextId + 1, selectedId: id, nodes: [...this.state.nodes, { id, kind, title: titles[kind], body: "", quote: "", x: cx, y: cy, ...(kind==="task"?{priority:"P2",assignee:"Unassigned",jira:""}:{}) }] });
++  }
++
++  renderVals() {
++    const s = this.state, byId = {};
++    s.nodes.forEach((n) => (byId[n.id] = n));
++
++    const nodes = s.nodes.map((n) => {
++      const meta = this.KIND[n.kind], sel = n.id === s.selectedId, dim = s.myTasks && n.kind !== "task";
++      const showFooter = !!(n.page || n.priority || (n.assignee && n.kind === "task") || n.jira);
++      return { id: n.id, glyph: meta.glyph, accent: meta.accent, label: meta.label, title: n.title, body: n.body || "", quote: n.quote || "", page: n.page || "", priority: n.priority || "", assignee: n.kind === "task" ? (n.assignee || "") : "", jira: n.jira || "", meta: n.kind === "finding" ? "finding" : (n.kind === "constraint" ? "rule" : ""), wrapStyle: { position: "absolute", left: n.x + "px", top: n.y + "px", width: this.WIDTH + "px", zIndex: sel ? 20 : 5, cursor: "grab", pointerEvents: dim ? "none" : "auto", opacity: dim ? 0.28 : 1, touchAction: "none", userSelect: "none", WebkitUserSelect: "none" }, cardStyle: { background: "#fff", border: "3px solid " + (sel ? meta.accent : "#1B1712"), boxShadow: (sel ? "6px 6px 0 " : "4px 4px 0 ") + meta.accent, paddingBottom: showFooter ? "0" : "11px" }, footerStyle: showFooter ? { display: "flex", alignItems: "center", gap: "8px", padding: "9px 11px", marginTop: "10px", borderTop: "2px solid #E4DCC7" } : { display: "none" }, onDown: (e) => { e.stopPropagation(); e.target.setPointerCapture(e.pointerId); this._el = e.target; this._ptr = e.pointerId; this.setState({ selectedId: n.id }); this.drag = { id: n.id, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y, active: false }; } };
++    });
++
++    const edges = s.edges.map((e, i) => {
++      const a = byId[e.from], b = byId[e.to];
++      if (!a || !b) return { id: i, d: "", labelStyle: { display: "none" } };
++      const sx = a.x + this.WIDTH, sy = a.y + this.ANCHOR, tx = b.x, ty = b.y + this.ANCHOR, mx = (sx + tx) / 2;
++      const labelDim = s.myTasks && !((a && a.kind==="task") || (b && b.kind==="task"));
++      const route = a.x + this.WIDTH > b.x ? "M " + sx + " " + sy + " H " + (sx + 40) + " V " + ty + " H " + tx : "M " + sx + " " + sy + " H " + mx + " V " + ty + " H " + tx;
++      return { id: i, d: route, tag: "S", labelStyle: { position: "absolute", left: (mx - 9) + "px", top: ((sy + ty) / 2 - 9) + "px", width: "18px", height: "18px", background: "#fff", border: "2px solid #1B1712", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "7px", color: "#1B1712", opacity: labelDim ? 0.25 : 1, pointerEvents: "none" } };
++    });
++
++    const miniNodes = s.nodes.map((n) => {
++      const meta = this.KIND[n.kind];
++      return { id: n.id, style: { position: "absolute", left: (6 + (n.x + 500) * 0.062) + "px", top: (22 + (n.y - 60) * 0.06) + "px", width: "16px", height: "9px", background: meta.accent, border: "1.5px solid #1B1712" } };
++    });
++
++    return {
++      isLanding: s.screen === "landing", isLogin: s.screen === "login", isBoard: s.screen === "board",
++      goLanding: () => this.setState({ screen: "landing" }), goLogin: () => this.setState({ screen: "login" }), goBoard: () => this.setState({ screen: "board" }),
++      worldStyle: { position: "absolute", left: "0", top: "0", transformOrigin: "0 0", transform: "translate(" + s.panX + "px," + s.panY + "px) scale(" + s.scale + ")" },
++      onBgDown: (e) => { e.target.setPointerCapture(e.pointerId); this._el = e.target; this._ptr = e.pointerId; this.setState({ selectedId: null }); this.panning = { sx: e.clientX, sy: e.clientY, ox: s.panX, oy: s.panY, active: false }; },
++      zoomIn: () => this.setState({ scale: Math.min(2, s.scale * 1.15) }), zoomOut: () => this.setState({ scale: Math.max(0.4, s.scale / 1.15) }), resetView: () => this.setState({ scale: 1, panX: 40, panY: 20 }),
++      nodes, edges, miniNodes, nodeCount: s.nodes.length, taskCount: s.nodes.filter((n) => n.kind === "task").length,
++      toggleMyTasks: () => this.setState({ myTasks: !s.myTasks }), myTasksBg: s.myTasks ? "#E10500" : "#fff", myTasksTextColor: s.myTasks ? "#fff" : "#1B1712",
++      addButtons: this.addButtons, addDoc: () => this.addNode("source"),
++      openReview: () => this.setState({ reviewOpen: true }), closeReview: () => this.setState({ reviewOpen: false }), reviewOpen: s.reviewOpen,
++      review: this.review, accounts: this.accounts, chain: this.chain,
++    };
++  }
++}
++</script>
++</body>
++</html>
+diff --git a/pixel-demo/support.js b/pixel-demo/support.js
+new file mode 100644
+index 0000000..31d6efa
+--- /dev/null
++++ b/pixel-demo/support.js
+@@ -0,0 +1,1910 @@
++﻿// GENERATED from dc-runtime/src/*.ts 鈥?do not edit. Rebuild with `cd dc-runtime && bun run build`.
++"use strict";
++(() => {
++  var __defProp = Object.defineProperty;
++  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
++  var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
++
++  // src/react.ts
++  function getReact() {
++    const R = window.React;
++    if (!R) throw new Error("dc-runtime: window.React is not available yet");
++    return R;
++  }
++  function getReactDOM() {
++    const RD = window.ReactDOM;
++    if (!RD) throw new Error("dc-runtime: window.ReactDOM is not available yet");
++    return RD;
++  }
++  var h = ((...args) => getReact().createElement(
++    ...args
++  ));
++
++  // src/parse.ts
++  function parseDcDocument(doc) {
++    const dc = doc.querySelector("x-dc");
++    if (!dc) return null;
++    const scriptEl = doc.querySelector("script[data-dc-script]");
++    const { props, preview } = parseDataProps(
++      scriptEl?.getAttribute("data-props") ?? null
++    );
++    return {
++      template: dc.innerHTML,
++      js: scriptEl ? scriptEl.textContent || "" : "",
++      props,
++      preview
++    };
++  }
++  function parseDcText(src) {
++    const openMatch = /<x-dc(?:\s[^>]*)?>/.exec(src);
++    if (!openMatch) return null;
++    const close = src.lastIndexOf("</x-dc>");
++    if (close === -1 || close < openMatch.index) return null;
++    const template = src.slice(openMatch.index + openMatch[0].length, close);
++    const doc = new DOMParser().parseFromString(src, "text/html");
++    const scriptEl = doc.querySelector("script[data-dc-script]");
++    const { props, preview } = parseDataProps(
++      scriptEl?.getAttribute("data-props") ?? null
++    );
++    return {
++      template,
++      js: scriptEl ? scriptEl.textContent || "" : "",
++      props,
++      preview
++    };
++  }
++  function parseDataProps(raw) {
++    if (!raw) return { props: null, preview: null };
++    let parsed;
++    try {
++      parsed = JSON.parse(raw);
++    } catch {
++      return { props: null, preview: null };
++    }
++    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
++      return { props: null, preview: null };
++    }
++    const obj = parsed;
++    const preview = obj.$preview && typeof obj.$preview === "object" ? obj.$preview : null;
++    const rest = {};
++    for (const k of Object.keys(obj)) {
++      if (k[0] !== "$") rest[k] = obj[k];
++    }
++    return { props: Object.keys(rest).length ? rest : null, preview };
++  }
++  function dcNameFromPath(pathname) {
++    let p = pathname || "";
++    try {
++      p = decodeURIComponent(p);
++    } catch {
++    }
++    const base = p.split("/").pop() || "Root";
++    return base.replace(/\.dc\.html$/, "").replace(/\.html?$/, "") || "Root";
++  }
++
++  // src/boot.ts
++  var BASE_CSS = `
++    .sc-placeholder{background:color-mix(in srgb,currentColor 8%,transparent);
++      border:1px solid color-mix(in srgb,currentColor 50%,transparent);
++      border-radius:2px;box-sizing:border-box;overflow:hidden}
++    @keyframes sc-shine{0%{background-position:100% 50%}100%{background-position:0% 50%}}
++    html.sc-dc-streaming .sc-placeholder,
++    html.sc-dc-streaming .sc-interp.sc-missing{position:relative;
++      background:color-mix(in srgb,currentColor 5%,transparent);
++      border-color:transparent}
++    html.sc-dc-streaming .sc-placeholder::before,
++    html.sc-dc-streaming .sc-interp.sc-missing::before{content:'';
++      position:absolute;inset:0;pointer-events:none;
++      background:linear-gradient(90deg,rgba(217,119,87,0) 25%,rgba(247,225,211,.95) 37%,rgba(217,119,87,0) 63%);
++      background-size:400% 100%;animation:sc-shine 1.4s ease infinite}
++    html.sc-dc-streaming .sc-placeholder:nth-child(n+9 of .sc-placeholder)::before,
++    html.sc-dc-streaming .sc-interp.sc-missing:nth-child(n+9 of .sc-interp.sc-missing)::before{animation:none;
++      background:color-mix(in srgb,currentColor 8%,transparent)}
++    .sc-placeholder-error{padding:4px 8px;font:11px/1.4 ui-monospace,monospace;
++      color:color-mix(in srgb,currentColor 70%,transparent);word-break:break-word}
++    .sc-interp.sc-missing{display:inline-block;width:2em;height:1em;overflow:hidden;
++      vertical-align:text-bottom;background:rgba(255,255,255,.3);border:1px solid rgba(0,0,0,.5);
++      border-radius:2px;box-sizing:border-box;color:transparent;
++      user-select:none}
++    .sc-interp.sc-unresolved{font-family:ui-monospace,monospace;font-size:.85em;
++      color:color-mix(in srgb,currentColor 50%,transparent);
++      background:color-mix(in srgb,currentColor 10%,transparent);border-radius:3px;
++      padding:0 3px}
++    .sc-host.sc-has-error{position:relative}
++    .sc-logic-error{position:absolute;top:8px;left:8px;z-index:2147483647;max-width:60ch;
++      padding:6px 10px;background:#b00020;color:#fff;font:12px/1.4 ui-monospace,monospace;
++      border-radius:4px;white-space:pre-wrap;pointer-events:none}
++    /* Mirrors PRINT_BASELINE_CSS in apps/web deck-stage-export.ts \u2014 keep both
++       in sync until dc-runtime regains a build step. */
++    @media print {
++      @page { margin: 0.5cm; }
++      figure, table { break-inside: avoid; }
++      #dc-root, #dc-root > .sc-host { height: auto; }
++      *, *::before, *::after {
++        print-color-adjust: exact; -webkit-print-color-adjust: exact;
++        backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
++        animation-delay: -99s !important; animation-duration: .001s !important;
++        animation-iteration-count: 1 !important; animation-fill-mode: both !important;
++        animation-play-state: running !important; transition-duration: 0s !important;
++      }
++    }
++  `;
++  var FULL_PAGE_CSS = "html,body{height:100%;margin:0}#dc-root,#dc-root>.sc-host{height:100%}";
++  function rootNameForDocument(doc, loc) {
++    let bootPath = loc.pathname || "";
++    if (!/\.dc\.html?$/i.test(safeDecode(bootPath))) {
++      try {
++        bootPath = new URL(doc.baseURI || "/").pathname;
++      } catch {
++      }
++    }
++    return dcNameFromPath(bootPath);
++  }
++  function safeDecode(s) {
++    try {
++      return decodeURIComponent(s);
++    } catch {
++      return s;
++    }
++  }
++  function boot(runtime, doc = document) {
++    const parsed = parseDcDocument(doc);
++    if (!parsed) return null;
++    const React = getReact();
++    const rootName = rootNameForDocument(doc, location);
++    runtime.markFetched(rootName);
++    runtime.setRootName(rootName);
++    runtime.adoptParsed(rootName, parsed);
++    if (!window.__resources) {
++      fetch(location.href).then((res) => res.ok ? res.text() : "").then((t) => {
++        const raw = t ? parseDcText(t) : null;
++        if (raw?.template) runtime.updateHtml(rootName, raw.template);
++      }).catch(() => {
++      });
++    }
++    const dc = doc.querySelector("x-dc");
++    const hostEl = doc.createElement("div");
++    hostEl.id = "dc-root";
++    dc.replaceWith(hostEl);
++    if (!parsed.preview) {
++      const s = doc.createElement("style");
++      s.textContent = FULL_PAGE_CSS;
++      doc.head.appendChild(s);
++    }
++    const Root = runtime.getDC(rootName);
++    const entry = runtime.registry.get(rootName);
++    function StandaloneRoot() {
++      const [, setTick] = React.useState(0);
++      React.useEffect(() => {
++        const sub = () => setTick((n) => n + 1);
++        entry.subs.add(sub);
++        return () => {
++          entry.subs.delete(sub);
++        };
++      }, []);
++      const defaults = React.useMemo(() => {
++        const d = {};
++        for (const k in entry.propsMeta || {}) {
++          const v = entry.propsMeta?.[k]?.default;
++          if (v !== void 0) d[k] = v;
++        }
++        return d;
++      }, [entry.propsMeta]);
++      return h(Root, { ...defaults, ...entry.propOverrides || {} });
++    }
++    const ReactDOM = getReactDOM();
++    if (ReactDOM.createRoot)
++      ReactDOM.createRoot(hostEl).render(h(StandaloneRoot));
++    else ReactDOM.render(h(StandaloneRoot), hostEl);
++    return rootName;
++  }
++
++  // src/expr.ts
++  var IDENT_RE = /^[A-Za-z_$][A-Za-z0-9_$]*/;
++  var NUMBER_RE = /^-?\d+(\.\d+)?$/;
++  function resolve(vals, src) {
++    const expr = String(src).trim();
++    if (!expr) return void 0;
++    if (expr[0] === "(" && expr[expr.length - 1] === ")" && parensWrapWhole(expr)) {
++      return resolve(vals, expr.slice(1, -1));
++    }
++    const eq = findTopLevelEquality(expr);
++    if (eq) {
++      const lv = resolve(vals, expr.slice(0, eq.index));
++      const rv = resolve(vals, expr.slice(eq.index + eq.op.length));
++      switch (eq.op) {
++        case "===":
++          return lv === rv;
++        case "!==":
++          return lv !== rv;
++        case "==":
++          return lv == rv;
++        default:
++          return lv != rv;
++      }
++    }
++    if (expr[0] === "!") return !resolve(vals, expr.slice(1));
++    if (expr === "true") return true;
++    if (expr === "false") return false;
++    if (expr === "null") return null;
++    if (expr === "undefined") return void 0;
++    if (NUMBER_RE.test(expr)) return Number(expr);
++    if (expr.length >= 2 && (expr[0] === '"' || expr[0] === "'") && expr[expr.length - 1] === expr[0]) {
++      return expr.slice(1, -1);
++    }
++    return resolvePath(vals, expr);
++  }
++  function parensWrapWhole(expr) {
++    let depth = 0;
++    for (let i = 0; i < expr.length - 1; i++) {
++      if (expr[i] === "(") depth++;
++      else if (expr[i] === ")") {
++        depth--;
++        if (depth === 0) return false;
++      }
++    }
++    return true;
++  }
++  function findTopLevelEquality(expr) {
++    let depth = 0;
++    for (let i = 0; i < expr.length; i++) {
++      const c = expr[i];
++      if (c === "[" || c === "(") depth++;
++      else if (c === "]" || c === ")") depth--;
++      else if (depth === 0 && (c === "=" || c === "!") && expr[i + 1] === "=") {
++        if (i > 0 && (expr[i - 1] === "=" || expr[i - 1] === "!")) continue;
++        if (!expr.slice(0, i).trim()) continue;
++        const op = expr[i + 2] === "=" ? c + "==" : c + "=";
++        return { index: i, op };
++      }
++    }
++    return null;
++  }
++  function resolvePath(vals, expr) {
++    const head = expr.match(IDENT_RE);
++    if (!head) return void 0;
++    let cur = vals == null ? void 0 : vals[head[0]];
++    let i = head[0].length;
++    while (i < expr.length) {
++      if (expr[i] === ".") {
++        const m = expr.slice(i + 1).match(IDENT_RE) || expr.slice(i + 1).match(/^\d+/);
++        if (!m) return void 0;
++        cur = cur == null ? void 0 : cur[m[0]];
++        i += 1 + m[0].length;
++      } else if (expr[i] === "[") {
++        let depth = 1;
++        let j = i + 1;
++        while (j < expr.length && depth > 0) {
++          if (expr[j] === "[") depth++;
++          else if (expr[j] === "]") {
++            depth--;
++            if (depth === 0) break;
++          }
++          j++;
++        }
++        if (depth !== 0) return void 0;
++        const key = resolve(vals, expr.slice(i + 1, j));
++        cur = cur == null ? void 0 : cur[key];
++        i = j + 1;
++      } else {
++        return void 0;
++      }
++    }
++    return cur;
++  }
++
++  // src/encode.ts
++  var CAMEL_ATTR = "sc-camel-";
++  var INLINE_TEXT_TAGS = new Set(
++    "a abbr b bdi bdo br cite code del dfn em i ins kbd mark q s samp small span strike strong sub sup u var wbr".split(
++      " "
++    )
++  );
++  var RAW_WRAP = {
++    select: "sc-raw-select",
++    table: "sc-raw-table",
++    tbody: "sc-raw-tbody",
++    thead: "sc-raw-thead",
++    tfoot: "sc-raw-tfoot",
++    tr: "sc-raw-tr",
++    td: "sc-raw-td",
++    th: "sc-raw-th",
++    caption: "sc-raw-caption"
++  };
++  var RAW_UNWRAP = Object.fromEntries(
++    Object.entries(RAW_WRAP).map(([k, v]) => [v, k])
++  );
++  var EVENT_MAP = {
++    onclick: "onClick",
++    onchange: "onChange",
++    oninput: "onInput",
++    onsubmit: "onSubmit",
++    onkeydown: "onKeyDown",
++    onkeyup: "onKeyUp",
++    onkeypress: "onKeyPress",
++    onmousedown: "onMouseDown",
++    onmouseup: "onMouseUp",
++    onmouseenter: "onMouseEnter",
++    onmouseleave: "onMouseLeave",
++    onfocus: "onFocus",
++    onblur: "onBlur",
++    ondoubleclick: "onDoubleClick",
++    oncontextmenu: "onContextMenu",
++    onmousemove: "onMouseMove",
++    onmouseover: "onMouseOver",
++    onmouseout: "onMouseOut",
++    onpointerdown: "onPointerDown",
++    onpointerup: "onPointerUp",
++    onpointermove: "onPointerMove",
++    onpointerenter: "onPointerEnter",
++    onpointerleave: "onPointerLeave",
++    onpointercancel: "onPointerCancel",
++    onpointerover: "onPointerOver",
++    onpointerout: "onPointerOut",
++    ongotpointercapture: "onGotPointerCapture",
++    onlostpointercapture: "onLostPointerCapture",
++    ontouchstart: "onTouchStart",
++    ontouchend: "onTouchEnd",
++    ontouchmove: "onTouchMove",
++    ontouchcancel: "onTouchCancel",
++    ondragstart: "onDragStart",
++    ondragend: "onDragEnd",
++    ondragenter: "onDragEnter",
++    ondragleave: "onDragLeave",
++    ondragover: "onDragOver",
++    onanimationstart: "onAnimationStart",
++    onanimationend: "onAnimationEnd",
++    onanimationiteration: "onAnimationIteration",
++    ontransitionend: "onTransitionEnd"
++  };
++  var ATTRS = `(?:[^>"']|"[^"]*"|'[^']*')*`;
++  var IMPORT_SELF_CLOSE_RE = new RegExp(
++    "<(x-import|dc-import)(" + ATTRS + ")/>",
++    "gi"
++  );
++  var CAMEL_ATTR_RE = /(\s)([a-z]+[A-Z][A-Za-z0-9]*)(\s*=)/g;
++  function encodeCamelAttrs(html) {
++    return html.replace(
++      CAMEL_ATTR_RE,
++      (_, sp, name, eq) => sp + CAMEL_ATTR + name.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + eq
++    );
++  }
++  function encodeCase(html) {
++    html = html.replace(
++      IMPORT_SELF_CLOSE_RE,
++      (_, t, a) => "<" + t + a + "></" + t + ">"
++    );
++    html = html.replace(/<helmet(\s|>)/gi, "<sc-helmet$1");
++    html = html.replace(/<\/helmet\s*>/gi, "</sc-helmet>");
++    html = encodeCamelAttrs(html);
++    for (const [real, alias] of Object.entries(RAW_WRAP)) {
++      html = html.replace(
++        new RegExp("(</?)" + real + "(?=[\\s>])", "gi"),
++        "$1" + alias
++      );
++    }
++    return html;
++  }
++  function kebabToCamel(s) {
++    return s.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
++  }
++  function cssToObj(css) {
++    const o = {};
++    for (const decl of css.split(";")) {
++      const i = decl.indexOf(":");
++      if (i < 0) continue;
++      const prop = decl.slice(0, i).trim();
++      o[prop.startsWith("--") ? prop : kebabToCamel(prop)] = decl.slice(i + 1).trim();
++    }
++    return o;
++  }
++  function compileAttr(raw) {
++    const whole = raw.match(/^\s*\{\{([\s\S]+?)\}\}\s*$/);
++    if (whole) {
++      const path = whole[1];
++      return (vals) => resolve(vals, path);
++    }
++    if (raw.includes("{{")) {
++      const parts = raw.split(/\{\{([\s\S]+?)\}\}/g);
++      return (vals) => parts.map((s, i) => i & 1 ? resolve(vals, s) ?? "" : s).join("");
++    }
++    return () => raw;
++  }
++
++  // src/compile.ts
++  function collectProps(node, kind, host) {
++    const propGetters = [];
++    const pseudoClasses = [];
++    let hintSize = null;
++    for (const { name, value } of [...node.attributes]) {
++      if (name === "sc-name" || name === "data-dc-tpl") continue;
++      let key = name;
++      if (key.startsWith(CAMEL_ATTR))
++        key = kebabToCamel(key.slice(CAMEL_ATTR.length));
++      if (key === "hint-size") {
++        hintSize = value;
++        continue;
++      }
++      if (key.startsWith("style-")) {
++        pseudoClasses.push(host.pseudoClass(key.slice(6), value));
++        continue;
++      }
++      if (kind !== "dom") {
++        if (key.includes("-") && !(kind === "x-import" && (key.startsWith("aria-") || key.startsWith("data-"))))
++          key = kebabToCamel(key);
++      } else {
++        if (key === "class") key = "className";
++        else if (key === "for") key = "htmlFor";
++        else if (key.startsWith("on"))
++          key = EVENT_MAP[key] || "on" + key[2].toUpperCase() + key.slice(3);
++      }
++      propGetters.push([key, compileAttr(value)]);
++    }
++    return { propGetters, pseudoClasses, hintSize };
++  }
++  var HOST_STYLE_PROPS = /* @__PURE__ */ new Set([
++    "position",
++    "left",
++    "right",
++    "top",
++    "bottom",
++    "inset",
++    "width",
++    "height",
++    "z-index",
++    "transform"
++  ]);
++  function hostPositionStyle(style) {
++    const all = typeof style === "string" ? cssToObj(style) : style != null && typeof style === "object" ? style : null;
++    if (!all) return void 0;
++    const out = {};
++    for (const [k, v] of Object.entries(all)) {
++      const kebab = k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
++      if (HOST_STYLE_PROPS.has(kebab)) out[k] = v;
++    }
++    return Object.keys(out).length ? out : void 0;
++  }
++  function compileTemplate(html, host) {
++    const tpl = document.createElement("template");
++    //! nosemgrep: direct-inner-html-assignment
++    tpl.innerHTML = encodeCase(html);
++    let tplN = 0;
++    (function stamp(node) {
++      if (node.nodeType === Node.ELEMENT_NODE) {
++        node.setAttribute("data-dc-tpl", String(tplN++));
++      }
++      for (const c of node.childNodes) stamp(c);
++    })(tpl.content);
++    const builders = walkChildren(tpl.content, host);
++    const render = ((vals, ctx) => builders.map((b, i) => b(vals || {}, ctx, i)));
++    render.__annotated = tpl.innerHTML;
++    return render;
++  }
++  function walkChildren(node, host) {
++    return [...node.childNodes].map((c) => walk(c, host)).filter((b) => b != null);
++  }
++  var SLIDE_ID_VALUE_RE = /^[0-9a-f]{8}$/;
++  var DECK_CONTROL_FLOW_RE = /^(sc-if|sc-for|sc-else|dc-import|x-import)$/;
++  var DECK_AUX_RE = /^(template|script|style|sc-helmet|helmet)$/;
++  function isDeckMountTag(el) {
++    if (el.localName === "deck-stage") return true;
++    return el.localName === "x-import" && (el.getAttribute("component-from-global-scope") || "") === "deck-stage";
++  }
++  function walkDeckChildren(el, host) {
++    const pairs = [...el.childNodes].map((c) => ({ c, b: walk(c, host) })).filter((p) => p.b !== null);
++    const kids = pairs.map((p) => p.b);
++    const seen = /* @__PURE__ */ new Set();
++    const wsSeen = /* @__PURE__ */ new Map();
++    const keys = [];
++    const nextSlideId = new Array(pairs.length);
++    {
++      let upcoming = null;
++      for (let j = pairs.length - 1; j >= 0; j--) {
++        const n = pairs[j].c;
++        if (n.nodeType === Node.ELEMENT_NODE) {
++          const t = n.localName;
++          upcoming = !DECK_AUX_RE.test(t) && !DECK_CONTROL_FLOW_RE.test(t) ? n.getAttribute("data-om-slide-id") : null;
++        }
++        nextSlideId[j] = upcoming;
++      }
++    }
++    for (let j = 0; j < pairs.length; j++) {
++      const { c } = pairs[j];
++      if (c.nodeType === Node.TEXT_NODE) {
++        if ((c.nodeValue ?? "").trim() === "") {
++          const base = nextSlideId[j] ? "omid-ws:" + nextSlideId[j] : "omid-ws:aux";
++          const n = wsSeen.get(base) ?? 0;
++          wsSeen.set(base, n + 1);
++          keys.push(n === 0 ? base : base + ":" + n);
++          continue;
++        }
++        return { kids, keys: null };
++      }
++      if (c.nodeType !== Node.ELEMENT_NODE) {
++        keys.push(j);
++        continue;
++      }
++      const child = c;
++      const tag = child.localName;
++      if (DECK_AUX_RE.test(tag)) {
++        keys.push(j);
++        continue;
++      }
++      if (DECK_CONTROL_FLOW_RE.test(tag)) return { kids, keys: null };
++      const v = child.getAttribute("data-om-slide-id");
++      if (!v || !SLIDE_ID_VALUE_RE.test(v) || seen.has(v)) {
++        return { kids, keys: null };
++      }
++      seen.add(v);
++      keys.push("omid:" + v);
++    }
++    return { kids, keys };
++  }
++  function renderDeckKids(kids, kidKeys, vals, ctx) {
++    return kids.map((b, j) => {
++      const k = kidKeys ? kidKeys[j] : j;
++      const out = b(vals, ctx, k);
++      return kidKeys != null && typeof out === "string" ? h(getReact().Fragment, { key: k }, out) : out;
++    });
++  }
++  function walk(node, host) {
++    if (node.nodeType === Node.TEXT_NODE) return walkText(node);
++    if (node.nodeType !== Node.ELEMENT_NODE) return null;
++    const el = node;
++    const tag = el.tagName.toLowerCase();
++    if (tag === "sc-for") return walkFor(el, host);
++    if (tag === "sc-if") return walkIf(el, host);
++    if (tag === "x-import") return walkXImport(el, host);
++    if (tag === "sc-helmet") return host.helmet(el);
++    if (tag === "dc-import") return walkComponent(el, host);
++    return walkElement(el, host);
++  }
++  var warnedHoles = /* @__PURE__ */ new Set();
++  function warnUnresolved(ctx, what) {
++    const key = (ctx?.__name || "?") + "\0" + what;
++    if (warnedHoles.has(key)) return;
++    warnedHoles.add(key);
++    console.warn("[dc-runtime] " + (ctx?.__name || "template") + ": " + what);
++  }
++  function walkText(node) {
++    const txt = node.nodeValue ?? "";
++    if (!txt.includes("{{")) {
++      if (!txt.trim() && !txt.includes(" ")) return null;
++      return () => txt;
++    }
++    const parts = txt.split(/\{\{([\s\S]+?)\}\}/g);
++    return (vals, ctx, key) => h(
++      getReact().Fragment,
++      { key },
++      ...parts.map((p, i) => {
++        if (!(i & 1)) return p;
++        const v = resolve(vals, p);
++        if (v === void 0) {
++          if (!ctx?.__streamingNow) {
++            if (document.body?.hasAttribute("data-dc-editor-on")) {
++              return h(
++                "span",
++                { key: i, className: "sc-interp sc-unresolved" },
++                "{{ " + p.trim() + " }}"
++              );
++            }
++            warnUnresolved(
++              ctx,
++              "{{ " + p.trim() + " }} never resolved \u2014 rendered as empty"
++            );
++            return null;
++          }
++          return h(
++            "span",
++            { key: i, className: "sc-interp sc-missing" },
++            p.trim()
++          );
++        }
++        if (getReact().isValidElement(v) || Array.isArray(v)) {
++          return h(getReact().Fragment, { key: i }, v);
++        }
++        if (v === null || typeof v === "boolean") return null;
++        return h("span", { key: i, className: "sc-interp" }, String(v));
++      })
++    );
++  }
++  function walkFor(el, host) {
++    const listGet = compileAttr(el.getAttribute("list") || "");
++    const asName = el.getAttribute("as") || "item";
++    const hintN = parseInt(el.getAttribute("hint-placeholder-count") || "0", 10);
++    const kids = walkChildren(el, host);
++    const listSrc = el.getAttribute("list") || "";
++    return (vals, ctx, key) => {
++      let list = listGet(vals);
++      if (!Array.isArray(list)) {
++        if (!ctx?.__streamingNow) {
++          if (list !== void 0 && list !== null) {
++            warnUnresolved(
++              ctx,
++              'sc-for list="' + listSrc + '" is not an array (' + typeof list + ")"
++            );
++          }
++          list = [];
++        } else {
++          list = hintN > 0 ? Array(hintN).fill(void 0) : [];
++        }
++      }
++      return h(
++        getReact().Fragment,
++        { key },
++        list.map((item, i) => {
++          const sub = { ...vals, [asName]: item, $index: i };
++          return h(
++            getReact().Fragment,
++            { key: i },
++            kids.map((b, j) => b(sub, ctx, j))
++          );
++        })
++      );
++    };
++  }
++  function walkIf(el, host) {
++    const valGet = compileAttr(el.getAttribute("value") || "");
++    const hintRaw = el.getAttribute("hint-placeholder-val");
++    const hintGet = hintRaw != null ? compileAttr(hintRaw) : null;
++    const kids = walkChildren(el, host);
++    return (vals, ctx, key) => {
++      let v = valGet(vals);
++      if (v === void 0 && hintGet && ctx?.__streamingNow) v = hintGet(vals);
++      return v ? h(
++        getReact().Fragment,
++        { key },
++        kids.map((b, j) => b(vals, ctx, j))
++      ) : null;
++    };
++  }
++  function walkComponent(el, host) {
++    const name = el.getAttribute("name") || el.getAttribute("component") || "";
++    el.removeAttribute("name");
++    el.removeAttribute("component");
++    const tplId = el.getAttribute("data-dc-tpl");
++    const styleRaw = el.getAttribute("style");
++    el.removeAttribute("style");
++    const styleGet = styleRaw != null ? compileAttr(styleRaw) : null;
++    const { propGetters, hintSize } = collectProps(el, "dc-import", host);
++    const kids = walkChildren(el, host);
++    return (vals, ctx, key) => {
++      const props = {
++        key,
++        __hintSize: hintSize,
++        __tplId: tplId,
++        __hostStyle: styleGet ? hostPositionStyle(styleGet(vals)) : void 0
++      };
++      for (const [k, g] of propGetters) {
++        const v = g(vals);
++        if (k === "dcProps") {
++          if (v && typeof v === "object") Object.assign(props, v);
++          continue;
++        }
++        props[k] = v;
++      }
++      if (kids.length) props.children = kids.map((b, j) => b(vals, ctx, j));
++      return h(host.component(name), props);
++    };
++  }
++  function walkXImport(el, host) {
++    const globalNameGet = compileAttr(
++      el.getAttribute("component-from-global-scope") || ""
++    );
++    const exportNameGet = compileAttr(
++      el.getAttribute("component") || el.getAttribute("name") || ""
++    );
++    const fromRaw = el.getAttribute("from") || (el.getAttribute("component-from-global-scope") ? "" : el.getAttribute("src") || el.getAttribute("import") || "");
++    const urls = fromRaw.trim() ? fromRaw.trim().split(/\s+/) : [];
++    const url = urls.length ? urls[urls.length - 1] : "";
++    const kindOf = (u) => /\.(jsx|tsx)(\?|#|$)/i.test(u) ? "jsx" : "js";
++    const tplId = el.getAttribute("data-dc-tpl");
++    const styleRaw = el.getAttribute("style");
++    el.removeAttribute("style");
++    const styleGet = styleRaw != null ? compileAttr(styleRaw) : null;
++    const wrap = tplId != null || styleGet != null;
++    const { propGetters, hintSize } = collectProps(el, "x-import", host);
++    const hasContent = el.children.length > 0 || !!(el.textContent || "").trim();
++    const deckKeyed = hasContent && isDeckMountTag(el) ? walkDeckChildren(el, host) : null;
++    const kids = deckKeyed ? deckKeyed.kids : hasContent ? walkChildren(el, host) : [];
++    const kidKeys = deckKeyed?.keys ?? null;
++    const urlBindable = fromRaw.includes("{{");
++    if (urls.length && !urlBindable) {
++      let prev;
++      for (const u of urls) prev = host.loadExternal(kindOf(u), u, prev);
++    }
++    const evalName = (g, vals) => {
++      const v = g(vals);
++      const s = v == null ? "" : String(v);
++      return s.includes("{{") ? "" : s;
++    };
++    return (vals, ctx, key) => {
++      const globalName = evalName(globalNameGet, vals);
++      const name = globalName || evalName(exportNameGet, vals);
++      const C = !name || urlBindable ? null : globalName ? host.resolveExternalGlobal(url, globalName) : host.resolveExternal(url, name);
++      const hostStyle = styleGet ? hostPositionStyle(styleGet(vals)) : void 0;
++      const wrapper = wrap ? {
++        key,
++        className: "sc-host-x",
++        "data-dc-tpl": tplId,
++        style: hostStyle || { display: "contents" }
++      } : null;
++      if (!C) {
++        const error = urlBindable ? "x-import `from` cannot contain {{ \u2026 }} \u2014 module URLs are resolved at parse time; use a literal URL" : host.resolveExternalError(url, name);
++        const ph = host.placeholder({
++          key: wrapper ? void 0 : key,
++          name,
++          hintSize,
++          error
++        });
++        return wrapper ? h("div", wrapper, ph) : ph;
++      }
++      const props = wrapper ? {} : { key };
++      let unresolvedHole = false;
++      for (const [k, g] of propGetters) {
++        if (k === "component" || k === "componentFromGlobalScope" || k === "from") {
++          continue;
++        }
++        const v = g(vals);
++        if (v === void 0) unresolvedHole = true;
++        if (k === "dcProps") {
++          if (v && typeof v === "object") Object.assign(props, v);
++          continue;
++        }
++        props[k] = v;
++      }
++      if (unresolvedHole && ctx?.__htmlStreamingNow) {
++        const ph = host.placeholder({
++          key: wrapper ? void 0 : key,
++          name,
++          hintSize,
++          error: null
++        });
++        return wrapper ? h("div", wrapper, ph) : ph;
++      }
++      if (kids.length) {
++        props.children = renderDeckKids(kids, kidKeys, vals, ctx);
++      }
++      return wrapper ? h("div", wrapper, h(C, props)) : h(C, props);
++    };
++  }
++  function contentKey(el) {
++    const clone = el.cloneNode(true);
++    for (const d of clone.querySelectorAll("*")) {
++      while (d.attributes.length) d.removeAttribute(d.attributes[0].name);
++    }
++    const s = clone.innerHTML;
++    let h2 = 5381;
++    for (let i = 0; i < s.length; i++) h2 = (h2 << 5) + h2 + s.charCodeAt(i) | 0;
++    return s.length + "." + (h2 >>> 0).toString(36);
++  }
++  var NEVER_CONTENT_KEYED = new Set(
++    "script style textarea option title select canvas iframe video audio".split(
++      " "
++    )
++  );
++  var NOT_INLINE_SELECTOR = ":not(" + [...INLINE_TEXT_TAGS].join(",") + ")";
++  function walkElement(el, host) {
++    const realTag = RAW_UNWRAP[el.localName] || el.localName;
++    const tplId = el.getAttribute("data-dc-tpl");
++    const inlineOnly = el.childNodes.length > 0 && !NEVER_CONTENT_KEYED.has(realTag) && el.querySelector(NOT_INLINE_SELECTOR) === null;
++    const keySuffix = inlineOnly ? "|" + contentKey(el) : "";
++    const { propGetters, pseudoClasses } = collectProps(el, "dom", host);
++    const deckKeyed = isDeckMountTag(el) ? walkDeckChildren(el, host) : null;
++    const kids = deckKeyed ? deckKeyed.kids : walkChildren(el, host);
++    const kidKeys = deckKeyed?.keys ?? null;
++    return (vals, ctx, key) => {
++      const props = {
++        key: key + keySuffix,
++        "data-dc-tpl": tplId
++      };
++      for (const [k, g] of propGetters) {
++        let v = g(vals);
++        if (k === "style" && typeof v === "string") v = cssToObj(v);
++        if ((k === "value" || k === "checked") && v === void 0) {
++          v = k === "checked" ? false : "";
++        }
++        props[k] = v;
++      }
++      if (pseudoClasses.length) {
++        props.className = [props.className, ...pseudoClasses].filter(Boolean).join(" ");
++      }
++      return h(realTag, props, ...renderDeckKids(kids, kidKeys, vals, ctx));
++    };
++  }
++
++  // src/logic.ts
++  var StreamableLogic = class {
++    constructor(props) {
++      __publicField(this, "props");
++      __publicField(this, "state", {});
++      /** Back-pointer to the wrapper component, installed after construction. */
++      __publicField(this, "__host");
++      this.props = props || {};
++    }
++    setState(update, cb) {
++      this.__host && this.__host.__setLogicState(update, cb);
++    }
++    forceUpdate() {
++      this.__host && this.__host.forceUpdate();
++    }
++    componentDidMount() {
++    }
++    componentDidUpdate(_prevProps) {
++    }
++    componentWillUnmount() {
++    }
++    /** The flat object the template renders against (merged over props). */
++    renderVals() {
++      return {};
++    }
++  };
++  function evalDcLogic(src) {
++    //! nosemgrep: eval-and-function-constructor
++    const fn = new Function(
++      "DCLogic",
++      "StreamableLogic",
++      "React",
++      src + '\n;return (typeof Component!=="undefined"&&Component)||undefined;'
++    );
++    return fn(StreamableLogic, StreamableLogic, getReact());
++  }
++
++  // src/component.ts
++  function shallowEqual(a, b) {
++    if (!b) return false;
++    const ak = Object.keys(a).filter((k) => k !== "children");
++    const bk = Object.keys(b).filter((k) => k !== "children");
++    if (ak.length !== bk.length) return false;
++    for (const k of ak) if (a[k] !== b[k]) return false;
++    return true;
++  }
++  function Placeholder({
++    name,
++    hintSize,
++    streaming,
++    error
++  }) {
++    const [w, hgt] = (hintSize || "100%,60px").split(",");
++    return h(
++      "div",
++      {
++        className: "sc-placeholder" + (streaming ? " sc-streaming" : ""),
++        style: { width: w.trim(), height: hgt && hgt.trim() },
++        title: name
++      },
++      error ? h(
++        "div",
++        { className: "sc-placeholder-error" },
++        (name ? name + ": " : "") + error
++      ) : null
++    );
++  }
++  function hintToMin(hint) {
++    if (!hint) return void 0;
++    const [w, hgt] = hint.split(",");
++    return { minWidth: w.trim(), minHeight: hgt && hgt.trim() };
++  }
++  function createComponentFactory(registry, ensureFetched) {
++    const React = getReact();
++    const AncestorContext = React.createContext([]);
++    class StreamableComponent extends React.Component {
++      constructor(props) {
++        super(props);
++        __publicField(this, "__name");
++        __publicField(this, "__sub");
++        __publicField(this, "__needsDidMount", false);
++        /** Snapshot of the registry's streaming flags taken at render time 鈥擻n         *  builders read it off the RenderCtx (this) to pick placeholder vs
++         *  render-nothing for unresolved values. */
++        __publicField(this, "__streamingNow", false);
++        __publicField(this, "__htmlStreamingNow", false);
++        /** When a construct throws, remember the (class, registry.ver, props)
++         *  triple so render-time reconcile doesn't re-attempt it on every parent
++         *  re-render. A registry bump (new class, template, external module
++         *  resolving via bumpAll) changes `ver` and breaks the memo so an
++         *  env-dependent constructor can self-heal. */
++        __publicField(this, "__failedLogic", null);
++        __publicField(this, "__failedUserProps", null);
++        __publicField(this, "__failedVer", -1);
++        /** Per-instance constructor error 鈥?kept here (not on the registry entry)
++         *  so one instance's successful construct can't hide a sibling's failure,
++         *  and a construct can never wipe an eval error `updateJs` recorded on
++         *  `r.logicError`. */
++        __publicField(this, "__ctorError", null);
++        __publicField(this, "logic");
++        this.__name = props.__name;
++        this.state = { __v: 0, __err: null };
++        this.__sub = () => {
++          if (this.state.__err) this.setState({ __err: null });
++          this.forceUpdate();
++        };
++        this.__makeLogic(registry.get(this.__name).Logic, null);
++        ensureFetched(this.__name);
++      }
++      /** Error-boundary hook: a render crash anywhere in this DC's subtree
++       *  (its own template, an x-import'd component, a child DC without its
++       *  own deeper boundary) lands here instead of unmounting the page. */
++      static getDerivedStateFromError(e) {
++        return { __err: e instanceof Error && e.message ? e.message : String(e) };
++      }
++      componentDidCatch(e, info) {
++        console.error(
++          "[dc-runtime] render error in <" + this.__name + ">:",
++          e,
++          info?.componentStack || ""
++        );
++      }
++      /** Instantiate the logic class (or the no-op base) and adopt `prevState`
++       *  over its initial state 鈥?used both at mount and on hot-swap. */
++      __makeLogic(Logic, prevState) {
++        const L = Logic || StreamableLogic;
++        try {
++          this.logic = new L(this.__userProps());
++          this.__failedLogic = null;
++          this.__failedUserProps = null;
++          this.__ctorError = null;
++        } catch (e) {
++          console.error(e);
++          this.__failedLogic = Logic;
++          this.__failedUserProps = this.__userProps();
++          this.__failedVer = registry.get(this.__name).ver;
++          this.__ctorError = this.__name + ": " + (e instanceof Error && e.message ? e.message : String(e));
++          this.logic = new StreamableLogic(
++            this.__userProps()
++          );
++        }
++        this.logic.__host = this;
++        if (prevState)
++          this.logic.state = { ...this.logic.state || {}, ...prevState };
++      }
++      /** The props the author's logic + template see 鈥?internal __-prefixed
++       *  wiring stripped. */
++      __userProps() {
++        const { __name, __hintSize, __tplId, __hostStyle, ...rest } = this.props;
++        return rest;
++      }
++      __setLogicState(update, cb) {
++        const prev = this.logic.state;
++        const patch = typeof update === "function" ? update(prev) : update;
++        this.logic.state = { ...prev, ...patch };
++        this.setState((s) => ({ __v: s.__v + 1 }), cb);
++      }
++      /** Swap the logic instance when the registry's Logic class changed
++       *  (streaming completion, hot reload). State carries over; didMount
++       *  re-fires after the swap commits so refs exist. */
++      __reconcileLogic() {
++        const r = registry.get(this.__name);
++        const Next = r.Logic;
++        const Cur = this.logic.constructor;
++        if (Next === Cur || !Next && Cur === StreamableLogic || Next === this.__failedLogic && r.ver === this.__failedVer && shallowEqual(this.__userProps(), this.__failedUserProps)) {
++          return;
++        }
++        if (!this.__needsDidMount) {
++          try {
++            this.logic.componentWillUnmount();
++          } catch (e) {
++            console.error(e);
++          }
++        }
++        this.__makeLogic(Next, this.logic.state);
++        this.__needsDidMount = true;
++      }
++      componentDidMount() {
++        registry.get(this.__name).subs.add(this.__sub);
++        try {
++          this.logic.componentDidMount();
++        } catch (e) {
++          console.error(e);
++        }
++      }
++      componentDidUpdate(prevProps) {
++        this.logic.props = this.__userProps();
++        if (this.__needsDidMount) {
++          if (this.state.__err || !registry.get(this.__name).tpl) return;
++          this.__needsDidMount = false;
++          try {
++            this.logic.componentDidMount();
++          } catch (e) {
++            console.error(e);
++          }
++        } else {
++          try {
++            this.logic.componentDidUpdate(prevProps);
++          } catch (e) {
++            console.error(e);
++          }
++        }
++      }
++      componentWillUnmount() {
++        registry.get(this.__name).subs.delete(this.__sub);
++        if (!this.__needsDidMount) {
++          try {
++            this.logic.componentWillUnmount();
++          } catch (e) {
++            console.error(e);
++          }
++        }
++      }
++      render() {
++        const r = registry.get(this.__name);
++        const cls = "sc-host" + (r.htmlStreaming ? " sc-streaming-html" : "") + (r.jsStreaming ? " sc-streaming-js" : "");
++        const hintStyle = r.htmlStreaming ? hintToMin(this.props.__hintSize) : void 0;
++        const hostStyle = this.props.__hostStyle || hintStyle ? { ...hintStyle || {}, ...this.props.__hostStyle || {} } : void 0;
++        const hostBase = {
++          className: cls,
++          style: hostStyle,
++          "data-sc-name": this.__name,
++          "data-dc-tpl": this.props.__tplId
++        };
++        const chain = Array.isArray(this.context) ? this.context : [];
++        if (chain.includes(this.__name)) {
++          const cycle = [
++            ...chain.slice(chain.indexOf(this.__name)),
++            this.__name
++          ].join(" \u2192 ");
++          return h(
++            "div",
++            { ...hostBase, className: cls + " sc-has-error" },
++            h(Placeholder, {
++              name: this.__name,
++              hintSize: this.props.__hintSize,
++              error: "circular import: " + cycle
++            })
++          );
++        }
++        if (this.state.__err) {
++          return h(
++            "div",
++            { ...hostBase, className: cls + " sc-has-error" },
++            h(
++              "div",
++              { className: "sc-logic-error", "data-omelette-chrome": "" },
++              this.__name + ": " + this.state.__err
++            ),
++            h(Placeholder, {
++              name: this.__name,
++              hintSize: this.props.__hintSize,
++              error: this.state.__err
++            })
++          );
++        }
++        this.__reconcileLogic();
++        if (!r.tpl) {
++          return h(
++            "div",
++            hostBase,
++            h(Placeholder, { name: this.__name, hintSize: this.props.__hintSize })
++          );
++        }
++        const userProps = this.__userProps();
++        this.logic.props = userProps;
++        let vals = userProps;
++        let renderErr = r.logicError || this.__ctorError;
++        try {
++          vals = { ...userProps, ...this.logic.renderVals() || {} };
++        } catch (e) {
++          console.error(e);
++          renderErr = this.__name + ".renderVals(): " + (e instanceof Error && e.message ? e.message : String(e));
++        }
++        this.__streamingNow = !!(r.htmlStreaming || r.jsStreaming);
++        this.__htmlStreamingNow = !!r.htmlStreaming;
++        return h(
++          "div",
++          { ...hostBase, className: cls + (renderErr ? " sc-has-error" : "") },
++          renderErr && h(
++            "div",
++            { className: "sc-logic-error", "data-omelette-chrome": "" },
++            renderErr
++          ),
++          h(
++            AncestorContext.Provider,
++            { value: [...chain, this.__name] },
++            r.tpl(vals, this)
++          )
++        );
++      }
++    }
++    __publicField(StreamableComponent, "contextType", AncestorContext);
++    const named = /* @__PURE__ */ new Map();
++    function getDC(name) {
++      const hit = named.get(name);
++      if (hit) return hit;
++      function Dispatcher(p) {
++        const [, setTick] = React.useState(0);
++        React.useEffect(() => {
++          const sub = () => setTick((n) => n + 1);
++          registry.get(name).subs.add(sub);
++          return () => {
++            registry.get(name).subs.delete(sub);
++          };
++        }, []);
++        ensureFetched(name);
++        return h(StreamableComponent, { ...p, __name: name });
++      }
++      Dispatcher.displayName = name;
++      named.set(name, Dispatcher);
++      return Dispatcher;
++    }
++    return {
++      getDC,
++      StreamableComponent
++    };
++  }
++
++  // src/bundled.ts
++  function bundledBlob(url) {
++    const blobs = window.__resourceBlobs;
++    const b = blobs ? blobs[url.split("#")[0]] : void 0;
++    return b instanceof Blob ? b : null;
++  }
++
++  // src/cdn.ts
++  var REACT_URL = "https://unpkg.com/react@18.3.1/umd/react.production.min.js";
++  var REACT_SRI = "sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z";
++  var REACT_DOM_URL = "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js";
++  var REACT_DOM_SRI = "sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1";
++  var BABEL_URL = "https://unpkg.com/@babel/standalone@7.29.0/babel.min.js";
++  var BABEL_SRI = "sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y";
++  function cdnScriptFor(url, sri) {
++    const res = window.__resources;
++    const v = res ? res[url] : void 0;
++    return typeof v === "string" && v ? { src: v } : { src: url, integrity: sri };
++  }
++
++  // src/external.ts
++  var isCustomElementName = (n) => !n.includes(".") && n.includes("-");
++  function isRenderableType(g) {
++    if (typeof g === "function") return !isElementClass(g);
++    return typeof g === "object" && g !== null && typeof g.$$typeof === "symbol";
++  }
++  function resolveDottedPath(root, name) {
++    let cur = root;
++    for (const seg of name.split(".")) {
++      if (cur == null) return void 0;
++      cur = cur[seg];
++    }
++    return cur;
++  }
++  var GLOBAL_POLL_INTERVAL_MS = 50;
++  var GLOBAL_POLL_TIMEOUT_MS = 3e4;
++  function createExternalModules(onResolved) {
++    const cache = /* @__PURE__ */ new Map();
++    let babelLoading = null;
++    const reportedMissing = /* @__PURE__ */ new Map();
++    const polling = /* @__PURE__ */ new Set();
++    function ensureBabel() {
++      if (window.Babel) return Promise.resolve();
++      if (babelLoading) return babelLoading;
++      const babel = cdnScriptFor(BABEL_URL, BABEL_SRI);
++      babelLoading = new Promise((res, rej) => {
++        const s = document.createElement("script");
++        s.src = babel.src;
++        if (babel.integrity) {
++          s.integrity = babel.integrity;
++          s.crossOrigin = "anonymous";
++        }
++        s.onload = () => res();
++        s.onerror = rej;
++        document.head.appendChild(s);
++      });
++      return babelLoading;
++    }
++    const pending = /* @__PURE__ */ new Map();
++    function load(kind, url, after) {
++      const existing = pending.get(url);
++      if (existing) return existing;
++      cache.set(url, null);
++      console.info("[dc-runtime] x-import: loading", url, "(" + kind + ")");
++      const ready = Promise.all([
++        kind === "jsx" ? ensureBabel() : Promise.resolve(),
++        after ?? Promise.resolve()
++      ]);
++      const p = ready.then(() => {
++        const pre = bundledBlob(url);
++        if (pre) return pre.text();
++        return fetch(url).then((r) => {
++          if (!r.ok) throw new Error("HTTP " + r.status);
++          return r.text();
++        });
++      }).then((src) => {
++        const code = kind === "jsx" ? window.Babel.transform(src, {
++          filename: url,
++          presets: ["react", "typescript"]
++        }).code : src;
++        const module = { exports: {} };
++        const before = new Set(Object.keys(window));
++        //! nosemgrep: eval-and-function-constructor
++        new Function("React", "module", "exports", "require", code)(
++          getReact(),
++          module,
++          module.exports,
++          () => ({})
++        );
++        const globals = {};
++        for (const k of Object.keys(window)) {
++          if (!before.has(k) && typeof window[k] === "function") {
++            globals[k] = window[k];
++          }
++        }
++        cache.set(url, { mod: module.exports, globals });
++        console.info(
++          "[dc-runtime] x-import: loaded",
++          url,
++          "\u2014 exports:",
++          Object.keys(module.exports),
++          "window globals:",
++          Object.keys(globals)
++        );
++        onResolved();
++      }).catch((e) => {
++        cache.set(url, {
++          mod: {},
++          globals: {},
++          error: "failed to load: " + (e instanceof Error && e.message ? e.message : String(e))
++        });
++        console.error(
++          "[dc-runtime] x-import: FAILED to load",
++          url,
++          "(" + kind + ")",
++          e
++        );
++        onResolved();
++      });
++      pending.set(url, p);
++      return p;
++    }
++    function resolve2(url, name) {
++      const entry = cache.get(url);
++      if (!entry) return null;
++      const { mod, globals } = entry;
++      const C = mod && mod[name] || globals && globals[name] || typeof window !== "undefined" && window[name] || mod && mod.default;
++      if (typeof C === "function") return C;
++      const key = url + "\0" + name;
++      if (!reportedMissing.has(key)) {
++        reportedMissing.set(
++          key,
++          entry.error || 'no export named "' + name + '" (has: ' + Object.keys(mod).join(", ") + ")"
++        );
++        console.error(
++          "[dc-runtime] x-import: module",
++          url,
++          "loaded but has no component named",
++          JSON.stringify(name),
++          "\u2014 available exports:",
++          Object.keys(mod),
++          "window globals:",
++          Object.keys(globals),
++          ". The module must `module.exports = {" + name + "}` or set `window." + name + "`."
++        );
++      }
++      return null;
++    }
++    function waitForGlobal(name) {
++      if (polling.has(name)) return;
++      polling.add(name);
++      const started = Date.now();
++      const isCE = isCustomElementName(name);
++      const tick = () => {
++        const found = isCE ? customElements.get(name) : isRenderableType(resolveDottedPath(window, name));
++        if (found) {
++          polling.delete(name);
++          onResolved();
++          return;
++        }
++        if (Date.now() - started >= GLOBAL_POLL_TIMEOUT_MS) {
++          console.warn(
++            "[dc-runtime] x-import: global",
++            JSON.stringify(name),
++            "never appeared on window after " + GLOBAL_POLL_TIMEOUT_MS + "ms"
++          );
++          return;
++        }
++        setTimeout(tick, GLOBAL_POLL_INTERVAL_MS);
++      };
++      setTimeout(tick, GLOBAL_POLL_INTERVAL_MS);
++    }
++    function resolveGlobal(url, name) {
++      const isCE = isCustomElementName(name);
++      if (!url) {
++        if (isCE) {
++          if (customElements.get(name)) return name;
++          waitForGlobal(name);
++          return null;
++        }
++        const g2 = resolveDottedPath(window, name);
++        if (isRenderableType(g2)) return g2;
++        waitForGlobal(name);
++        return null;
++      }
++      const entry = cache.get(url);
++      if (!entry) return null;
++      if (isCE && customElements.get(name)) return name;
++      const g = entry.globals[name] ?? resolveDottedPath(window, name);
++      if (isRenderableType(g)) return g;
++      if (name.includes(".")) return null;
++      const key = url + "\0global\0" + name;
++      if (!reportedMissing.has(key)) {
++        reportedMissing.set(key, null);
++        if (isCE && !customElements.get(name)) {
++          console.warn(
++            "[dc-runtime] x-import:",
++            url,
++            "loaded but no custom element",
++            JSON.stringify(name),
++            "is registered and window." + name + " is not a function \u2014 rendering <" + name + "> as an unknown element."
++          );
++        }
++      }
++      return name;
++    }
++    function getError(url, name) {
++      const entry = cache.get(url);
++      if (entry?.error) return entry.error;
++      return reportedMissing.get(url + "\0" + name) || null;
++    }
++    return { load, resolve: resolve2, resolveGlobal, getError };
++  }
++  function isElementClass(g) {
++    try {
++      return typeof g === "function" && typeof HTMLElement !== "undefined" && g.prototype instanceof HTMLElement;
++    } catch {
++      return false;
++    }
++  }
++
++  // src/atomics.ts
++  var ATOMIC_CSS = (
++    // layout
++    ".fx{display:flex}.col{display:flex;flex-direction:column}.grid{display:grid}.ac{align-items:center}.jc{justify-content:center}.jb{justify-content:space-between}.f1{flex:1}.noshrink{flex-shrink:0}.wrap{flex-wrap:wrap}.fw5{font-weight:500}.fw6{font-weight:600}.fw7{font-weight:700}.fw8{font-weight:800}.fs11{font-size:11px}.fs12{font-size:12px}.fs13{font-size:13px}.fs14{font-size:14px}.fs15{font-size:15px}.fs16{font-size:16px}.fs20{font-size:20px}.fs22{font-size:22px}.upper{text-transform:uppercase}.tc{text-align:center}.nowrap{white-space:nowrap}.gap8{gap:8px}.gap10{gap:10px}.gap12{gap:12px}.gap16{gap:16px}.gap24{gap:24px}.m0{margin:0}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.posrel{position:relative}.posabs{position:absolute}.round{border-radius:50%}.ohide{overflow:hidden}.bbox{box-sizing:border-box}.pointer{cursor:pointer}.w100{width:100%}.b0{border:none}"
++  );
++
++  // src/helmet.ts
++  var DESIGN_DOC_MODE_RE = /<meta\b[^>]*\bname\s*=\s*["']design_doc_mode["'][^>]*\b(?:content|value)\s*=\s*["'](\w+)["']/i;
++  var CANVAS_BG_LIGHT = "#f0eee6";
++  var CANVAS_BG_DARK = "#2e2c26";
++  function createHelmetManager(doc, isStreaming) {
++    const mounted = /* @__PURE__ */ new Set();
++    const live = /* @__PURE__ */ new Map();
++    let designDocMode = null;
++    let canvasStyleEl = null;
++    let appTheme = "light";
++    try {
++      const ds = doc.documentElement.dataset.theme;
++      appTheme = ds === "dark" || ds === "light" ? ds : new URLSearchParams(doc.defaultView?.location.search ?? "").get(
++        "theme"
++      ) === "dark" ? "dark" : "light";
++    } catch {
++    }
++    function applyCanvasBg() {
++      if (!canvasStyleEl) return;
++      const bg = appTheme === "dark" ? CANVAS_BG_DARK : CANVAS_BG_LIGHT;
++      canvasStyleEl.textContent = `html,body{background:${bg}}#dc-root>.sc-host{position:relative}`;
++    }
++    function postDesignMode(mode) {
++      if (window.parent === window) return;
++      try {
++        window.parent.postMessage({ type: "__dc_design_mode", mode }, "*");
++      } catch {
++      }
++    }
++    function setDesignDocMode(mode) {
++      if (mode === designDocMode) return;
++      designDocMode = mode;
++      postDesignMode(mode);
++      if (mode === "canvas") {
++        doc.documentElement.setAttribute("data-dc-canvas", "");
++        canvasStyleEl = doc.createElement("style");
++        canvasStyleEl.setAttribute("data-dc-canvas", "");
++        applyCanvasBg();
++        doc.head.appendChild(canvasStyleEl);
++      } else {
++        doc.documentElement.removeAttribute("data-dc-canvas");
++        canvasStyleEl?.remove();
++        canvasStyleEl = null;
++      }
++    }
++    window.addEventListener("message", (e) => {
++      const type = e.data && e.data.type;
++      if (type === "__dc_theme") {
++        const t = e.data.theme;
++        if (t === "light" || t === "dark") {
++          appTheme = t;
++          applyCanvasBg();
++        }
++        return;
++      }
++      if (!designDocMode || type !== "__dc_probe") return;
++      postDesignMode(designDocMode);
++    });
++    function compile(node) {
++      const raw = [...node.children];
++      const helmetClosed = node.nextSibling != null || node.parentNode?.nextSibling != null;
++      if (node.hasAttribute("data-dc-atomics") && !mounted.has("__dc-atomics")) {
++        mounted.add("__dc-atomics");
++        const el = doc.createElement("style");
++        el.id = "__dc-atomics";
++        el.textContent = ATOMIC_CSS;
++        doc.head.appendChild(el);
++      }
++      return (_vals, ctx) => {
++        const name = ctx && ctx.__name || "";
++        const streaming = !!(name && isStreaming(name));
++        for (let i = 0; i < raw.length; i++) {
++          const child = raw[i];
++          const tag = child.tagName;
++          const mayBePartial = streaming && !helmetClosed && i === raw.length - 1;
++          if (tag === "SCRIPT") {
++            if (mayBePartial) continue;
++            const key = "SCRIPT|" + (child.getAttribute("src") || child.textContent || "");
++            if (mounted.has(key)) continue;
++            mounted.add(key);
++            const el = doc.createElement("script");
++            for (const { name: an, value } of [...child.attributes])
++              el.setAttribute(an, value);
++            if (child.textContent) el.textContent = child.textContent;
++            doc.head.appendChild(el);
++          } else if (tag === "LINK" || tag === "META") {
++            if (mayBePartial) continue;
++            const key = tag + "|" + (child.getAttribute("href") || child.getAttribute("src") || child.outerHTML);
++            if (mounted.has(key)) continue;
++            mounted.add(key);
++            if (tag === "LINK") {
++              const rel = (child.getAttribute("rel") || "").toLowerCase().split(/\s+/);
++              const href = (child.getAttribute("href") || "").trim();
++              const res = window.__resources;
++              const pre = res && rel.includes("stylesheet") && !rel.includes("alternate") ? res[href] : void 0;
++              const blob = typeof pre === "string" && pre ? bundledBlob(pre) : null;
++              if (blob) {
++                const el = doc.createElement("style");
++                if (child.hasAttribute("disabled")) {
++                  el.setAttribute("media", "not all");
++                } else if (child.getAttribute("media")) {
++                  el.setAttribute("media", child.getAttribute("media"));
++                }
++                if (child.getAttribute("title"))
++                  el.setAttribute("title", child.getAttribute("title"));
++                void blob.text().then((css) => {
++                  el.textContent = css;
++                });
++                doc.head.appendChild(el);
++                continue;
++              }
++            }
++            doc.head.appendChild(child.cloneNode(true));
++          } else {
++            const key = name + "|" + i;
++            let el = live.get(key);
++            if (!el || el.tagName !== tag) {
++              if (el) el.remove();
++              el = doc.createElement(tag.toLowerCase());
++              live.set(key, el);
++              doc.head.appendChild(el);
++            }
++            for (const { name: an, value } of [...child.attributes]) {
++              if (el.getAttribute(an) !== value) el.setAttribute(an, value);
++            }
++            if (el.textContent !== child.textContent)
++              el.textContent = child.textContent;
++          }
++        }
++        return null;
++      };
++    }
++    return { compile, setDesignDocMode };
++  }
++
++  // src/pseudo.ts
++  function scanUnquotedUrl(css, i) {
++    if (css[i] !== "u" && css[i] !== "U" || css.slice(i, i + 4).toLowerCase() !== "url(" || /[a-z0-9_-]/i.test(css[i - 1] ?? "")) {
++      return -1;
++    }
++    let j = i + 4;
++    while (j < css.length && /\s/.test(css[j])) j++;
++    if (css[j] === '"' || css[j] === "'") return -1;
++    while (j < css.length && css[j] !== ")") {
++      if (css[j] === "\\") j++;
++      j++;
++    }
++    return j < css.length ? j + 1 : css.length;
++  }
++  function stripComments(css) {
++    let out = "";
++    let quote = "";
++    for (let i = 0; i < css.length; i++) {
++      const c = css[i];
++      if (quote) {
++        if (c === "\\") {
++          out += c + (css[i + 1] ?? "");
++          i++;
++          continue;
++        }
++        if (c === quote) quote = "";
++        out += c;
++      } else if (c === "'" || c === '"') {
++        quote = c;
++        out += c;
++      } else if (c === "/" && css[i + 1] === "*") {
++        const end = css.indexOf("*/", i + 2);
++        i = end === -1 ? css.length : end + 1;
++        out += " ";
++      } else {
++        const end = scanUnquotedUrl(css, i);
++        if (end === -1) out += c;
++        else {
++          out += css.slice(i, end);
++          i = end - 1;
++        }
++      }
++    }
++    return out;
++  }
++  function importantify(css) {
++    css = stripComments(css);
++    const decls = [];
++    let start = 0;
++    let depth = 0;
++    let quote = "";
++    for (let i = 0; i < css.length; i++) {
++      const c = css[i];
++      if (quote) {
++        if (c === "\\") i++;
++        else if (c === quote) quote = "";
++      } else if (c === "'" || c === '"') quote = c;
++      else if (c === "(") depth++;
++      else if (c === ")") depth = Math.max(0, depth - 1);
++      else if (c === ";" && depth === 0) {
++        decls.push(css.slice(start, i));
++        start = i + 1;
++      } else {
++        const end = scanUnquotedUrl(css, i);
++        if (end !== -1) i = end - 1;
++      }
++    }
++    decls.push(css.slice(start));
++    return decls.map((d) => d.trim()).filter(Boolean).map((d) => /!\s*important$/i.test(d) ? d : d + " !important").join(";");
++  }
++  function createPseudoSheet(doc) {
++    let el = null;
++    const cache = /* @__PURE__ */ new Map();
++    let n = 0;
++    return (pseudo, css) => {
++      const k = pseudo + "|" + css;
++      const hit = cache.get(k);
++      if (hit) return hit;
++      if (!el) {
++        el = doc.createElement("style");
++        doc.head.appendChild(el);
++      }
++      const cls = "scp" + (n++).toString(36);
++      const isPseudoElement = pseudo === "before" || pseudo === "after";
++      const sel = isPseudoElement ? "." + cls + "::" + pseudo : "." + cls + ":" + pseudo;
++      el.sheet.insertRule(
++        sel + "{" + (isPseudoElement ? css : importantify(css)) + "}",
++        el.sheet.cssRules.length
++      );
++      cache.set(k, cls);
++      return cls;
++    };
++  }
++
++  // src/registry.ts
++  function createRegistry() {
++    const entries = /* @__PURE__ */ Object.create(null);
++    function get(name) {
++      return entries[name] || (entries[name] = {
++        html: "",
++        tpl: null,
++        Logic: null,
++        jsStreaming: false,
++        htmlStreaming: false,
++        ver: 0,
++        subs: /* @__PURE__ */ new Set(),
++        fetched: false
++      });
++    }
++    function bump(name) {
++      const r = get(name);
++      r.ver++;
++      for (const fn of r.subs) fn();
++    }
++    return {
++      entries,
++      get,
++      bump,
++      bumpAll() {
++        for (const n in entries) bump(n);
++      }
++    };
++  }
++
++  // src/runtime.ts
++  var COMPONENT_DIR = ".";
++  function createRuntime(doc = document) {
++    const registry = createRegistry();
++    const pseudoClass = createPseudoSheet(doc);
++    const helmet = createHelmetManager(
++      doc,
++      (name) => registry.get(name).htmlStreaming
++    );
++    const external = createExternalModules(() => registry.bumpAll());
++    const factory = createComponentFactory(registry, ensureFetched);
++    const host = {
++      component: (name) => factory.getDC(name),
++      placeholder: (props) => h(Placeholder, props),
++      helmet: (node) => helmet.compile(node),
++      loadExternal: (kind, url, after) => external.load(kind, url, after),
++      resolveExternal: (url, name) => external.resolve(url, name),
++      resolveExternalGlobal: (url, name) => external.resolveGlobal(url, name),
++      resolveExternalError: (url, name) => external.getError(url, name),
++      pseudoClass
++    };
++    function ensureFetched(name) {
++      const r = registry.get(name);
++      if (r.fetched) return;
++      r.fetched = true;
++      const url = COMPONENT_DIR + "/" + encodeURIComponent(name) + ".dc.html";
++      const res = window.__resources;
++      const pre = res ? res[url] : void 0;
++      const target = typeof pre === "string" && pre ? pre : url;
++      const blob = bundledBlob(target);
++      (blob ? blob.text() : fetch(target).then((res2) => {
++        if (!res2.ok) {
++          console.error(
++            '[dc-runtime] sibling fetch for "' + name + '" failed:',
++            url,
++            "returned",
++            res2.status,
++            "\u2014 the reference renders as an empty placeholder."
++          );
++          return "";
++        }
++        return res2.text();
++      })).then((t) => {
++        if (!t) return;
++        const parsed = parseDcText(t);
++        if (!parsed) {
++          console.error(
++            '[dc-runtime] sibling fetch for "' + name + '":',
++            url,
++            "has no <x-dc> block \u2014 not a Design Component."
++          );
++          return;
++        }
++        if (parsed.props) r.propsMeta = parsed.props;
++        if (parsed.preview) r.preview = parsed.preview;
++        if (parsed.template && !r.html) updateHtml(name, parsed.template);
++        if (parsed.js && !r.Logic) updateJs(name, parsed.js);
++      }).catch(
++        (e) => console.error(
++          '[dc-runtime] sibling fetch for "' + name + '" threw:',
++          url,
++          e
++        )
++      );
++    }
++    let rootName = null;
++    function updateHtml(name, html) {
++      const r = registry.get(name);
++      r.html = html;
++      if (name === rootName) {
++        const mode = DESIGN_DOC_MODE_RE.exec(html)?.[1] ?? null;
++        if (mode || !r.htmlStreaming) helmet.setDesignDocMode(mode);
++      }
++      try {
++        r.tpl = compileTemplate(html, host);
++      } catch (e) {
++        console.error("[dc-runtime] template compile FAILED for", name, e);
++      }
++      registry.bump(name);
++    }
++    function updateJs(name, src) {
++      const r = registry.get(name);
++      const seq = r.jsSeq = (r.jsSeq || 0) + 1;
++      try {
++        const Cls = evalDcLogic(src);
++        if (r.jsSeq !== seq) return;
++        if (typeof Cls !== "function") {
++          r.logicError = name + ".dc.html: <script data-dc-script> must define `class Component extends DCLogic`";
++        } else {
++          r.logicError = null;
++          r.Logic = Cls;
++        }
++      } catch (e) {
++        if (r.jsSeq !== seq) return;
++        console.error(
++          "[dc-runtime] logic class eval FAILED for",
++          name,
++          "\u2014 the template renders with props only.",
++          e
++        );
++        r.logicError = name + ": " + (e instanceof Error && e.message ? e.message : String(e));
++      }
++      registry.bump(name);
++    }
++    function setStreaming(name, kind, on) {
++      const r = registry.get(name);
++      if (kind === "html") r.htmlStreaming = !!on;
++      else r.jsStreaming = !!on;
++      let any = false;
++      for (const n in registry.entries) {
++        const e = registry.entries[n];
++        if (e && (e.htmlStreaming || e.jsStreaming)) {
++          any = true;
++          break;
++        }
++      }
++      doc.documentElement.classList.toggle("sc-dc-streaming", any);
++      registry.bump(name);
++    }
++    function dcUpdate(name, kind, content, streaming) {
++      if (streaming) registry.get(name).fetched = true;
++      if (kind === "html") {
++        setStreaming(name, "html", !!streaming);
++        updateHtml(name, content);
++      } else if (kind === "js") {
++        setStreaming(name, "js", !!streaming);
++        if (!streaming) updateJs(name, content);
++      } else if (kind === "props") {
++        const { props, preview } = parseDataProps(content);
++        const r = registry.get(name);
++        r.propsMeta = props ?? void 0;
++        r.preview = preview;
++        registry.bump(name);
++      }
++    }
++    function setProps(name, overrides) {
++      registry.get(name).propOverrides = overrides && typeof overrides === "object" ? { ...overrides } : null;
++      registry.bump(name);
++    }
++    function adoptParsed(name, parsed) {
++      if (!parsed) return;
++      const r = registry.get(name);
++      if (parsed.props) r.propsMeta = parsed.props;
++      if (parsed.preview) r.preview = parsed.preview;
++      if (parsed.template) updateHtml(name, parsed.template);
++      if (parsed.js) updateJs(name, parsed.js);
++    }
++    return {
++      registry,
++      getDC: factory.getDC,
++      updateHtml,
++      updateJs,
++      dcUpdate,
++      setProps,
++      adoptParsed,
++      setRootName: (name) => {
++        rootName = name;
++      },
++      markFetched: (name) => {
++        registry.get(name).fetched = true;
++      },
++      annotatedTemplate: (name) => {
++        const r = registry.get(name);
++        return r.tpl && r.tpl.__annotated || null;
++      },
++      templateSource: (name) => registry.get(name).html || null,
++      StreamableLogic
++    };
++  }
++
++  // src/stream-state.ts
++  function createStreamTracker(staleMs = 6e4, now = Date.now) {
++    const since = /* @__PURE__ */ new Map();
++    const liveOne = (n) => {
++      const t = since.get(n);
++      if (t === void 0) return false;
++      if (now() - t > staleMs) {
++        since.delete(n);
++        return false;
++      }
++      return true;
++    };
++    return {
++      push(name, streaming, viewportKey) {
++        if (viewportKey === "dc-model") return;
++        if (streaming) since.set(name, now());
++        else since.delete(name);
++      },
++      live(name) {
++        if (name !== void 0) return liveOne(name);
++        for (const n of [...since.keys()]) if (liveOne(n)) return true;
++        return false;
++      }
++    };
++  }
++
++  // src/index.ts
++  function hideRawTemplate() {
++    const s = document.createElement("style");
++    s.textContent = "x-dc{display:none!important}";
++    document.head.appendChild(s);
++  }
++  function loadScript(src, integrity) {
++    return new Promise((resolve2, reject) => {
++      //! nosemgrep: create-script-element
++      const s = document.createElement("script");
++      s.src = src;
++      if (integrity) {
++        s.integrity = integrity;
++        s.crossOrigin = "anonymous";
++      }
++      s.async = false;
++      s.onload = () => resolve2();
++      s.onerror = () => reject(new Error(`failed to load ${src}`));
++      document.head.appendChild(s);
++    });
++  }
++  function loadReactUmd() {
++    const w = window;
++    if (w.React && w.ReactDOM) return Promise.resolve();
++    const react = cdnScriptFor(REACT_URL, REACT_SRI);
++    const reactDom = cdnScriptFor(REACT_DOM_URL, REACT_DOM_SRI);
++    return Promise.all([
++      loadScript(react.src, react.integrity),
++      loadScript(reactDom.src, reactDom.integrity)
++    ]).then(() => void 0);
++  }
++  function init() {
++    const runtime = createRuntime(document);
++    let rootName = "Root";
++    const baseCss = document.createElement("style");
++    baseCss.textContent = BASE_CSS;
++    document.head.prepend(baseCss);
++    const notifyHost = () => {
++      if (window.parent === window) return;
++      const r = runtime.registry.entries[rootName];
++      try {
++        window.parent.postMessage(
++          {
++            type: "__dc_booted",
++            rootName,
++            propsMeta: r && r.propsMeta || null,
++            preview: r && r.preview || null
++          },
++          "*"
++        );
++      } catch {
++      }
++    };
++    const streams = createStreamTracker();
++    const api = {
++      __dcUpdate: (name, kind, content, streaming, viewportKey) => {
++        streams.push(name, streaming, viewportKey);
++        runtime.dcUpdate(name, kind, content, streaming);
++        if (name === rootName && !streaming && kind === "props") notifyHost();
++      },
++      __dcStreaming: (name) => streams.live(name),
++      __dcSetProps: (name, overrides) => runtime.setProps(name, overrides),
++      /** Name of the component currently mounted as the page root 鈥?DC tools
++       *  push their template-stream here when targeting "the open page". */
++      __dcRootName: () => rootName,
++      /** Editor bridge 鈥?the encoded, `data-dc-tpl`-annotated template source.
++       *  The host editor parses this into its own template DOM so it can map a
++       *  rendered node (carrying the same `data-dc-tpl`) back to the source
++       *  node that emitted it. Returns the encoded form (`sc-camel-*` attrs,
++       *  `<sc-raw-*>`/`<sc-helmet>` tags); the editor decodes on serialize. */
++      __dcAnnotatedTemplate: (name) => runtime.annotatedTemplate(name),
++      /** Editor bridge 鈥?the *original* (decoded) template source. */
++      __dcTemplateSource: (name) => runtime.templateSource(name),
++      __dcBoot: () => {
++        rootName = boot(runtime, document) ?? rootName;
++        notifyHost();
++      },
++      __dcRegistry: runtime.registry.entries,
++      getDC: (name) => runtime.getDC(name),
++      // `DCLogic` is the documented base class name; `StreamableLogic` is the
++      // implementation alias kept for any project that already references it.
++      DCLogic: runtime.StreamableLogic,
++      StreamableLogic: runtime.StreamableLogic
++    };
++    Object.assign(window, api);
++    window.__dcContentKeyed = true;
++    if (document.readyState !== "loading") api.__dcBoot();
++    else document.addEventListener("DOMContentLoaded", () => api.__dcBoot());
++  }
++  hideRawTemplate();
++  loadReactUmd().then(init).catch((err) => {
++    console.error("[dc] failed to load React or boot:", err);
++    throw err;
++  });
++})();

@@ -1,0 +1,29 @@
+- generic [active] [ref=f4e1]:
+  - generic [ref=f4e2]:
+    - application [ref=f4e3]:
+      - group [ref=f4e64]:
+        - generic [ref=f4e65] [cursor=pointer]:
+          - generic [ref=f4e67]:
+            - heading "User Research Notes" [level=3] [ref=f4e68]
+            - generic [ref=f4e69]: INFO
+          - generic [ref=f4e70]:
+            - button "Summarize" [ref=f4e71]
+            - button "Delete" [ref=f4e72]
+      - generic "Control Panel" [ref=f4e6]:
+        - button "Zoom In" [disabled]
+        - button "Zoom Out" [ref=f4e10] [cursor=pointer]
+        - button "Fit View" [ref=f4e13] [cursor=pointer]
+        - button "Toggle Interactivity" [ref=f4e16] [cursor=pointer]
+    - generic [ref=f4e23]:
+      - button "note_add Add Info" [ref=f4e24]:
+        - generic [ref=f4e25]: note_add
+        - generic [ref=f4e26]: Add Info
+      - button "assignment_add Add Task" [ref=f4e27]:
+        - generic [ref=f4e28]: assignment_add
+        - generic [ref=f4e29]: Add Task
+    - generic [ref=f4e31]:
+      - button "Canvas" [ref=f4e32]
+      - button "Gantt" [disabled] [ref=f4e33]
+      - button "List" [disabled] [ref=f4e34]
+  - button "Open Next.js Dev Tools" [ref=f4e40] [cursor=pointer]
+  - alert [ref=f4e44]

@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { detectEffort, detectBlocked, detectDueDate } from "@/lib/lineage"
 import type { GraphNode, NodeKind, ParseState } from "@/lib/types"
 
 export interface GraphNodeData extends Record<string, unknown> {
@@ -76,6 +77,9 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
   const meta = KIND_META[node.kind]
   const Icon = meta.icon
   const isTask = node.kind === "task"
+  const effort = isTask ? detectEffort(node.title, node.body) : null
+  const blocked = isTask ? detectBlocked(node.title, node.body) : null
+  const dueDate = isTask ? detectDueDate(node.title, node.body) : null
 
   return (
     <div
@@ -150,7 +154,10 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
 
           {isTask && (
             <>
-              {assigneeName ? (
+                {effort && <span className="text-2xs bg-accent/50 text-muted-foreground rounded px-1.5 py-0.5 font-mono">{effort}</span>}
+              {blocked && <span className="text-2xs bg-destructive/15 text-destructive rounded px-1.5 py-0.5 font-medium">Blocked</span>}
+              {dueDate && <span className="text-2xs text-muted-foreground font-mono">due {dueDate}</span>}
+            {assigneeName ? (
                 <span className="text-2xs text-muted-foreground truncate">{assigneeName}</span>
               ) : (
                 <span className="text-2xs text-muted-foreground/70">Unassigned</span>
