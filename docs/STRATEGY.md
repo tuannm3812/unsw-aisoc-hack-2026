@@ -1,6 +1,6 @@
 # UNSW AiSoc Hackathon 2026 — Strategy
 
-Source: `INFORMATION SESSION.pdf` (Info Session and Workshop deck), read 2026-07-31.
+Sources: `INFORMATION SESSION.pdf` (Info Session and Workshop deck, read 2026-07-31); DevPost rules; organizer Slack announcements; Atlassian's opening presentation (§1b, checked 2026-07-31).
 
 ## 1. Event Timeline
 
@@ -32,12 +32,25 @@ Key words to hold onto: **multi-disciplinary teams** (not a single-role persona 
 
 Team sign-up required: [DevPost — aisoc-atlassian-mistral](https://aisoc-atlassian-mistral.devpost.com/)
 
+## 1b. What The Problem Includes (from Atlassian's opening presentation, checked 2026-07-31)
+
+Source: the Atlassian × Mistral × UNSW opening slide deck (a 24-slide recruiting/opening presentation; only its "Requirements and judging" and "What the problem includes" slides are hackathon-relevant, the rest is Atlassian careers content).
+
+The "What the problem includes" slide explicitly scopes the problem statement:
+
+- **Disciplines named**: Design, Engineering, Product, Operations, Business, Law, Science
+- **Input types named**: Pull requests, whiteboard photos, recordings, documents, PDFs, spreadsheets, raw data
+- Explicit note: *"The challenge covers quantitative and qualitative information."*
+
+**Implication**: multi-modal ingestion (not just PDF text) is squarely in scope and explicitly named by the organizers — a solution that only handles one input type (e.g. PDF-only) is narrower than what's being invited, even though it isn't a hard requirement. Worth weighing against build-time cost.
+
 ## 2. Prizes
 
 - 1st: $600 + Susquehanna playing cards, per team member
 - 2nd: $400 + playing cards, per team member
 - 3rd: $200 + playing cards, per team member
 - Susquehanna track prize: keychron keyboards, playing cards, fidget spinners (per member)
+- **Hidden Signals Award** (new, found in Atlassian's opening presentation, §1b source): *"Uncover a non-obvious pattern, contradiction, anomaly or connection."* A separate award from the main placings. Directly matches our Conflict Detector / "Align" decision-trail concept (surfacing contradictions between connected context nodes) — worth explicitly calling out in the pitch as targeting this award by name, not just describing the feature.
 
 ## 3. Judging Criteria — and how to win each
 
@@ -51,6 +64,10 @@ Team sign-up required: [DevPost — aisoc-atlassian-mistral](https://aisoc-atlas
 | 4 | **Feasibility + Scalability** | 20% | Real-world viability, potential to expand | Address: real-world relevance, cost to the *user*, cost to *build/maintain*. |
 
 Note: the info session deck also called out **"Use of AI"** (supports the work, doesn't replace thinking) as a 5th criterion with no stated weight — DevPost's official list doesn't list it separately, so it's likely folded into Technical Execution. Still follow the deck's guidance (AI for early research + late-stage pressure-testing, not for inventing the core idea) since it's clearly something judges care about even if unweighted.
+
+**A third framing, from Atlassian's opening presentation (§1b source)**: their "Requirements and judging" slide states **Requirements** — Use Mistral APIs ("build with the required platform"), Address the problem ("focus on information overload and teamwork"), Use the right tools ("specialised workflows beat one giant prompt") — and **Judging**: **Relevance** ("a clear response to the problem"), **Usefulness** ("value for real teams"), **Generality** ("works across domains and content types"). Footer note: *"No-code and deep technical systems are both welcome."*
+
+Three different sources now describe judging with different words (DevPost's weighted 4, the deck's unweighted 5, Atlassian's Relevance/Usefulness/Generality). They're not contradictory in substance — Relevance ≈ Value+Human Insight, Usefulness ≈ Feasibility, Generality is closest to a new, distinct idea (does the solution generalize across domains/content types, not just the one demoed) worth explicitly addressing in the pitch since it's not clearly covered by the DevPost 4. Worth confirming with organizers which rubric is actually scored if asked, but treat "generality across domains and content types" as a real, additional bar to clear regardless.
 
 ## 4. Case Study Takeaways ("Orbit")
 
@@ -142,3 +159,5 @@ Implications:
 
 - Whether "Use of AI" is folded into Technical Execution or scored separately (DevPost page omits it; deck lists it) — the 2026-07-31 2:12pm Mistral message strongly suggests it's assessed via Q&A regardless of formal scoring category
 - Whether an external AI agent (e.g. Claude Code, Cursor) appearing in a live demo purely as an MCP client counts as "the project" using a non-Mistral model — largely de-risked by the judge's live clarification (§1a: other models OK for "a clear technical reason," only Mistral gets funded access), but still worth a direct confirmation since it's exactly the scenario that rule was written to cover
+- Which judging rubric is actually scored — DevPost's weighted 4, the deck's unweighted 5, or Atlassian's Relevance/Usefulness/Generality (§3) — three sources now phrase it differently; low risk since they overlap in substance, but worth a direct confirmation
+- Whether the Hidden Signals Award (§2) is a separate prize pool/pitch or just a callout within the main judging — worth asking so we know whether to pitch for it explicitly as a second target
