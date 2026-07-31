@@ -1,26 +1,28 @@
 import type { Metadata } from "next"
-import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google"
+import { Space_Grotesk, JetBrains_Mono, Press_Start_2P } from "next/font/google"
 
 import { Toaster } from "@/components/ui/toaster"
 
 import "./globals.css"
 
-const inter = Inter({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-space-grotesk",
   display: "swap",
 })
 
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
+  weight: ["400", "500"],
   variable: "--font-jetbrains",
   display: "swap",
 })
 
-const instrument = Instrument_Serif({
+const pressStart = Press_Start_2P({
   subsets: ["latin"],
   weight: "400",
-  variable: "--font-instrument",
+  variable: "--font-press-start",
   display: "swap",
 })
 
@@ -32,7 +34,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrains.variable} ${instrument.variable}`}>
+    <html lang="en" className={`${spaceGrotesk.variable} ${jetbrains.variable} ${pressStart.variable}`}>
       <body className="min-h-dvh antialiased">
         {children}
         <Toaster />
