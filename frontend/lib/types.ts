@@ -105,6 +105,16 @@ export interface PresentResult {
   citations: string[]
   image_url: string
   generated_by: string
+  work_summary?: string
+  delivery_notes?: string
+  checklist_summary?: string
+  pr_url?: string
+  pr_title?: string
+  pr_state?: string
+  jira_issue_key?: string
+  jira_url?: string
+  assignee_name?: string
+  task_status?: string
 }
 
 export interface ReviewCheckItem {

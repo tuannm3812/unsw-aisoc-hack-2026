@@ -114,12 +114,13 @@ async def present_task(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ) -> PresentResult:
-    """Stakeholder narrative + optional one-pager image over the task lineage."""
+    """End-to-end stakeholder present: knowledge lineage + engineering delivery."""
     board_for_user(db, board_id, user)
     task = _task_or_404(db, board_id, task_id)
     lineage = assemble_lineage(db, task)
+    work = await _build_work_context(db, task)
     try:
-        result = await mistral_service.present_task(lineage)
+        result = await mistral_service.present_task(lineage, work)
     except MistralError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
     task.present_payload = result.model_dump()
@@ -130,7 +131,11 @@ async def present_task(
         actor=user.name,
         action="task.presented",
         subject_id=task.id,
-        detail={"beats": len(result.beats), "has_image": bool(result.image_url)},
+        detail={
+            "beats": len(result.beats),
+            "has_image": bool(result.image_url),
+            "has_pr": bool(task.pr_url),
+        },
     )
     db.commit()
     return result
@@ -201,20 +206,58 @@ async def agent_run(
         events.append(f"Arbiter returned {len(result.conflicts)} conflict(s)")
         return AgentRunResult(action="align", status="ok", events=events, alignment=result)
 
-    if payload.action == "present":
+    if payload.action in {"present", "brief"}:
+        review_result = None
+        if task.pr_url and (payload.action == "brief" or not task.review_checklist):
+            events.append("Handed off to Reviewer before Present")
+            events.extend(
+                await mistral_service.start_specialist_conversation(
+                    "review",
+                    f"Check PR '{task.pr_title}' ({task.pr_url}) against constraints "
+                    f"for '{task.title}'.",
+                )
+            )
+            try:
+                review_result = await review_checklist(board_id, task_id, user, db)
+                db.refresh(task)
+                events.append(f"Reviewer checked {len(review_result.items)} constraint(s)")
+            except HTTPException as exc:
+                events.append(f"Review skipped: {exc.detail}")
+
+        events.append("Handed off to Narrator")
         lineage = assemble_lineage(db, task)
+        work = await _build_work_context(db, task)
         events.extend(
             await mistral_service.start_specialist_conversation(
                 "present",
-                f"Draft a stakeholder present for task '{task.title}'. "
-                f"Context:\n{_lineage_prompt(lineage)}",
+                f"Draft an end-to-end stakeholder present for '{task.title}' including "
+                f"knowledge lineage and engineering delivery.\n"
+                f"Delivery:\n{_format_work_for_agent(work)}",
             )
         )
-        if len(events) == 1:
-            events.append("Handed off to Narrator")
-        result = await present_task(board_id, task_id, user, db)
+        try:
+            result = await mistral_service.present_task(lineage, work)
+        except MistralError as exc:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
+        task.present_payload = result.model_dump()
+        touch(task)
+        log_activity(
+            db,
+            board_id=board_id,
+            actor=user.name,
+            action="task.presented",
+            subject_id=task.id,
+            detail={"beats": len(result.beats), "end_to_end": True},
+        )
+        db.commit()
         events.append(f"Narrator produced {len(result.beats)} beats")
-        return AgentRunResult(action="present", status="ok", events=events, present=result)
+        return AgentRunResult(
+            action=payload.action,
+            status="ok",
+            events=events,
+            present=result,
+            review=review_result,
+        )
 
     if payload.action == "review":
         events.append("Handed off to Reviewer")
@@ -241,7 +284,68 @@ async def agent_run(
         action=payload.action,
         status="unsupported",
         events=events,
-        detail="Sense runs automatically on upload; use Align, Present, or Review here.",
+        detail="Sense runs automatically on upload; use Align, Present/Brief, or Review here.",
+    )
+
+
+async def _build_work_context(db: Session, task: Node) -> dict:
+    """Assemble Jira/PR/checklist (+ optional live PR notes) for Present."""
+    assignee = db.get(User, task.assignee_id) if task.assignee_id else None
+    checklist_items = task.review_checklist or []
+    if isinstance(checklist_items, dict):
+        checklist_items = checklist_items.get("items") or []
+
+    delivery_notes = ""
+    if task.pr_url:
+        delivery_notes = await mistral_service.fetch_delivery_notes(
+            pr_url=task.pr_url,
+            pr_title=task.pr_title,
+            pr_state=task.pr_state,
+        )
+
+    parts = []
+    if assignee:
+        parts.append(f"Assigned to {assignee.name}")
+    if task.jira_issue_key:
+        parts.append(f"Jira {task.jira_issue_key}")
+    if task.pr_url:
+        parts.append(f"PR {task.pr_state or 'linked'}: {task.pr_title or task.pr_url}")
+    else:
+        parts.append("No pull request linked yet")
+    if checklist_items:
+        passes = sum(1 for i in checklist_items if i.get("status") == "pass")
+        fails = sum(1 for i in checklist_items if i.get("status") == "fail")
+        parts.append(f"Checklist {passes} pass / {fails} fail / {len(checklist_items)} total")
+
+    checklist_summary = ""
+    if checklist_items:
+        checklist_summary = "; ".join(
+            f"{i.get('status')}: {i.get('title')}" for i in checklist_items[:8]
+        )
+
+    return {
+        "task_status": task.task_status,
+        "assignee_name": assignee.name if assignee else "",
+        "decision_state": task.decision_state or "",
+        "decision_rationale": task.decision_rationale or "",
+        "jira_issue_key": task.jira_issue_key or "",
+        "jira_url": task.jira_url or "",
+        "pr_url": task.pr_url or "",
+        "pr_title": task.pr_title or "",
+        "pr_state": task.pr_state or "",
+        "pr_reported_by": task.pr_reported_by or "",
+        "checklist_items": checklist_items,
+        "checklist_summary": checklist_summary,
+        "delivery_notes": delivery_notes,
+        "work_summary": " · ".join(parts),
+    }
+
+
+def _format_work_for_agent(work: dict) -> str:
+    return (
+        f"{work.get('work_summary')}\n"
+        f"Delivery notes: {(work.get('delivery_notes') or '')[:1200]}\n"
+        f"Checklist: {work.get('checklist_summary') or 'none'}"
     )
 
 

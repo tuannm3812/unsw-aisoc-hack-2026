@@ -175,7 +175,11 @@ export const api = {
       method: "POST",
     }),
 
-  agentRun: (boardId: string, taskId: string, action: "align" | "present" | "review" | "sense") =>
+  agentRun: (
+    boardId: string,
+    taskId: string,
+    action: "align" | "present" | "review" | "brief" | "sense",
+  ) =>
     request<AgentRunResult>(`/api/boards/${boardId}/tasks/${taskId}/agent-run`, {
       method: "POST",
       body: JSON.stringify({ action }),

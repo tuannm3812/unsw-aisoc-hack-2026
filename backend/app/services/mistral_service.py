@@ -229,9 +229,13 @@ PRESENT_SCHEMA: dict[str, Any] = {
 
 PRESENT_PROMPT = (
     "You present a multi-disciplinary decision to mixed stakeholders (PM, science, eng, "
-    "design). Turn the task lineage into a short narrative: headline, audience summary, "
-    "ordered beats (claim → evidence → implication → task), open risks, citations.\n"
-    "Use only supplied context. Prefer 4-6 beats. Cite node ids in beats when possible."
+    "design, ops). Tell the full end-to-end story: why the work exists (findings/"
+    "constraints with quotes), what the team decided, what engineering delivered "
+    "(assignee, Jira, pull request, delivery notes), and what is still risky.\n"
+    "Ordered beats should mix kinds such as finding, constraint, decision, task, "
+    "delivery, review. Prefer 5-8 beats. Use only supplied context. Cite node ids "
+    "when referring to graph nodes. If there is no PR yet, say delivery is not started "
+    "rather than inventing one."
 )
 
 REVIEW_SCHEMA: dict[str, Any] = {
@@ -598,14 +602,25 @@ class MistralService:
         )
 
     # ----------------------------------------------------------------- present
-    async def present_task(self, lineage: LineageOut) -> PresentResult:
+    async def present_task(
+        self,
+        lineage: LineageOut,
+        work: dict[str, Any] | None = None,
+    ) -> PresentResult:
+        """Stakeholder present over lineage + engineering delivery (Jira/PR/checklist)."""
+        work = work or {}
         context = _lineage_context(lineage)
+        work_block = _format_work_context(work)
         if not self.enabled:
-            return _fallback_present(lineage)
+            return _fallback_present(lineage, work)
 
         raw = await self._chat_json(
             system=PRESENT_PROMPT,
-            user=f"Task: {lineage.task_title}\n\n<context>\n{context}\n</context>",
+            user=(
+                f"Task: {lineage.task_title}\n\n"
+                f"<knowledge>\n{context}\n</knowledge>\n\n"
+                f"<delivery>\n{work_block}\n</delivery>"
+            ),
             schema=PRESENT_SCHEMA,
             temperature=0.3,
         )
@@ -627,9 +642,66 @@ class MistralService:
             open_risks=[str(x) for x in (raw.get("open_risks") or [])],
             citations=[str(x) for x in (raw.get("citations") or [])],
             generated_by=settings.mistral_text_model,
+            work_summary=str(work.get("work_summary") or ""),
+            delivery_notes=str(work.get("delivery_notes") or ""),
+            checklist_summary=str(work.get("checklist_summary") or ""),
+            pr_url=str(work.get("pr_url") or ""),
+            pr_title=str(work.get("pr_title") or ""),
+            pr_state=str(work.get("pr_state") or ""),
+            jira_issue_key=str(work.get("jira_issue_key") or ""),
+            jira_url=str(work.get("jira_url") or ""),
+            assignee_name=str(work.get("assignee_name") or ""),
+            task_status=str(work.get("task_status") or ""),
         )
         result.image_url = await self.generate_present_image(result)
         return result
+
+    async def fetch_delivery_notes(self, *, pr_url: str, pr_title: str, pr_state: str) -> str:
+        """Ask the Reviewer (GitHub connector) what the PR actually changed."""
+        if not self.enabled or not pr_url:
+            return ""
+        agent_id = (
+            settings.mistral_agent_review.strip()
+            or settings.mistral_agent_present.strip()
+            or settings.mistral_agent_coordinator.strip()
+        )
+        prompt = (
+            "You are preparing a stakeholder delivery note for a product canvas.\n"
+            f"Pull request: {pr_title or '(untitled)'} [{pr_state or 'unknown'}]\n"
+            f"URL: {pr_url}\n"
+            "If GitHub tools are available, inspect the PR and summarize in 4-8 sentences: "
+            "intent, key files/areas touched, merge/state, and anything a PM should know. "
+            "If you cannot access GitHub, reply with exactly: "
+            "UNAVAILABLE: could not read pull request details."
+        )
+        try:
+            if agent_id:
+                response = await self._sdk().beta.conversations.start_async(
+                    agent_id=agent_id,
+                    inputs=prompt,
+                    handoff_execution="server",
+                    store=False,
+                    retries=RETRY,
+                )
+            else:
+                response = await self._sdk().beta.conversations.start_async(
+                    model=settings.mistral_text_model,
+                    inputs=prompt,
+                    store=False,
+                    retries=RETRY,
+                )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Delivery notes via agent skipped: %s", exc)
+            return ""
+
+        text = ""
+        for entry in getattr(response, "outputs", None) or []:
+            chunk = _flatten_content(getattr(entry, "content", None))
+            if chunk:
+                text = f"{text}\n{chunk}".strip()
+        if not text or text.startswith("UNAVAILABLE"):
+            return ""
+        return text[:4000]
 
     async def generate_present_image(self, present: PresentResult) -> str:
         """Generate a one-pager via Conversations + image_generation tool."""
@@ -653,7 +725,37 @@ class MistralService:
         except Exception as exc:  # noqa: BLE001
             logger.warning("Present image generation skipped: %s", exc)
             return ""
-        return _image_from_conversation(response)
+        return await self.resolve_image_url(_image_from_conversation(response))
+
+    async def resolve_image_url(self, ref: str) -> str:
+        """Turn a Mistral file id / tool ref into a browser-loadable URL."""
+        if not ref:
+            return ""
+        if ref.startswith(("http://", "https://", "data:")):
+            return ref
+        file_id = ref.removeprefix("mistral-file:").strip()
+        if not file_id:
+            return ""
+        try:
+            signed = await self._sdk().files.get_signed_url_async(
+                file_id=file_id,
+                expiry=48,
+                retries=RETRY,
+            )
+            url = getattr(signed, "url", None) or ""
+            if url:
+                return str(url)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Signed URL for %s failed: %s", file_id, exc)
+        try:
+            response = await self._sdk().files.download_async(file_id=file_id, retries=RETRY)
+            await response.aread()
+            content_type = response.headers.get("content-type") or "image/jpeg"
+            encoded = base64.b64encode(response.content).decode("ascii")
+            return f"data:{content_type};base64,{encoded}"
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Download for %s failed: %s", file_id, exc)
+            return ""
 
     # ---------------------------------------------------------- review checklist
     async def review_constraints(
@@ -1037,7 +1139,34 @@ def _heuristic_alignment(lineage: LineageOut) -> AlignmentResult:
     )
 
 
-def _fallback_present(lineage: LineageOut) -> PresentResult:
+def _format_work_context(work: dict[str, Any]) -> str:
+    if not work:
+        return "No engineering delivery recorded on this task yet."
+    lines = [
+        f"Task status: {work.get('task_status') or 'unknown'}",
+        f"Assignee: {work.get('assignee_name') or 'unassigned'}",
+        f"Decision: {work.get('decision_state') or 'none'}"
+        + (f" — {work.get('decision_rationale')}" if work.get("decision_rationale") else ""),
+        f"Jira: {work.get('jira_issue_key') or 'none'} {work.get('jira_url') or ''}".strip(),
+        f"PR: {work.get('pr_title') or 'none'} [{work.get('pr_state') or ''}] "
+        f"{work.get('pr_url') or ''}".strip(),
+        f"PR reported by: {work.get('pr_reported_by') or 'n/a'}",
+    ]
+    if work.get("checklist_summary"):
+        lines.append(f"Constraint checklist: {work['checklist_summary']}")
+    for item in work.get("checklist_items") or []:
+        lines.append(
+            f"  - [{item.get('status')}] {item.get('title')}: {item.get('note') or ''}"
+        )
+    if work.get("delivery_notes"):
+        lines.append(f"Delivery notes from PR inspection:\n{work['delivery_notes']}")
+    if work.get("work_summary"):
+        lines.append(f"Work summary: {work['work_summary']}")
+    return "\n".join(lines)
+
+
+def _fallback_present(lineage: LineageOut, work: dict[str, Any] | None = None) -> PresentResult:
+    work = work or {}
     beats = [
         PresentBeat(
             kind=n.kind,
@@ -1048,13 +1177,50 @@ def _fallback_present(lineage: LineageOut) -> PresentResult:
         )
         for n in lineage.nodes
         if n.depth > 0
-    ][:6]
+    ][:5]
+    if work.get("pr_url") or work.get("jira_issue_key"):
+        beats.append(
+            PresentBeat(
+                kind="delivery",
+                title=work.get("pr_title") or work.get("jira_issue_key") or "Delivery",
+                body=(
+                    f"Status {work.get('task_status') or 'unknown'}; "
+                    f"assignee {work.get('assignee_name') or 'unassigned'}; "
+                    f"PR {work.get('pr_state') or 'n/a'}."
+                ),
+                quote=(work.get("delivery_notes") or "")[:300],
+            )
+        )
+    if work.get("checklist_items"):
+        fails = [i for i in work["checklist_items"] if i.get("status") == "fail"]
+        beats.append(
+            PresentBeat(
+                kind="review",
+                title="Constraint checklist",
+                body=work.get("checklist_summary")
+                or f"{len(work['checklist_items'])} constraints checked; "
+                f"{len(fails)} fail.",
+            )
+        )
     return PresentResult(
         task_id=lineage.task_id,
         headline=lineage.task_title,
-        audience_summary="Generated without Mistral; showing lineage beats as-is.",
+        audience_summary=(
+            work.get("work_summary")
+            or "Generated without Mistral; showing lineage and delivery as-is."
+        ),
         beats=beats,
         generated_by="fallback",
+        work_summary=str(work.get("work_summary") or ""),
+        delivery_notes=str(work.get("delivery_notes") or ""),
+        checklist_summary=str(work.get("checklist_summary") or ""),
+        pr_url=str(work.get("pr_url") or ""),
+        pr_title=str(work.get("pr_title") or ""),
+        pr_state=str(work.get("pr_state") or ""),
+        jira_issue_key=str(work.get("jira_issue_key") or ""),
+        jira_url=str(work.get("jira_url") or ""),
+        assignee_name=str(work.get("assignee_name") or ""),
+        task_status=str(work.get("task_status") or ""),
     )
 
 

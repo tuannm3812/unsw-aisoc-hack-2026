@@ -61,6 +61,28 @@ def test_fallback_present_builds_beats():
     assert len(present.beats) == 1
 
 
+def test_fallback_present_includes_delivery():
+    lineage = _lineage(("a", "finding", "Latency", "68 percent"))
+    present = _fallback_present(
+        lineage,
+        {
+            "pr_url": "https://github.com/acme/repo/pull/1",
+            "pr_title": "Add citations",
+            "pr_state": "open",
+            "assignee_name": "Marco",
+            "task_status": "in_review",
+            "jira_issue_key": "SB-1",
+            "work_summary": "Assigned to Marco · Jira SB-1 · PR open",
+            "checklist_items": [{"status": "pass", "title": "Cite sources", "note": ""}],
+            "checklist_summary": "pass: Cite sources",
+        },
+    )
+    kinds = {b.kind for b in present.beats}
+    assert "delivery" in kinds
+    assert "review" in kinds
+    assert present.pr_url.endswith("/1")
+
+
 def test_fallback_recommend_creates_actionable_task():
     from app.services.mistral_service import _fallback_recommend
 

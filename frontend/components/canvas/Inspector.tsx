@@ -970,7 +970,8 @@ function PresentBlock({ node }: { node: GraphNode }) {
     if (!boardId) return
     setBusy(true)
     try {
-      const run = await api.agentRun(boardId, node.id, "present")
+      // End-to-end: Reviewer (if PR) → Narrator with lineage + delivery.
+      const run = await api.agentRun(boardId, node.id, "brief")
       pushAgentEvents(run.events)
       if (run.present) {
         setPresent(run.present)
@@ -995,11 +996,15 @@ function PresentBlock({ node }: { node: GraphNode }) {
   return (
     <section>
       <h3 className="text-2xs text-muted-foreground mb-2.5 font-medium tracking-[0.08em] uppercase">
-        Present ideas
+        Present end to end
       </h3>
+      <p className="text-muted-foreground mb-2.5 text-xs leading-relaxed">
+        Narrator builds a stakeholder story from knowledge lineage, Jira, the linked PR, and
+        constraint review — not research alone.
+      </p>
       <Button size="sm" onClick={run} disabled={busy} className="h-8 w-full gap-2 text-xs">
         {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
-        Generate stakeholder present
+        Prepare stakeholder brief
       </Button>
       {present && (
         <Button

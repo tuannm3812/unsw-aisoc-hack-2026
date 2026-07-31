@@ -251,6 +251,17 @@ class PresentResult(BaseModel):
     citations: list[str] = Field(default_factory=list)
     image_url: str = ""
     generated_by: str = ""
+    # Engineering delivery snapshot (PR / Jira / checklist) woven into the present.
+    work_summary: str = ""
+    delivery_notes: str = ""
+    checklist_summary: str = ""
+    pr_url: str = ""
+    pr_title: str = ""
+    pr_state: str = ""
+    jira_issue_key: str = ""
+    jira_url: str = ""
+    assignee_name: str = ""
+    task_status: str = ""
 
 
 class ReviewCheckItem(BaseModel):
@@ -268,7 +279,7 @@ class ReviewChecklistResult(BaseModel):
 
 
 class AgentRunRequest(BaseModel):
-    action: str = Field(pattern="^(align|present|review|sense)$")
+    action: str = Field(pattern="^(align|present|review|brief|sense)$")
     message: str = ""
 
 
