@@ -2,7 +2,7 @@
 
 | Doc | Purpose |
 | --- | --- |
-| [`../STRATEGY.md`](../STRATEGY.md) | Event rules, timeline, judging criteria, eligibility, pitch narrative framework. |
+| [`STRATEGY.md`](STRATEGY.md) | Event rules, timeline, judging criteria, eligibility, pitch narrative framework. |
 | [`../README.md`](../README.md) | What shipped: how to run, demo path, architecture, verify. |
 | [`DEMO.md`](DEMO.md) | Live demo runbook — script, failure table, recording notes. |
 | [`PITCH.md`](PITCH.md) | Selling points, competitor comparison, judging-criteria tie-in — for video narration. |

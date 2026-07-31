@@ -4,7 +4,7 @@
 
 A research paper becomes a Jira issue becomes a pull request — and every hop stays visible on one canvas.
 
-Built for the [UNSW AiSoc × Atlassian × Mistral hackathon](https://aisoc-atlassian-mistral.devpost.com/). Event rules, judging criteria, and pitch narrative live in [`STRATEGY.md`](STRATEGY.md). The original product design spec (Context Canvas) lives in [`docs/DESIGN_SPEC.md`](docs/DESIGN_SPEC.md); this README describes **what shipped**.
+Built for the [UNSW AiSoc × Atlassian × Mistral hackathon](https://aisoc-atlassian-mistral.devpost.com/). Event rules, judging criteria, and pitch narrative live in [`docs/STRATEGY.md`](docs/STRATEGY.md). The original product design spec (Context Canvas) lives in [`docs/DESIGN_SPEC.md`](docs/DESIGN_SPEC.md); this README describes **what shipped**.
 
 ## The problem we solve
 
@@ -18,7 +18,7 @@ Cross-disciplinary work loses its reasoning in the handoff. A scientist's findin
 
 ## Eligibility
 
-Every AI reasoning step in this project runs on **Mistral APIs only** (OCR + structured extraction + task briefs). No OpenAI, no Anthropic inside the product. Cursor appears in the live demo only as an **MCP client** consuming our tools — the models that write briefs and parse PDFs are Mistral. See [`STRATEGY.md`](STRATEGY.md) §1a.
+Every AI reasoning step in this project runs on **Mistral APIs only** (OCR + structured extraction + task briefs). No OpenAI, no Anthropic inside the product. Cursor appears in the live demo only as an **MCP client** consuming our tools — the models that write briefs and parse PDFs are Mistral. See [`docs/STRATEGY.md`](docs/STRATEGY.md) §1a.
 
 ## Run it
 
@@ -88,7 +88,7 @@ The design spec imagined a Next.js monolith on Vercel with Neon, Conflict Detect
 | Next monolith / Neon / Vercel Blob | Not used — FastAPI + SQLite + local uploads for a one-command local demo |
 | Persona: Jamie, generic startup PM/designer/2 engineers | Replaced with Priya (PM) / Dr Aisha Khan (research scientist) / Marco (engineer) — a more specific research-to-engineering handoff story that covers all four verbs in the official problem statement (make sense of information, present ideas, align on decisions, review work), not just some of them |
 
-Stretch cut on purpose: real-time multiplayer, inbound Jira sync, GitHub PR polling, embeddings. See design spec §3 and `STRATEGY.md` §6 (MVP first).
+Stretch cut on purpose: real-time multiplayer, inbound Jira sync, GitHub PR polling, embeddings. See design spec §3 and `docs/STRATEGY.md` §6 (MVP first).
 
 ## Verify it
 
@@ -105,15 +105,15 @@ The last three need the API running. Run `python -m app.seed --reset` before pre
 ## Layout
 
 ```
-STRATEGY.md                         hackathon rules, judging, pitch framework
-docs/                               demo runbook, MCP guide, design spec, coding standards
+docs/STRATEGY.md                    hackathon rules, judging, pitch framework
+docs/                                demo runbook, pitch, Q&A prep, design spec, coding standards
 backend/app/services/lineage.py     the graph walk behind the whole idea
 backend/app/services/mistral_service.py
 backend/app/services/jira_service.py
 backend/app/mcp/server.py           MCP tools (stdio)
 frontend/components/canvas/         React Flow canvas, nodes, inspector
 demo/                               PDF for the live upload step
-start.ps1                           one-command local bring-up
+start.ps1 / start.sh                one-command local bring-up (Windows / macOS/Linux)
 ```
 
 ## Docs index
