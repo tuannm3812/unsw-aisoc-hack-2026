@@ -8,6 +8,7 @@ from ..db import get_db
 from ..models import (
     Asset,
     Board,
+    Candidate,
     Edge,
     Membership,
     Node,
@@ -18,6 +19,7 @@ from ..models import (
 from ..schemas import (
     AssetOut,
     BoardOut,
+    CandidateOut,
     EdgeCreate,
     EdgeOut,
     GraphOut,
@@ -26,8 +28,10 @@ from ..schemas import (
     NodeMove,
     NodeOut,
     NodeUpdate,
+    TaskRecommendationResult,
 )
 from ..services.graph import connect, create_node, creates_task_cycle, log_activity, touch
+from ..services.mistral_service import mistral_service
 
 router = APIRouter(prefix="/api/boards", tags=["boards"])
 
@@ -72,6 +76,18 @@ def get_graph(
     nodes = db.query(Node).filter(Node.board_id == board_id).order_by(Node.created_at).all()
     edges = db.query(Edge).filter(Edge.board_id == board_id).order_by(Edge.created_at).all()
     assets = db.query(Asset).filter(Asset.board_id == board_id).order_by(Asset.created_at).all()
+    # Only what still needs a decision. Promoted proposals are nodes now, and
+    # dismissed ones were answered, so neither belongs in the review list.
+    candidates = (
+        db.query(Candidate)
+        .filter(
+            Candidate.board_id == board_id,
+            Candidate.dismissed.is_(False),
+            Candidate.promoted_node_id.is_(None),
+        )
+        .all()
+    )
+    candidates.sort(key=lambda c: (c.kind, -(c.confidence or 0.0), c.title))
 
     return GraphOut(
         board=BoardOut.model_validate(board),
@@ -79,6 +95,7 @@ def get_graph(
         nodes=[NodeOut.model_validate(node) for node in nodes],
         edges=[EdgeOut.model_validate(edge) for edge in edges],
         assets=[AssetOut.model_validate(asset) for asset in assets],
+        candidates=[CandidateOut.model_validate(c) for c in candidates],
     )
 
 
@@ -138,6 +155,14 @@ def update_node(
         if node.kind != NodeKind.task.value:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only tasks have a status")
         node.task_status = payload.task_status
+    if payload.decision_state is not None:
+        if node.kind != NodeKind.task.value:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only tasks record decisions")
+        node.decision_state = payload.decision_state
+    if payload.decision_rationale is not None:
+        if node.kind != NodeKind.task.value:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only tasks record decisions")
+        node.decision_rationale = payload.decision_rationale
     touch(node)
     db.commit()
     return node
@@ -228,6 +253,113 @@ def delete_edge(
     db.delete(edge)
     db.commit()
     return {"ok": True}
+
+
+@router.post(
+    "/{board_id}/nodes/{node_id}/recommend-tasks",
+    response_model=TaskRecommendationResult,
+)
+async def recommend_tasks_from_node(
+    board_id: str,
+    node_id: str,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> TaskRecommendationResult:
+    """Mistral proposes tasks from a finding/constraint and creates them on the canvas."""
+    board_for_user(db, board_id, user)
+    source = _node_or_404(db, board_id, node_id)
+    if source.kind not in {NodeKind.finding.value, NodeKind.constraint.value}:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "Task recommendations start from a finding or constraint",
+        )
+
+    neighbor_ids: set[str] = set()
+    for edge in db.query(Edge).filter(
+        Edge.board_id == board_id,
+        (Edge.source_id == node_id) | (Edge.target_id == node_id),
+    ):
+        neighbor_ids.add(edge.source_id)
+        neighbor_ids.add(edge.target_id)
+    neighbor_ids.discard(node_id)
+    neighbors = (
+        db.query(Node).filter(Node.board_id == board_id, Node.id.in_(neighbor_ids)).all()
+        if neighbor_ids
+        else []
+    )
+
+    result = await mistral_service.recommend_tasks(
+        source_id=source.id,
+        source_kind=source.kind,
+        source_title=source.title,
+        source_body=source.body or source.source_quote or "",
+        neighbors=[
+            {"id": n.id, "kind": n.kind, "title": n.title, "body": n.body or ""}
+            for n in neighbors
+        ],
+    )
+
+    created_nodes: list[Node] = []
+    created_edges: list[Edge] = []
+    relations: list[str] = []
+    for index, proposal in enumerate(result.tasks):
+        task = create_node(
+            db,
+            board_id=board_id,
+            kind=NodeKind.task.value,
+            title=proposal.title,
+            body=(
+                f"{proposal.body}\n\nWhy: {proposal.rationale}".strip()
+                if proposal.rationale
+                else proposal.body
+            ),
+            x=source.x + 330.0,
+            y=source.y + index * 140.0,
+            created_by=user.id,
+            evidence_class="asserted",
+        )
+        relation = (
+            Relation.constrains.value
+            if proposal.relation == "constrains"
+            else Relation.supports.value
+        )
+        created_nodes.append(task)
+        relations.append(relation)
+
+    # Same order as candidate promote: nodes must exist before edge FK inserts.
+    db.flush()
+
+    for task, relation in zip(created_nodes, relations, strict=True):
+        edge = connect(
+            db,
+            board_id=board_id,
+            source_id=source.id,
+            target_id=task.id,
+            relation=relation,
+            created_by=user.id,
+        )
+        if edge is not None:
+            created_edges.append(edge)
+
+    log_activity(
+        db,
+        board_id=board_id,
+        actor=user.name,
+        action="node.recommend_tasks",
+        subject_id=source.id,
+        detail={"count": len(created_nodes), "by": result.generated_by},
+    )
+    db.commit()
+    for node in created_nodes:
+        db.refresh(node)
+
+    result.created_nodes = [NodeOut.model_validate(n) for n in created_nodes]
+    result.created_edges = [EdgeOut.model_validate(e) for e in created_edges]
+    result.events = [
+        *result.events,
+        f"Created {len(created_nodes)} task(s) from {source.kind} '{source.title}'",
+    ]
+    return result
 
 
 def _node_or_404(db: Session, board_id: str, node_id: str) -> Node:
