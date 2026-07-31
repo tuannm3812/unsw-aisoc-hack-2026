@@ -87,9 +87,9 @@
     --ring: #E10500;
 
     --kind-asset: #1B1712;
-    --kind-finding: #8A5C00;
-    --kind-constraint: #B34D00;
-    --kind-task: #C40400;
+    --kind-finding: #F2A100;
+    --kind-constraint: #FF6A00;
+    --kind-task: #E10500;
   }
 
   /* Dark mode disabled for pixel theme — only light mode ships */

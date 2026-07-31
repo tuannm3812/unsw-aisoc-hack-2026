@@ -86,11 +86,13 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
       className={cn(
         "group bg-card w-[264px] rounded-none border-[3px] border-[#1B1712] shadow-[3px_3px_0_#1B1712] transition-[opacity,box-shadow,border-color] duration-200",
         dimmed && "pointer-events-none opacity-25",
-        inLineage && !isFocusedTask && "ring-primary/60 border-primary/30 ring-2",
-        isFocusedTask && "ring-primary ring-2",
-        selected && !inLineage && "ring-ring ring-2",
+        inLineage && !isFocusedTask && "border-[#E10500] shadow-[3px_3px_0_#E10500]",
+        isFocusedTask && "border-[#E10500] shadow-[5px_5px_0_#E10500]",
+        selected && !inLineage && "border-[3px] border-[#E10500] shadow-[5px_5px_0_#E10500]",
       )}
     >
+      {/* Kind colour top bar */}
+      <div className="h-[4px] w-full" style={{ backgroundColor: node.kind==="finding"?"#F2A100":node.kind==="constraint"?"#FF6A00":node.kind==="task"?"#E10500":"#1B1712" }} />
       <Handle
         type="target"
         position={Position.Left}
@@ -153,8 +155,8 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
 
           {isTask && (
             <>
-                {effort && <span className="text-2xs bg-accent/50 text-muted-foreground rounded px-1.5 py-0.5 font-mono">{effort}</span>}
-              {blocked && <span className="text-2xs bg-destructive/15 text-destructive rounded px-1.5 py-0.5 font-medium">Blocked</span>}
+                {effort && <span className="text-2xs bg-accent/50 text-muted-foreground px-1.5 py-0.5 border-[1.5px] border-[#1B1712] font-mono">{effort}</span>}
+              {blocked && <span className="text-2xs bg-destructive/15 text-destructive px-1.5 py-0.5 border-[1.5px] border-[#1B1712] font-medium">Blocked</span>}
               {dueDate && <span className="text-2xs text-muted-foreground font-mono">due {dueDate}</span>}
             {assigneeName ? (
                 <span className="text-2xs text-muted-foreground truncate">{assigneeName}</span>
@@ -167,7 +169,7 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
                   <Loader2 className="text-muted-foreground size-3 animate-spin" />
                 )}
                 {node.jira_issue_key && (
-                  <span className="text-2xs bg-secondary text-secondary-foreground rounded px-1.5 py-0.5 font-mono font-medium">
+                  <span className="text-2xs bg-secondary text-secondary-foreground px-1.5 py-0.5 border-[1.5px] border-[#1B1712] font-mono font-medium">
                     {node.jira_issue_key}
                   </span>
                 )}
@@ -185,7 +187,7 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
                     onMouseDown={(event) => event.stopPropagation()}
                     title={node.pr_title || node.pr_url}
                     className={cn(
-                      "text-2xs flex items-center gap-1 rounded px-1.5 py-0.5 font-medium transition-colors",
+                      "text-2xs flex items-center gap-1 px-1.5 py-0.5 border-[1.5px] border-[#1B1712] font-medium transition-colors",
                       PR_BADGE[node.pr_state] ?? PR_BADGE.open,
                     )}
                   >

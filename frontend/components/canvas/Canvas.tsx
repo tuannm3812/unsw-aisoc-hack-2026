@@ -201,13 +201,13 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
         <Controls
           position="top-left"
           showInteractive={false}
-          className="!border-border !bg-card !rounded-lg !border !shadow-none"
+          className="!border-[3px] !border-[#1B1712] !bg-card !shadow-[3px_3px_0_#1B1712]"
         />
         <MiniMap
           pannable
           zoomable
           position="bottom-right"
-          className="!border-border !bg-card !rounded-lg !border"
+          className="!border-[3px] !border-[#1B1712] !bg-card"
           maskColor="rgba(120, 120, 130, 0.14)"
           nodeClassName={(node) => `mm-${node.type ?? "asset"}`}
           nodeStrokeWidth={0}
