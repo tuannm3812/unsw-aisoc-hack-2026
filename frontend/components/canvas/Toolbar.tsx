@@ -91,15 +91,15 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
       await new Promise((resolve) => setTimeout(resolve, 800))
       setReviewData({
         shipped: [
-          { title: "Build 2-Step Checkout", assignee: "张工", summary: "PaymentElement integration complete, saved-payment selector working E2E." },
-          { title: "Auth System Migration", assignee: "李工", summary: "Magic-link auth replaces OTP — clean migration for 100% of users." },
+          { title: "Build 2-Step Checkout", assignee: "Marco", summary: "PaymentElement integration complete, saved-payment selector working E2E." },
+          { title: "Auth System Migration", assignee: "Aisha", summary: "Magic-link auth replaces OTP — clean migration for 100% of users." },
         ],
         blocked: [
-          { title: "Payment Selector UI", assignee: "王工", summary: "Waiting on final design mockups — feedback sent, expecting final by EOD Friday." },
+          { title: "Payment Selector UI", assignee: "Priya", summary: "Waiting on final design mockups — feedback sent, expecting final by EOD Friday." },
         ],
         next: [
-          { title: "PCI Compliance Audit", assignee: "张工", summary: "External audit scheduled Aug 5. SAQ-A self-assessment + documentation." },
-          { title: "Onboarding Flow Rewrite", assignee: "李工", summary: "Move from 5-step to 2-step. Design specs finalised." },
+          { title: "PCI Compliance Audit", assignee: "Marco", summary: "External audit scheduled Aug 5. SAQ-A self-assessment + documentation." },
+          { title: "Onboarding Flow Rewrite", assignee: "Aisha", summary: "Move from 5-step to 2-step. Design specs finalised." },
         ],
       })
       setReviewOpen(true)

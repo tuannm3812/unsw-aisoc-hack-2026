@@ -1,0 +1,532 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#start-of-content"
+    - banner [ref=e6]:
+      - heading "Navigation Menu" [level=2] [ref=e7]
+      - generic [ref=e8]:
+        - link "Homepage" [ref=e10] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e13]:
+          - navigation "Global" [ref=e16]:
+            - list [ref=e17]:
+              - listitem [ref=e18]:
+                - button "Platform" [ref=e20] [cursor=pointer]
+              - listitem [ref=e23]:
+                - button "Solutions" [ref=e25] [cursor=pointer]
+              - listitem [ref=e28]:
+                - button "Resources" [ref=e30] [cursor=pointer]
+              - listitem [ref=e33]:
+                - button "Open Source" [ref=e35] [cursor=pointer]
+              - listitem [ref=e38]:
+                - button "Enterprise" [ref=e40] [cursor=pointer]
+              - listitem [ref=e43]:
+                - link "Pricing" [ref=e44] [cursor=pointer]:
+                  - /url: https://github.com/pricing
+          - generic [ref=e46]:
+            - button "Search or jump to…" [ref=e49] [cursor=pointer]:
+              - generic [ref=e53]: Search or jump to...
+            - link "Sign in" [ref=e59] [cursor=pointer]:
+              - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Ftuannm3812%2Funsw-aisoc-hack-2026
+            - link "Sign up" [ref=e60] [cursor=pointer]:
+              - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E&source=header-repo&source_repo=tuannm3812%2Funsw-aisoc-hack-2026
+            - button "Appearance settings" [ref=e63] [cursor=pointer]
+  - main [ref=e67]:
+    - generic [ref=e68]:
+      - generic [ref=e69]:
+        - generic [ref=e71]:
+          - link "tuannm3812" [ref=e75] [cursor=pointer]:
+            - /url: /tuannm3812
+          - generic [ref=e76]: /
+          - strong [ref=e77]:
+            - link "unsw-aisoc-hack-2026" [ref=e78] [cursor=pointer]:
+              - /url: /tuannm3812/unsw-aisoc-hack-2026
+          - generic [ref=e79]: Public
+        - generic [ref=e80]:
+          - list:
+            - listitem [ref=e81]:
+              - link "You must be signed in to change notification settings" [ref=e82] [cursor=pointer]:
+                - /url: /login?return_to=%2Ftuannm3812%2Funsw-aisoc-hack-2026
+                - text: Notifications
+            - listitem [ref=e85]:
+              - link "Fork 0" [ref=e86] [cursor=pointer]:
+                - /url: /login?return_to=%2Ftuannm3812%2Funsw-aisoc-hack-2026
+                - text: Fork
+                - generic "0" [ref=e89]
+            - listitem [ref=e90]:
+              - link "You must be signed in to star a repository" [ref=e92] [cursor=pointer]:
+                - /url: /login?return_to=%2Ftuannm3812%2Funsw-aisoc-hack-2026
+                - text: Star
+                - generic "0 users starred this repository" [ref=e95]: "0"
+      - navigation "Repository" [ref=e96]:
+        - list [ref=e97]:
+          - listitem [ref=e98]:
+            - link "Code" [ref=e99] [cursor=pointer]:
+              - /url: /tuannm3812/unsw-aisoc-hack-2026
+          - listitem [ref=e103]:
+            - link "Issues" [ref=e104] [cursor=pointer]:
+              - /url: /tuannm3812/unsw-aisoc-hack-2026/issues
+          - listitem [ref=e109]:
+            - link "Pull requests 1" [ref=e110] [cursor=pointer]:
+              - /url: /tuannm3812/unsw-aisoc-hack-2026/pulls
+              - generic [ref=e113]: Pull requests
+              - generic "1" [ref=e114]
+          - listitem [ref=e115]:
+            - link "Actions" [ref=e116] [cursor=pointer]:
+              - /url: /tuannm3812/unsw-aisoc-hack-2026/actions
+          - listitem [ref=e120]:
+            - link "Projects" [ref=e121] [cursor=pointer]:
+              - /url: /tuannm3812/unsw-aisoc-hack-2026/projects
+          - listitem [ref=e125]:
+            - link "Security and quality" [ref=e126] [cursor=pointer]:
+              - /url: /tuannm3812/unsw-aisoc-hack-2026/security
+          - listitem [ref=e130]:
+            - link "Insights" [ref=e131] [cursor=pointer]:
+              - /url: /tuannm3812/unsw-aisoc-hack-2026/pulse
+    - generic [ref=e148]:
+      - generic [ref=e151]:
+        - generic [ref=e152]:
+          - generic [ref=e153]:
+            - button "main branch" [ref=e155] [cursor=pointer]:
+              - generic [ref=e156]: main
+            - generic [ref=e160]:
+              - link "Branches" [ref=e161] [cursor=pointer]:
+                - /url: /tuannm3812/unsw-aisoc-hack-2026/branches
+              - link "Tags" [ref=e164] [cursor=pointer]:
+                - /url: /tuannm3812/unsw-aisoc-hack-2026/tags
+          - button "Code" [ref=e168] [cursor=pointer]
+        - generic [ref=e171]:
+          - generic [ref=e172]:
+            - heading "Folders and files" [level=2] [ref=e173]
+            - table "Folders and files" [ref=e174]:
+              - rowgroup:
+                - row "Name Last commit message Last commit date":
+                  - columnheader "Name"
+                  - columnheader "Last commit message"
+                  - columnheader "Last commit date"
+              - rowgroup [ref=e175]:
+                - row [ref=e176]:
+                  - cell "Latest commit History 13 Commits" [ref=e177]:
+                    - generic [ref=e178]:
+                      - heading "Latest commit" [level=2] [ref=e179]
+                      - generic [ref=e182]:
+                        - heading "History" [level=2] [ref=e183]
+                        - link "13 Commits" [ref=e184] [cursor=pointer]:
+                          - /url: /tuannm3812/unsw-aisoc-hack-2026/commits/main/
+                - row ".cursor, (Directory)" [ref=e187]:
+                  - cell [ref=e188]:
+                    - link ".cursor, (Directory)" [ref=e195] [cursor=pointer]:
+                      - /url: /tuannm3812/unsw-aisoc-hack-2026/tree/main/.cursor
+                      - text: .cursor
+                  - cell [ref=e196]
+                  - cell [ref=e198]
+                - row "backend, (Directory)" [ref=e201]:
+                  - cell [ref=e202]:
+                    - link "backend, (Directory)" [ref=e209] [cursor=pointer]:
+                      - /url: /tuannm3812/unsw-aisoc-hack-2026/tree/main/backend
+                      - text: backend
+                  - cell [ref=e210]
+                  - cell [ref=e212]
+                - row "demo, (Directory)" [ref=e215]:
+                  - cell [ref=e216]:
+                    - link "demo, (Directory)" [ref=e223] [cursor=pointer]:
+                      - /url: /tuannm3812/unsw-aisoc-hack-2026/tree/main/demo
+                      - text: demo
+                  - cell [ref=e224]
+                  - cell [ref=e226]
+                - row "docs, (Directory)" [ref=e229]:
+                  - cell [ref=e230]:
+                    - link "docs, (Directory)" [ref=e237] [cursor=pointer]:
+                      - /url: /tuannm3812/unsw-aisoc-hack-2026/tree/main/docs
+                      - text: docs
+                  - cell [ref=e238]
+                  - cell [ref=e240]
+                - row "frontend, (Directory)" [ref=e243]:
+                  - cell [ref=e244]:
+                    - link "frontend, (Directory)" [ref=e251] [cursor=pointer]:
+                      - /url: /tuannm3812/unsw-aisoc-hack-2026/tree/main/frontend
+                      - text: frontend
+                  - cell [ref=e252]
+                  - cell [ref=e254]
+                - row ".env.example, (File)" [ref=e257]:
+                  - cell [ref=e258]:
+                    - link ".env.example, (File)" [ref=e265] [cursor=pointer]:
+                      - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/.env.example
+                      - text: .env.example
+                  - cell [ref=e266]
+                  - cell [ref=e268]
+                - row ".gitignore, (File)" [ref=e271]:
+                  - cell [ref=e272]:
+                    - link ".gitignore, (File)" [ref=e279] [cursor=pointer]:
+                      - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/.gitignore
+                      - text: .gitignore
+                  - cell [ref=e280]
+                  - cell [ref=e282]
+                - row "README.md, (File)" [ref=e285]:
+                  - cell [ref=e286]:
+                    - link "README.md, (File)" [ref=e293] [cursor=pointer]:
+                      - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/README.md
+                      - text: README.md
+                  - cell [ref=e294]
+                  - cell [ref=e296]
+                - row "start.ps1, (File)" [ref=e299]:
+                  - cell [ref=e300]:
+                    - link "start.ps1, (File)" [ref=e307] [cursor=pointer]:
+                      - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/start.ps1
+                      - text: start.ps1
+                  - cell [ref=e308]
+                  - cell [ref=e310]
+                - row "start.sh, (File)" [ref=e313]:
+                  - cell [ref=e314]:
+                    - link "start.sh, (File)" [ref=e321] [cursor=pointer]:
+                      - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/start.sh
+                      - text: start.sh
+                  - cell [ref=e322]
+                  - cell [ref=e324]
+          - generic [ref=e328]:
+            - generic [ref=e329]:
+              - heading "Repository files navigation" [level=2] [ref=e330]
+              - navigation "Repository files" [ref=e331]:
+                - list [ref=e332]:
+                  - listitem [ref=e333]:
+                    - link "README" [ref=e334] [cursor=pointer]:
+                      - /url: "#"
+              - button "Outline" [ref=e336] [cursor=pointer]
+            - article [ref=e340]:
+              - generic [ref=e341]:
+                - heading "Spatial Brain" [level=1] [ref=e342]
+                - 'link "Permalink: Spatial Brain" [ref=e343] [cursor=pointer]':
+                  - /url: "#spatial-brain"
+              - blockquote [ref=e346]:
+                - paragraph [ref=e347]: How might AI help multi-disciplinary teams make sense of information, present ideas, align on decisions, and review work more effectively?
+              - paragraph [ref=e348]: A research paper becomes a Jira issue becomes a pull request — and every hop stays visible on one canvas.
+              - paragraph [ref=e349]:
+                - text: Built for the
+                - link "UNSW AiSoc × Atlassian × Mistral hackathon" [ref=e350] [cursor=pointer]:
+                  - /url: https://aisoc-atlassian-mistral.devpost.com/
+                - text: . Event rules, judging criteria, and pitch narrative live in
+                - link [ref=e351] [cursor=pointer]:
+                  - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/docs/STRATEGY.md
+                  - code [ref=e352]: docs/STRATEGY.md
+                - text: . The original product design spec (Context Canvas) lives in
+                - link [ref=e353] [cursor=pointer]:
+                  - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/docs/DESIGN_SPEC.md
+                  - code [ref=e354]: docs/DESIGN_SPEC.md
+                - text: ; this README describes
+                - strong [ref=e355]: what shipped
+                - text: .
+              - generic [ref=e356]:
+                - heading "The problem we solve" [level=2] [ref=e357]
+                - 'link "Permalink: The problem we solve" [ref=e358] [cursor=pointer]':
+                  - /url: "#the-problem-we-solve"
+              - paragraph [ref=e361]: Cross-disciplinary work loses its reasoning in the handoff. A scientist's finding is retyped into a ticket, the ticket loses the constraint that made it necessary, and the engineer implements something subtly wrong.
+              - paragraph [ref=e362]:
+                - strong [ref=e363]: "Persona:"
+                - text: Priya (PM), Dr Aisha Khan (research scientist), and Marco (engineer) on one board — a multi-disciplinary team, not a single-role tool.
+              - paragraph [ref=e364]:
+                - strong [ref=e365]: "Insight:"
+                - text: AI should package context, not replace judgment. Teammates dump research onto typed nodes; connecting those nodes to a task gives a human or an agent the full upstream lineage — quotes and page numbers included — on demand.
+              - paragraph [ref=e366]:
+                - strong [ref=e367]: "Solution (one sentence):"
+                - text: A shared semantic canvas where connecting knowledge to a task auto-assembles a Mistral brief and exposes that same lineage to coding agents over MCP, then writes the result into a real Jira issue and back when a PR lands.
+              - generic [ref=e368]:
+                - heading "Eligibility" [level=2] [ref=e369]
+                - 'link "Permalink: Eligibility" [ref=e370] [cursor=pointer]':
+                  - /url: "#eligibility"
+              - paragraph [ref=e373]:
+                - text: Every AI reasoning step in this project runs on
+                - strong [ref=e374]: Mistral APIs only
+                - text: (OCR + structured extraction + task briefs). No OpenAI, no Anthropic inside the product. Cursor appears in the live demo only as an
+                - strong [ref=e375]: MCP client
+                - text: consuming our tools — the models that write briefs and parse PDFs are Mistral. See
+                - link [ref=e376] [cursor=pointer]:
+                  - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/docs/STRATEGY.md
+                  - code [ref=e377]: docs/STRATEGY.md
+                - text: §1a.
+              - generic [ref=e378]:
+                - heading "Run it" [level=2] [ref=e379]
+                - 'link "Permalink: Run it" [ref=e380] [cursor=pointer]':
+                  - /url: "#run-it"
+              - generic [ref=e383]:
+                - generic [ref=e384]: .\start.ps1
+                - button "Copy code to clipboard" [ref=e386] [cursor=pointer]
+              - paragraph [ref=e390]:
+                - text: That installs dependencies, seeds the demo board, and starts both servers. Then open
+                - link "http://localhost:3100" [ref=e391] [cursor=pointer]:
+                  - /url: http://localhost:3100
+                - text: and sign in.
+              - table [ref=e393]:
+                - rowgroup [ref=e394]:
+                  - row [ref=e395]:
+                    - columnheader "Who" [ref=e396]
+                    - columnheader "Email" [ref=e397]
+                    - columnheader "Password" [ref=e398]
+                - rowgroup [ref=e399]:
+                  - row [ref=e400]:
+                    - cell "Priya Raman, product manager" [ref=e401]
+                    - cell [ref=e402]:
+                      - code [ref=e403]: priya@spatialbrain.dev
+                    - cell [ref=e404]:
+                      - code [ref=e405]: spatial
+                  - row [ref=e406]:
+                    - cell "Dr Aisha Khan, research scientist" [ref=e407]
+                    - cell [ref=e408]:
+                      - code [ref=e409]: aisha@spatialbrain.dev
+                    - cell [ref=e410]:
+                      - code [ref=e411]: spatial
+                  - row [ref=e412]:
+                    - cell "Marco Silva, software engineer" [ref=e413]
+                    - cell [ref=e414]:
+                      - code [ref=e415]: marco@spatialbrain.dev
+                    - cell [ref=e416]:
+                      - code [ref=e417]: spatial
+              - paragraph [ref=e418]:
+                - code [ref=e419]: .\start.ps1 -Reset
+                - text: wipes and reseeds for a clean rehearsal.
+                - code [ref=e420]: .\start.ps1 -Check
+                - text: installs, seeds, runs the tests, and exits.
+              - paragraph [ref=e421]:
+                - text: Copy
+                - link [ref=e422] [cursor=pointer]:
+                  - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/.env.example
+                  - code [ref=e423]: .env.example
+                - text: to
+                - code [ref=e424]: .env
+                - text: "at the repo root for Mistral and Jira. Without keys the app still runs: documents are stored but not extracted, briefs fall back to a deterministic summary, and tasks stay canvas-only."
+              - paragraph [ref=e425]:
+                - strong [ref=e426]:
+                  - text: Never commit
+                  - code [ref=e427]: .env
+                  - text: .
+                - text: It is gitignored.
+              - generic [ref=e428]:
+                - heading "The demo, in seven steps" [level=2] [ref=e429]
+                - 'link "Permalink: The demo, in seven steps" [ref=e430] [cursor=pointer]':
+                  - /url: "#the-demo-in-seven-steps"
+              - paragraph [ref=e433]:
+                - text: "Full runbook (what to say, what to do when something breaks):"
+                - link [ref=e434] [cursor=pointer]:
+                  - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/docs/DEMO.md
+                  - code [ref=e435]: docs/DEMO.md
+                - text: .
+              - list [ref=e436]:
+                - listitem [ref=e437]:
+                  - strong [ref=e438]: Sign in as Priya.
+                  - text: The board already has the scientist's findings and one constraint — the story starts mid-conversation.
+                - listitem [ref=e439]:
+                  - strong [ref=e440]:
+                    - text: Drop
+                    - code [ref=e441]: demo/retrieval-grounding-study.pdf
+                    - text: .
+                  - text: Mistral OCR + structured extraction lays out findings and constraints, each with a quoted span and page.
+                - listitem [ref=e442]:
+                  - strong [ref=e443]: Add a typed node and connect it
+                  - text: to an extracted finding (a teammate reacting to the paper).
+                - listitem [ref=e444]:
+                  - strong [ref=e445]: Create a task, connect it to knowledge nodes, assign to Marco.
+                - listitem [ref=e446]:
+                  - strong [ref=e447]: Assignment creates a real Jira Cloud issue.
+                  - text: The key appears on the task node.
+                - listitem [ref=e448]:
+                  - strong [ref=e449]: An agent asks about that task over MCP.
+                  - text: It receives the full upstream lineage, summarized by Mistral, with citations. "Trace ancestry" lights the same set on the canvas.
+                - listitem [ref=e450]:
+                  - strong [ref=e451]: The agent reports its pull request through MCP.
+                  - text: Badge on the canvas node + comment on the Jira issue.
+              - paragraph [ref=e452]: "Step 6 is the point of the product. Step 7 closes the loop: the scientist can see their paper turn into shipped code."
+              - paragraph [ref=e453]:
+                - text: "MCP attach guide:"
+                - link [ref=e454] [cursor=pointer]:
+                  - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/docs/MCP.md
+                  - code [ref=e455]: docs/MCP.md
+                - text: .
+              - generic [ref=e456]:
+                - heading "How it works" [level=2] [ref=e457]
+                - 'link "Permalink: How it works" [ref=e458] [cursor=pointer]':
+                  - /url: "#how-it-works"
+              - generic [ref=e461]:
+                - code [ref=e463]: Canvas (Next.js) ─── FastAPI ─── SQLite │ ├── Mistral OCR + structured extraction → typed nodes with evidence ├── Lineage assembler → Mistral brief → MCP tools → coding agent └── Jira outbound adapter → Jira Cloud
+                - button "Copy code to clipboard" [ref=e465] [cursor=pointer]
+              - paragraph [ref=e469]:
+                - strong [ref=e470]: Nodes are typed and provenanced.
+                - text: "Kinds:"
+                - code [ref=e471]: asset
+                - text: ","
+                - code [ref=e472]: finding
+                - text: ","
+                - code [ref=e473]: constraint
+                - text: ","
+                - code [ref=e474]: task
+                - text: ". Relations:"
+                - code [ref=e475]: derived_from
+                - text: ","
+                - code [ref=e476]: supports
+                - text: ","
+                - code [ref=e477]: constrains
+                - text: ","
+                - code [ref=e478]: implements
+                - text: ","
+                - code [ref=e479]: assigned_to
+                - text: . Extracted nodes carry source asset, page, verbatim quote, and confidence.
+              - paragraph [ref=e480]:
+                - strong [ref=e481]: Lineage is a graph walk, not a prompt.
+                - code [ref=e482]: backend/app/services/lineage.py
+                - text: walks context-bearing relations back to the roots — cycle-safe, capped, with relation paths recorded. Mistral only writes the brief on top; the agent is told the nodes are authoritative.
+              - paragraph [ref=e483]:
+                - strong [ref=e484]: Document text is data, never instructions.
+                - text: MCP tools use a bearer token separate from user sessions. Reported PR URLs are restricted to
+                - code [ref=e485]: http
+                - text: /
+                - code [ref=e486]: https
+                - text: at the schema.
+              - paragraph [ref=e487]:
+                - strong [ref=e488]: Jira is real outbound create.
+                - text: Issue types resolved from
+                - code [ref=e489]: createmeta
+                - text: and sent by
+                - strong [ref=e490]: id
+                - text: (team-managed projects make type names ambiguous). ADF descriptions, correlation property on the issue, local dedupe because Jira has no create idempotency. Timeouts are recorded as
+                - code [ref=e491]: ambiguous
+                - text: ", not retried blindly."
+              - generic [ref=e492]:
+                - heading "What shipped vs the design spec" [level=2] [ref=e493]
+                - 'link "Permalink: What shipped vs the design spec" [ref=e494] [cursor=pointer]':
+                  - /url: "#what-shipped-vs-the-design-spec"
+              - paragraph [ref=e497]: "The design spec imagined a Next.js monolith on Vercel with Neon, Conflict Detector, and Task Spec Generation as separate wow moments. What we shipped for the demo path:"
+              - table [ref=e499]:
+                - rowgroup [ref=e500]:
+                  - row [ref=e501]:
+                    - columnheader "Spec idea" [ref=e502]
+                    - columnheader "Status in this repo" [ref=e503]
+                - rowgroup [ref=e504]:
+                  - row [ref=e505]:
+                    - cell "Semantic canvas + Context → Task" [ref=e506]
+                    - cell "Shipped (typed nodes + React Flow)" [ref=e507]
+                  - row [ref=e508]:
+                    - cell "Mistral packaging of context" [ref=e509]
+                    - cell "Shipped (OCR extract + lineage brief)" [ref=e510]
+                  - row [ref=e511]:
+                    - cell [ref=e512]:
+                      - text: MCP
+                      - code [ref=e513]: get_task_context
+                    - cell [ref=e514]:
+                      - text: Shipped (
+                      - code [ref=e515]: spatial_get_task_context
+                      - text: + list + PR write-back)
+                  - row [ref=e516]:
+                    - cell "Jira push" [ref=e517]
+                    - cell "Shipped (on assign; live Cloud REST v3)" [ref=e518]
+                  - row [ref=e519]:
+                    - cell "Conflict Detector / Task Spec button" [ref=e520]
+                    - cell "Not shipped — cut for reliability; lineage + Jira + PR close the story" [ref=e521]
+                  - row [ref=e522]:
+                    - cell "Next monolith / Neon / Vercel Blob" [ref=e523]
+                    - cell "Not used — FastAPI + SQLite + local uploads for a one-command local demo" [ref=e524]
+                  - row [ref=e525]:
+                    - 'cell "Persona: Jamie, generic startup PM/designer/2 engineers" [ref=e526]'
+                    - cell "Replaced with Priya (PM) / Dr Aisha Khan (research scientist) / Marco (engineer) — a more specific research-to-engineering handoff story that covers all four verbs in the official problem statement (make sense of information, present ideas, align on decisions, review work), not just some of them" [ref=e527]
+              - paragraph [ref=e528]:
+                - text: "Stretch cut on purpose: real-time multiplayer, inbound Jira sync, GitHub PR polling, embeddings. See design spec §3 and"
+                - code [ref=e529]: docs/STRATEGY.md
+                - text: §6 (MVP first).
+              - generic [ref=e530]:
+                - heading "Verify it" [level=2] [ref=e531]
+                - 'link "Permalink: Verify it" [ref=e532] [cursor=pointer]':
+                  - /url: "#verify-it"
+              - generic [ref=e535]:
+                - generic [ref=e536]:
+                  - text: cd backend .venv\Scripts\python.exe -m pytest
+                  - generic [ref=e537]: "# lineage, Jira payloads, issue-type selection, PR validation"
+                  - text: .venv\Scripts\python.exe scripts\smoke.py
+                  - generic [ref=e538]: "# end-to-end against a running server"
+                  - text: .venv\Scripts\python.exe scripts\mcp_check.py
+                  - generic [ref=e539]: "# MCP server over stdio"
+                  - text: .venv\Scripts\python.exe scripts\preflight.py
+                  - generic [ref=e540]: "# go / no-go on all seven demo steps"
+                - button "Copy code to clipboard" [ref=e542] [cursor=pointer]
+              - paragraph [ref=e546]:
+                - text: The last three need the API running. Run
+                - code [ref=e547]: python -m app.seed --reset
+                - text: before presenting if smoke/MCP left test nodes on the board — preflight will say so.
+              - generic [ref=e548]:
+                - heading "Layout" [level=2] [ref=e549]
+                - 'link "Permalink: Layout" [ref=e550] [cursor=pointer]':
+                  - /url: "#layout"
+              - generic [ref=e553]:
+                - code [ref=e555]: docs/STRATEGY.md hackathon rules, judging, pitch framework docs/ demo runbook, pitch, Q&A prep, design spec, coding standards backend/app/services/lineage.py the graph walk behind the whole idea backend/app/services/mistral_service.py backend/app/services/jira_service.py backend/app/mcp/server.py MCP tools (stdio) frontend/components/canvas/ React Flow canvas, nodes, inspector demo/ PDF for the live upload step start.ps1 / start.sh one-command local bring-up (Windows / macOS/Linux)
+                - button "Copy code to clipboard" [ref=e557] [cursor=pointer]
+              - generic [ref=e561]:
+                - heading "Docs index" [level=2] [ref=e562]
+                - 'link "Permalink: Docs index" [ref=e563] [cursor=pointer]':
+                  - /url: "#docs-index"
+              - paragraph [ref=e566]:
+                - text: See
+                - link [ref=e567] [cursor=pointer]:
+                  - /url: /tuannm3812/unsw-aisoc-hack-2026/blob/main/docs/README.md
+                  - code [ref=e568]: docs/README.md
+                - text: for the full reading order for teammates and judges.
+      - generic [ref=e571]:
+        - generic [ref=e572]:
+          - heading "About" [level=2] [ref=e573]
+          - generic [ref=e574]: No description, website, or topics provided.
+          - heading "Resources" [level=3] [ref=e575]
+          - link "Readme" [ref=e577] [cursor=pointer]:
+            - /url: "#readme-ov-file"
+          - link "Activity" [ref=e581] [cursor=pointer]:
+            - /url: /tuannm3812/unsw-aisoc-hack-2026/activity
+          - heading "Stars" [level=3] [ref=e584]
+          - link [ref=e586] [cursor=pointer]:
+            - /url: /tuannm3812/unsw-aisoc-hack-2026/stargazers
+            - strong [ref=e590]: "0"
+            - text: stars
+          - heading "Watchers" [level=3] [ref=e591]
+          - link [ref=e593] [cursor=pointer]:
+            - /url: /tuannm3812/unsw-aisoc-hack-2026/watchers
+            - strong [ref=e597]: "0"
+            - text: watching
+          - heading "Forks" [level=3] [ref=e598]
+          - link [ref=e600] [cursor=pointer]:
+            - /url: /tuannm3812/unsw-aisoc-hack-2026/forks
+            - strong [ref=e604]: "0"
+            - text: forks
+          - link "Report repository" [ref=e606] [cursor=pointer]:
+            - /url: /contact/report-content?content_url=https%3A%2F%2Fgithub.com%2Ftuannm3812%2Funsw-aisoc-hack-2026&report=tuannm3812+%28user%29
+        - heading "Releases" [level=2] [ref=e608]
+        - heading "Packages" [level=2] [ref=e612]
+        - heading "Contributors" [level=2] [ref=e615]
+        - heading "Languages" [level=2] [ref=e618]
+  - contentinfo [ref=e621]:
+    - heading "Footer" [level=2] [ref=e622]
+    - generic [ref=e623]:
+      - generic [ref=e624]:
+        - link "GitHub Homepage" [ref=e625] [cursor=pointer]:
+          - /url: https://github.com
+        - generic [ref=e628]: © 2026 GitHub, Inc.
+      - navigation "Footer" [ref=e629]:
+        - heading "Footer navigation" [level=3] [ref=e630]
+        - list "Footer navigation" [ref=e631]:
+          - listitem [ref=e632]:
+            - link "Terms" [ref=e633] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+          - listitem [ref=e634]:
+            - link "Privacy" [ref=e635] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+          - listitem [ref=e636]:
+            - link "Security" [ref=e637] [cursor=pointer]:
+              - /url: https://github.com/security
+          - listitem [ref=e638]:
+            - link "Status" [ref=e639] [cursor=pointer]:
+              - /url: https://www.githubstatus.com/
+          - listitem [ref=e640]:
+            - link "Community" [ref=e641] [cursor=pointer]:
+              - /url: https://github.community/
+          - listitem [ref=e642]:
+            - link "Docs" [ref=e643] [cursor=pointer]:
+              - /url: https://docs.github.com/
+          - listitem [ref=e644]:
+            - link "Contact" [ref=e645] [cursor=pointer]:
+              - /url: https://support.github.com?tags=dotcom-footer
+          - listitem [ref=e646]:
+            - button "Manage cookies" [ref=e648] [cursor=pointer]
+          - listitem [ref=e649]:
+            - button "Do not share my personal information" [ref=e651] [cursor=pointer]
