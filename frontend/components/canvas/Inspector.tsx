@@ -62,7 +62,7 @@ export function Inspector() {
         </button>
       </header>
 
-      {node.kind === "task" ? <TaskInspector node={node} /> : <KnowledgeInspector node={node} />}
+      {node.kind === "task" ? <TaskInspector key={node.id} node={node} /> : <KnowledgeInspector key={node.id} node={node} />}
     </aside>
   )
 }
@@ -536,7 +536,7 @@ function TaskInspector({ node }: { node: GraphNode }) {
         ) : (
           <div className="py-12 text-center">
             <p className="text-muted-foreground text-sm">
-              Click &ldquo;Check Alignment&rdquo; in the Details tab to scan for contradictions.
+              Click &ldquo;Scan for contradictions&rdquo; above to check connected nodes.
             </p>
           </div>
         )}

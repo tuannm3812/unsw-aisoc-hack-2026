@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -20,7 +20,18 @@ export function CustomEdge({
   style,
   markerEnd,
 }: EdgeProps) {
+  const menuRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const handle = (e: MouseEvent) => { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false) }
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false) }
+    setTimeout(() => document.addEventListener("click", handle), 0)
+    document.addEventListener("keydown", key)
+    return () => { document.removeEventListener("click", handle); document.removeEventListener("keydown", key) }
+  }, [menuOpen])
+
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX, sourceY, sourcePosition,
     targetX, targetY, targetPosition,
@@ -42,7 +53,7 @@ export function CustomEdge({
           >⊕</button>
         )}
         {menuOpen && (
-          <div className="nodrag nopan absolute z-50 min-w-[140px] rounded-none border-[3px] border-[#1B1712] bg-white shadow-[3px_3px_0_#1B1712] py-0.5"
+          <div ref={menuRef} className="nodrag nopan absolute z-50 min-w-[140px] rounded-none border-[3px] border-[#1B1712] bg-white shadow-[3px_3px_0_#1B1712] py-0.5"
             style={{ left: labelX, top: labelY, transform: "translate(-50%, -50%)" }}>
             {(["finding", "constraint", "task"] as const).map((kind) => (
               <button key={kind} className="hover:bg-accent flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs"

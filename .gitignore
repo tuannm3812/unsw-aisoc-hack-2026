@@ -12,3 +12,5 @@ __pycache__/
 
 # Playwright MCP debug artifacts
 .playwright-mcp/
+*.png
+.review-tmp/

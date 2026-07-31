@@ -196,9 +196,10 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
 
   const onNodesChange = useCallback(
     (changes: NodeChange<FlowNode<GraphNodeData>>[]) => {
-      // React Flow manages drag positions internally (zero store churn).
-      // Only track dimensions for the minimap.
       for (const change of changes) {
+        if (change.type === "position" && change.position) {
+          nudgeNode(change.id, change.position.x, change.position.y)
+        }
         if (change.type === "dimensions" && change.dimensions) {
           const { width, height } = change.dimensions
           setMeasured((previous) =>
@@ -267,7 +268,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           const graphNode = (node.data as GraphNodeData).node
           if (graphNode.kind === "task") {
             const ancestorIds = getAncestorIds(node.id, nodes, edges)
-            focusLineage(node.id, ancestorIds)
+            focusLineage(node.id, [node.id, ...ancestorIds])
           } else {
             clearLineage()
           }
