@@ -1,0 +1,20 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e2]:
+    - application [ref=f1e3]:
+      - generic "Control Panel" [ref=f1e6]:
+        - button "Zoom In" [ref=f1e7] [cursor=pointer]
+        - button "Zoom Out" [ref=f1e10] [cursor=pointer]
+        - button "Fit View" [ref=f1e13] [cursor=pointer]
+        - button "Toggle Interactivity" [ref=f1e16] [cursor=pointer]
+    - generic [ref=f1e21]:
+      - button "note_add Add Info" [ref=f1e22]:
+        - generic [ref=f1e23]: note_add
+        - generic [ref=f1e24]: Add Info
+      - button "assignment_add Add Task" [ref=f1e25]:
+        - generic [ref=f1e26]: assignment_add
+        - generic [ref=f1e27]: Add Task
+    - generic [ref=f1e29]:
+      - button "Canvas" [ref=f1e30]
+      - button "Gantt" [disabled] [ref=f1e31]
+      - button "List" [disabled] [ref=f1e32]
+  - button "Open Next.js Dev Tools" [ref=f1e38] [cursor=pointer]

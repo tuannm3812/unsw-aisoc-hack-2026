@@ -1,0 +1,28 @@
+- generic [active] [ref=f5e1]:
+  - generic [ref=f5e2]:
+    - application [ref=f5e3]:
+      - generic "Control Panel" [ref=f5e6]:
+        - button "Zoom In" [ref=f5e7] [cursor=pointer]
+        - button "Zoom Out" [ref=f5e10] [cursor=pointer]
+        - button "Fit View" [ref=f5e13] [cursor=pointer]
+        - button "Toggle Interactivity" [ref=f5e16] [cursor=pointer]
+    - generic:
+      - generic:
+        - generic: ⚡
+        - heading "Start building your context canvas" [level=2]
+        - paragraph: Add context nodes for research, notes, and decisions. Connect them to task nodes and let Mistral synthesize what your team needs to know.
+        - generic:
+          - button "📄 Add Context Node" [ref=f5e20]
+          - button "📝 Add Task Node" [ref=f5e21]
+    - generic [ref=f5e23]:
+      - button "note_add Add Context" [ref=f5e24]:
+        - generic [ref=f5e25]: note_add
+        - generic [ref=f5e26]: Add Context
+      - button "assignment_add Add Task" [ref=f5e27]:
+        - generic [ref=f5e28]: assignment_add
+        - generic [ref=f5e29]: Add Task
+    - generic [ref=f5e31]:
+      - button "Canvas" [ref=f5e32]
+      - button "Gantt" [disabled] [ref=f5e33]
+      - button "List" [disabled] [ref=f5e34]
+  - button "Open Next.js Dev Tools" [ref=f5e40] [cursor=pointer]

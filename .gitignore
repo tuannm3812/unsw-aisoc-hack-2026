@@ -1,0 +1,7 @@
+frontend-prototype/
+node_modules/
+.next/
+stitch_extracted/
+__pycache__/
+*.db
+.env

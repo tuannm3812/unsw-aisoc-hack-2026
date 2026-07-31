@@ -1,0 +1,13 @@
+- generic [active] [ref=f19e1]:
+  - main [ref=f19e2]:
+    - generic [ref=f19e3]:
+      - generic [ref=f19e4]: Spatial Brain
+      - heading "Pick who you are on the team." [level=1] [ref=f19e8]
+      - paragraph [ref=f19e9]:
+        - text: The board is already set up with all three of you on it. Everyone shares the password
+        - code [ref=f19e10]: spatial
+        - text: .
+      - generic [ref=f19e11]: Loading the team
+      - paragraph [ref=f19e15]: Start as Priya to run the demo end to end. She is the board admin, so she can assign work into Jira.
+  - region "Notifications (F8)":
+    - list
