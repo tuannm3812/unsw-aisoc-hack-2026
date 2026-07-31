@@ -1,0 +1,239 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 2622 >>
+stream
+BT
+1 0 0 1 64 728 Tm
+15.5 TL
+/F2 17 Tf
+(Grounding failures in retrieval-augmented answering: a field study) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(Internal research note, Applied Retrieval Group. Draft 3.) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F2 13.5 Tf
+(Abstract) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(We instrumented three production question-answering deployments over eleven weeks to) Tj
+T*
+/F1 10.5 Tf
+(find where retrieval-augmented systems lose user trust. Accuracy was rarely the) Tj
+T*
+/F1 10.5 Tf
+(binding problem. The binding problem was that users could not check an answer, and so) Tj
+T*
+/F1 10.5 Tf
+(treated correct answers and incorrect ones the same way.) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F2 13.5 Tf
+(Method) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(We shadowed 34 reviewers across the three deployments and logged 4,181 answer) Tj
+T*
+/F1 10.5 Tf
+(sessions. Every session recorded retrieval latency, generation latency, the retrieved) Tj
+T*
+/F1 10.5 Tf
+(spans, and whether the reviewer accepted, edited, or rejected the answer.) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F2 13.5 Tf
+(Findings) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(Retrieval dominated the time users waited. Across the three deployments retrieval) Tj
+T*
+/F1 10.5 Tf
+(accounted for 68 percent of end-to-end latency, with a median of 1.9 seconds against) Tj
+T*
+/F1 10.5 Tf
+(0.9 seconds for generation. Teams had been optimising the generation step.) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(Reviewers rejected answers they could not verify. In shadowing sessions, reviewers) Tj
+T*
+/F1 10.5 Tf
+(rejected 7 of 9 unsourced summaries even when a later audit confirmed the content was) Tj
+T*
+/F1 10.5 Tf
+(correct. Reviewers described the unsourced answers as "unusable" rather than "wrong".) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(Chunking destroyed cross-sentence claims. Fixed 512-token chunks split 23 percent of) Tj
+T*
+/F1 10.5 Tf
+(multi-sentence claims across a boundary, and answers drawing on a split claim were) Tj
+T*
+/F1 10.5 Tf
+(2.4 times more likely to be edited. Reintroducing a 15 percent overlap between) Tj
+T*
+/F1 10.5 Tf
+(adjacent chunks recovered most of the lost context and cut the edit rate to near the) Tj
+T*
+/F1 10.5 Tf
+(unsplit baseline.) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(Confidence scores were ignored. Reviewers reported that numeric confidence had no) Tj
+T*
+/F1 10.5 Tf
+(effect on their decision, because the number did not tell them what to check.) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F2 13.5 Tf
+(Constraints on any implementation) Tj
+T*
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 1269 >>
+stream
+BT
+1 0 0 1 64 728 Tm
+15.5 TL
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(Every generated claim must cite the source span it came from. A claim without a) Tj
+T*
+/F1 10.5 Tf
+(retrievable span is treated as unusable by the review team, regardless of accuracy.) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(End-to-end answer latency must stay under 2.5 seconds at the 95th percentile.) Tj
+T*
+/F1 10.5 Tf
+(Reviewers abandoned sessions above that threshold in 41 percent of cases.) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(Citations must resolve to a location a reviewer can open, not to a document name. In) Tj
+T*
+/F1 10.5 Tf
+(pilot two, document-level citations produced the same rejection rate as no citation) Tj
+T*
+/F1 10.5 Tf
+(at all.) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(The system must degrade to extractive quoting when retrieval confidence is low,) Tj
+T*
+/F1 10.5 Tf
+(rather than generating an unsourced summary.) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F2 13.5 Tf
+(Limitations) Tj
+T*
+/F1 10.5 Tf
+() Tj
+T*
+/F1 10.5 Tf
+(All three deployments served internal reviewers rather than end customers, so the) Tj
+T*
+/F1 10.5 Tf
+(verification behaviour we measured may be stronger than in a consumer setting. We did) Tj
+T*
+/F1 10.5 Tf
+(not test multilingual retrieval.) Tj
+T*
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000002940 00000 n 
+0000003076 00000 n 
+0000004397 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+4533
+%%EOF
