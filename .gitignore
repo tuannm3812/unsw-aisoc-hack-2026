@@ -45,3 +45,6 @@ demo/*.mov
 
 # Scratch from tooling
 _remote_pull/
+
+# Local source material (meeting notes, raw session recordings) — not for the public repo
+material/
