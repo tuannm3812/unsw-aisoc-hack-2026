@@ -262,10 +262,10 @@
 
 .react-flow__attribution { display: none; }
 
-.react-flow__minimap-node.mm-asset { fill: var(--kind-asset); }
-.react-flow__minimap-node.mm-finding { fill: var(--kind-finding); }
-.react-flow__minimap-node.mm-constraint { fill: var(--kind-constraint); }
-.react-flow__minimap-node.mm-task { fill: var(--kind-task); }
+.react-flow__minimap-node.mm-asset { fill: var(--kind-asset); stroke: var(--border); stroke-width: 1.5; }
+.react-flow__minimap-node.mm-finding { fill: var(--kind-finding); stroke: var(--border); stroke-width: 1.5; }
+.react-flow__minimap-node.mm-constraint { fill: var(--kind-constraint); stroke: var(--border); stroke-width: 1.5; }
+.react-flow__minimap-node.mm-task { fill: var(--kind-task); stroke: var(--border); stroke-width: 1.5; }
 
 .react-flow__controls-button {
   background: var(--card);
@@ -275,6 +275,13 @@
 .react-flow__controls-button:hover {
   background: var(--accent);
   fill: var(--foreground);
+}
+
+/* Toast pixel styling */
+[data-sonner-toaster] [data-sonner-toast] {
+  border-radius: 0 !important;
+  border: 3px solid var(--border) !important;
+  box-shadow: 3px 3px 0 var(--border) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

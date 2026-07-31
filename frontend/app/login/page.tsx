@@ -52,7 +52,7 @@ export default function LoginPage() {
           <span className="text-sm font-medium tracking-tight">Spatial Brain</span>
         </div>
 
-        <h1 className="font-display mt-8 text-3xl leading-tight tracking-tight">
+        <h1 className="mt-8 text-3xl leading-tight tracking-tight font-bold">
           Pick who you are on the team.
         </h1>
         <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
