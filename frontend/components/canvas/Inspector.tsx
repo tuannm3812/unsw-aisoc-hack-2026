@@ -9,11 +9,15 @@ import {
   Loader2,
   RefreshCw,
   Route,
+  Scale,
+  Sparkles,
   Trash2,
   TriangleAlert,
   X,
 } from "lucide-react"
 
+import { CandidateReview } from "@/components/canvas/CandidateReview"
+import { PresentMode } from "@/components/canvas/PresentMode"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -27,7 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { api } from "@/lib/api"
-import { KIND_LABEL, type GraphNode, type TaskContext } from "@/lib/types"
+import { KIND_LABEL, type AlignmentResult, type GraphNode, type PresentResult, type ReviewChecklistResult, type TaskContext, type TaskRecommendationResult } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { useGraphStore } from "@/stores/graphStore"
 
@@ -62,8 +66,81 @@ export function Inspector() {
         </button>
       </header>
 
-      {node.kind === "task" ? <TaskInspector node={node} /> : <KnowledgeInspector node={node} />}
+      {node.kind === "task" ? (
+        <TaskInspector node={node} />
+      ) : node.kind === "asset" ? (
+        <AssetInspector node={node} />
+      ) : (
+        <KnowledgeInspector node={node} />
+      )}
     </aside>
+  )
+}
+
+/** A source document: what it is, what Mistral proposed from it, and a re-read. */
+function AssetInspector({ node }: { node: GraphNode }) {
+  const boardId = useGraphStore((state) => state.boardId)
+  const assets = useGraphStore((state) => state.assets)
+  const refresh = useGraphStore((state) => state.refresh)
+  const { toast } = useToast()
+  const [reparsing, setReparsing] = useState(false)
+
+  const asset = assets.find((entry) => entry.id === node.source_asset_id)
+
+  async function reparse() {
+    if (!boardId || !asset) return
+    setReparsing(true)
+    try {
+      await api.reparseAsset(boardId, asset.id)
+      await refresh()
+      toast({
+        title: "Reading it again",
+        description: "New proposals will appear here. Nodes you already added stay put.",
+      })
+    } catch (error) {
+      toast({ title: "Could not re-read", description: (error as Error).message, variant: "error" })
+    } finally {
+      setReparsing(false)
+    }
+  }
+
+  return (
+    <div className="thin-scrollbar flex-1 space-y-6 overflow-y-auto px-5 py-5">
+      <div>
+        <p className="text-sm leading-relaxed font-medium">{node.title}</p>
+        {asset && (
+          <p className="text-muted-foreground mt-1 font-mono text-[11px]">
+            {asset.page_count > 0 && `${asset.page_count} pages · `}
+            {Math.max(1, Math.round(asset.byte_size / 1024))} KB
+          </p>
+        )}
+      </div>
+
+      {asset ? (
+        <CandidateReview asset={asset} />
+      ) : (
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          The uploaded file behind this node is missing, so there is nothing to review.
+        </p>
+      )}
+
+      {asset && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={reparse}
+          disabled={reparsing || asset.parse_state === "parsing"}
+          className="text-muted-foreground -ml-3 h-8 gap-2 text-xs"
+        >
+          {reparsing ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="size-3.5" />
+          )}
+          Read the document again
+        </Button>
+      )}
+    </div>
   )
 }
 
@@ -163,6 +240,10 @@ function KnowledgeInspector({ node }: { node: GraphNode }) {
         <Provenance node={node} />
       </section>
 
+      {(node.kind === "finding" || node.kind === "constraint") && (
+        <RecommendTasksBlock node={node} />
+      )}
+
       <Button
         variant="ghost"
         size="sm"
@@ -173,6 +254,73 @@ function KnowledgeInspector({ node }: { node: GraphNode }) {
         Delete this node
       </Button>
     </div>
+  )
+}
+
+function RecommendTasksBlock({ node }: { node: GraphNode }) {
+  const boardId = useGraphStore((state) => state.boardId)
+  const refresh = useGraphStore((state) => state.refresh)
+  const select = useGraphStore((state) => state.select)
+  const arrangeLayout = useGraphStore((state) => state.arrangeLayout)
+  const pushAgentEvents = useGraphStore((state) => state.pushAgentEvents)
+  const { toast } = useToast()
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<TaskRecommendationResult | null>(null)
+
+  async function run() {
+    if (!boardId) return
+    setBusy(true)
+    try {
+      const payload = await api.recommendTasks(boardId, node.id)
+      setResult(payload)
+      pushAgentEvents(payload.events.length ? payload.events : [payload.summary])
+      await refresh()
+      await arrangeLayout()
+      const first = payload.created_nodes[0]
+      if (first) select(first.id)
+      toast({
+        title: `Created ${payload.created_nodes.length} task${payload.created_nodes.length === 1 ? "" : "s"}`,
+        description: payload.summary,
+      })
+    } catch (error) {
+      pushAgentEvents([(error as Error).message], "error")
+      toast({
+        title: "Could not recommend tasks",
+        description: (error as Error).message,
+        variant: "error",
+      })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section>
+      <h3 className="text-2xs text-muted-foreground mb-2.5 font-medium tracking-[0.08em] uppercase">
+        Recommend tasks
+      </h3>
+      <p className="text-muted-foreground mb-2.5 text-xs leading-relaxed">
+        Mistral turns this {node.kind} (and neighbours) into concrete tasks and places them on
+        the canvas, already linked.
+      </p>
+      <Button size="sm" onClick={run} disabled={busy} className="h-8 w-full gap-2 text-xs">
+        {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+        Create recommended tasks
+      </Button>
+      {result && (
+        <ul className="mt-3 space-y-2">
+          {result.tasks.map((task) => (
+            <li key={`${task.title}-${task.priority}`} className="border-border rounded-lg border px-2.5 py-2 text-xs">
+              <p className="font-medium">{task.title}</p>
+              <p className="text-muted-foreground mt-1">
+                {task.priority} · {task.relation}
+                {task.rationale ? ` — ${task.rationale}` : ""}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }
 
@@ -328,6 +476,9 @@ function TaskInspector({ node }: { node: GraphNode }) {
 
         <JiraBlock node={node} />
         <PullRequestBlock node={node} />
+        <AlignmentBlock node={node} />
+        <PresentBlock node={node} />
+        <ReviewChecklistBlock node={node} />
       </TabsContent>
 
       <TabsContent
@@ -675,6 +826,272 @@ function PullRequestBlock({ node }: { node: GraphNode }) {
           {node.pr_reported_at && ` · ${formatReportedAt(node.pr_reported_at)}`}
         </span>
       </a>
+    </section>
+  )
+}
+
+function AlignmentBlock({ node }: { node: GraphNode }) {
+  const boardId = useGraphStore((state) => state.boardId)
+  const focusLineage = useGraphStore((state) => state.focusLineage)
+  const replaceNode = useGraphStore((state) => state.replaceNode)
+  const pushAgentEvents = useGraphStore((state) => state.pushAgentEvents)
+  const { toast } = useToast()
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<AlignmentResult | null>(
+    (node.alignment_payload as AlignmentResult | null) ?? null,
+  )
+  const [rationale, setRationale] = useState("")
+
+  useEffect(() => {
+    setResult((node.alignment_payload as AlignmentResult | null) ?? null)
+  }, [node.id, node.alignment_payload])
+
+  async function run() {
+    if (!boardId) return
+    setBusy(true)
+    try {
+      const run = await api.agentRun(boardId, node.id, "align")
+      pushAgentEvents(run.events)
+      if (run.alignment) {
+        setResult(run.alignment)
+        const ids = new Set<string>([node.id])
+        for (const conflict of run.alignment.conflicts) {
+          ids.add(conflict.node_a_id)
+          ids.add(conflict.node_b_id)
+        }
+        focusLineage(node.id, [...ids])
+      }
+      const refreshed = await api.graph(boardId)
+      const updated = refreshed.nodes.find((n) => n.id === node.id)
+      if (updated) replaceNode(updated)
+    } catch (error) {
+      pushAgentEvents([(error as Error).message], "error")
+      toast({ title: "Alignment failed", description: (error as Error).message, variant: "error" })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function decide(state: "decided" | "deferred" | "rejected") {
+    if (!boardId) return
+    try {
+      const updated = await api.recordDecision(boardId, node.id, state, rationale)
+      replaceNode(updated)
+      toast({ title: `Recorded as ${state}` })
+    } catch (error) {
+      toast({ title: "Could not record", description: (error as Error).message, variant: "error" })
+    }
+  }
+
+  return (
+    <section>
+      <h3 className="text-2xs text-muted-foreground mb-2.5 font-medium tracking-[0.08em] uppercase">
+        Align on decisions
+      </h3>
+      <p className="text-muted-foreground mb-2.5 text-xs leading-relaxed">
+        Arbiter checks whether findings and constraints feeding this task contradict each other.
+      </p>
+      <Button size="sm" onClick={run} disabled={busy} className="h-8 w-full gap-2 text-xs">
+        {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Scale className="size-3.5" />}
+        Check alignment
+      </Button>
+
+      {result && (
+        <div className="mt-3 space-y-2">
+          <p className="text-xs leading-relaxed">{result.summary}</p>
+          {result.conflicts.length === 0 ? (
+            <p className="text-muted-foreground text-xs">No contradictions found.</p>
+          ) : (
+            <ul className="space-y-2">
+              {result.conflicts.map((conflict) => (
+                <li
+                  key={`${conflict.node_a_id}-${conflict.node_b_id}`}
+                  className="bg-warning/15 rounded-lg px-2.5 py-2 text-xs leading-relaxed"
+                >
+                  <p className="text-warning-foreground font-medium">
+                    {conflict.node_a_title} ↔ {conflict.node_b_title}
+                  </p>
+                  <p className="text-muted-foreground mt-1">{conflict.description}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <Textarea
+            value={rationale}
+            onChange={(event) => setRationale(event.target.value)}
+            rows={2}
+            placeholder="Decision rationale"
+            className="mt-2 resize-none text-xs"
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {(["decided", "deferred", "rejected"] as const).map((state) => (
+              <Button
+                key={state}
+                size="sm"
+                variant={node.decision_state === state ? "default" : "outline"}
+                className="h-7 text-[11px]"
+                onClick={() => decide(state)}
+              >
+                {state}
+              </Button>
+            ))}
+          </div>
+          {node.decision_state && (
+            <p className="text-muted-foreground text-[11px]">
+              {node.decision_state}
+              {node.decision_by && ` · ${node.decision_by}`}
+              {node.decision_rationale && ` — ${node.decision_rationale}`}
+            </p>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function PresentBlock({ node }: { node: GraphNode }) {
+  const boardId = useGraphStore((state) => state.boardId)
+  const replaceNode = useGraphStore((state) => state.replaceNode)
+  const focusLineage = useGraphStore((state) => state.focusLineage)
+  const pushAgentEvents = useGraphStore((state) => state.pushAgentEvents)
+  const { toast } = useToast()
+  const [busy, setBusy] = useState(false)
+  const [present, setPresent] = useState<PresentResult | null>(
+    (node.present_payload as PresentResult | null) ?? null,
+  )
+  const [modeOpen, setModeOpen] = useState(false)
+
+  useEffect(() => {
+    setPresent((node.present_payload as PresentResult | null) ?? null)
+  }, [node.id, node.present_payload])
+
+  async function run() {
+    if (!boardId) return
+    setBusy(true)
+    try {
+      const run = await api.agentRun(boardId, node.id, "present")
+      pushAgentEvents(run.events)
+      if (run.present) {
+        setPresent(run.present)
+        const ids = [
+          node.id,
+          ...run.present.beats.map((beat) => beat.node_id).filter(Boolean),
+        ] as string[]
+        focusLineage(node.id, ids)
+        setModeOpen(true)
+      }
+      const refreshed = await api.graph(boardId)
+      const updated = refreshed.nodes.find((n) => n.id === node.id)
+      if (updated) replaceNode(updated)
+    } catch (error) {
+      pushAgentEvents([(error as Error).message], "error")
+      toast({ title: "Present failed", description: (error as Error).message, variant: "error" })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section>
+      <h3 className="text-2xs text-muted-foreground mb-2.5 font-medium tracking-[0.08em] uppercase">
+        Present ideas
+      </h3>
+      <Button size="sm" onClick={run} disabled={busy} className="h-8 w-full gap-2 text-xs">
+        {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+        Generate stakeholder present
+      </Button>
+      {present && (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="mt-2 h-7 w-full text-xs"
+          onClick={() => setModeOpen(true)}
+        >
+          Open Present Mode
+        </Button>
+      )}
+      {modeOpen && present && <PresentMode present={present} onClose={() => setModeOpen(false)} />}
+    </section>
+  )
+}
+
+function ReviewChecklistBlock({ node }: { node: GraphNode }) {
+  const boardId = useGraphStore((state) => state.boardId)
+  const replaceNode = useGraphStore((state) => state.replaceNode)
+  const pushAgentEvents = useGraphStore((state) => state.pushAgentEvents)
+  const { toast } = useToast()
+  const [busy, setBusy] = useState(false)
+  const [items, setItems] = useState<ReviewChecklistResult["items"]>(
+    (node.review_checklist as ReviewChecklistResult["items"]) ?? [],
+  )
+  const [summary, setSummary] = useState("")
+
+  useEffect(() => {
+    setItems((node.review_checklist as ReviewChecklistResult["items"]) ?? [])
+  }, [node.id, node.review_checklist])
+
+  async function run() {
+    if (!boardId) return
+    setBusy(true)
+    try {
+      const run = await api.agentRun(boardId, node.id, "review")
+      pushAgentEvents(run.events)
+      if (run.status === "needs_pr") {
+        toast({ title: "Link a PR first", variant: "error" })
+        return
+      }
+      if (run.review) {
+        setItems(run.review.items)
+        setSummary(run.review.summary)
+      }
+      const refreshed = await api.graph(boardId)
+      const updated = refreshed.nodes.find((n) => n.id === node.id)
+      if (updated) replaceNode(updated)
+    } catch (error) {
+      pushAgentEvents([(error as Error).message], "error")
+      toast({ title: "Review failed", description: (error as Error).message, variant: "error" })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section>
+      <h3 className="text-2xs text-muted-foreground mb-2.5 font-medium tracking-[0.08em] uppercase">
+        Review constraints
+      </h3>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={run}
+        disabled={busy || !node.pr_url}
+        className="h-8 w-full gap-2 text-xs"
+      >
+        {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
+        Constraint checklist
+      </Button>
+      {summary && <p className="text-muted-foreground mt-2 text-xs leading-relaxed">{summary}</p>}
+      {items.length > 0 && (
+        <ul className="mt-2 space-y-1.5">
+          {items.map((item) => (
+            <li key={item.constraint_id} className="border-border rounded-lg border px-2.5 py-2 text-xs">
+              <span
+                className={cn(
+                  "text-2xs mr-2 font-medium tracking-[0.08em] uppercase",
+                  item.status === "pass" && "text-success",
+                  item.status === "fail" && "text-destructive",
+                  item.status === "unknown" && "text-muted-foreground",
+                )}
+              >
+                {item.status}
+              </span>
+              {item.title}
+              {item.note && <p className="text-muted-foreground mt-1">{item.note}</p>}
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }

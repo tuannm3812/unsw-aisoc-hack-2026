@@ -7,12 +7,23 @@ from sqlalchemy.orm import Session
 
 from ..auth import board_for_user, current_user
 from ..db import get_db
-from ..models import Membership, Node, NodeKind, SyncState, User
-from ..schemas import NodeOut, TaskContextOut, UserOut
+from ..models import Membership, Node, NodeKind, SyncState, User, utcnow
+from ..schemas import (
+    AgentRunRequest,
+    AgentRunResult,
+    AlignmentResult,
+    DecisionRequest,
+    NodeOut,
+    PresentResult,
+    ReviewChecklistResult,
+    TaskContextOut,
+    UserOut,
+)
 from ..services.context import lineage_titles, task_context
 from ..services.graph import log_activity, task_description_paragraphs, touch
 from ..services.jira_service import JiraAmbiguous, JiraError, jira_service
 from ..services.lineage import assemble_lineage
+from ..services.mistral_service import MistralError, mistral_service
 from ..services.notify import notify
 
 logger = logging.getLogger(__name__)
@@ -40,6 +51,205 @@ async def get_task_context(
         lineage=lineage,
         brief=brief,
     )
+
+
+@router.post("/{board_id}/tasks/{task_id}/align", response_model=AlignmentResult)
+async def check_alignment(
+    board_id: str,
+    task_id: str,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> AlignmentResult:
+    """Flag contradictions among the nodes that feed this task."""
+    board_for_user(db, board_id, user)
+    task = _task_or_404(db, board_id, task_id)
+    lineage = assemble_lineage(db, task)
+    result = await mistral_service.check_alignment(lineage)
+    task.alignment_payload = result.model_dump()
+    touch(task)
+    log_activity(
+        db,
+        board_id=board_id,
+        actor=user.name,
+        action="task.aligned",
+        subject_id=task.id,
+        detail={"conflicts": len(result.conflicts), "by": result.generated_by},
+    )
+    db.commit()
+    return result
+
+
+@router.post("/{board_id}/tasks/{task_id}/decision", response_model=NodeOut)
+def record_decision(
+    board_id: str,
+    task_id: str,
+    payload: DecisionRequest,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> Node:
+    board_for_user(db, board_id, user)
+    task = _task_or_404(db, board_id, task_id)
+    task.decision_state = payload.state
+    task.decision_rationale = payload.rationale.strip()
+    task.decision_by = user.name
+    task.decision_at = utcnow()
+    touch(task)
+    log_activity(
+        db,
+        board_id=board_id,
+        actor=user.name,
+        action="task.decision",
+        subject_id=task.id,
+        detail={"state": payload.state},
+    )
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+@router.post("/{board_id}/tasks/{task_id}/present", response_model=PresentResult)
+async def present_task(
+    board_id: str,
+    task_id: str,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> PresentResult:
+    """Stakeholder narrative + optional one-pager image over the task lineage."""
+    board_for_user(db, board_id, user)
+    task = _task_or_404(db, board_id, task_id)
+    lineage = assemble_lineage(db, task)
+    try:
+        result = await mistral_service.present_task(lineage)
+    except MistralError as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
+    task.present_payload = result.model_dump()
+    touch(task)
+    log_activity(
+        db,
+        board_id=board_id,
+        actor=user.name,
+        action="task.presented",
+        subject_id=task.id,
+        detail={"beats": len(result.beats), "has_image": bool(result.image_url)},
+    )
+    db.commit()
+    return result
+
+
+@router.post("/{board_id}/tasks/{task_id}/review-checklist", response_model=ReviewChecklistResult)
+async def review_checklist(
+    board_id: str,
+    task_id: str,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> ReviewChecklistResult:
+    """Map the linked PR against lineage constraints."""
+    board_for_user(db, board_id, user)
+    task = _task_or_404(db, board_id, task_id)
+    if not task.pr_url:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Link a pull request before running the constraint checklist",
+        )
+    lineage = assemble_lineage(db, task)
+    result = await mistral_service.review_constraints(
+        lineage, task.pr_title, task.pr_url, task.pr_state
+    )
+    task.review_checklist = [item.model_dump() for item in result.items]
+    touch(task)
+    log_activity(
+        db,
+        board_id=board_id,
+        actor=user.name,
+        action="task.review_checklist",
+        subject_id=task.id,
+        detail={"items": len(result.items)},
+    )
+    db.commit()
+    return result
+
+
+@router.post("/{board_id}/tasks/{task_id}/agent-run", response_model=AgentRunResult)
+async def agent_run(
+    board_id: str,
+    task_id: str,
+    payload: AgentRunRequest,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> AgentRunResult:
+    """Route a canvas action through named specialists, with activity events for the UI.
+
+    Prefers a live Conversations API kick when agent ids are provisioned, then always
+    runs our graph tools so Spatial Brain stays the system of record.
+    """
+    board_for_user(db, board_id, user)
+    task = _task_or_404(db, board_id, task_id)
+    events = [f"Coordinator received '{payload.action}' for {task.title}"]
+
+    if payload.action == "align":
+        lineage = assemble_lineage(db, task)
+        events.extend(
+            await mistral_service.start_specialist_conversation(
+                "align",
+                f"Find contradictions among findings/constraints for task "
+                f"'{task.title}'. Context:\n{_lineage_prompt(lineage)}",
+            )
+        )
+        if len(events) == 1:
+            events.append("Handed off to Arbiter")
+        result = await check_alignment(board_id, task_id, user, db)
+        events.append(f"Arbiter returned {len(result.conflicts)} conflict(s)")
+        return AgentRunResult(action="align", status="ok", events=events, alignment=result)
+
+    if payload.action == "present":
+        lineage = assemble_lineage(db, task)
+        events.extend(
+            await mistral_service.start_specialist_conversation(
+                "present",
+                f"Draft a stakeholder present for task '{task.title}'. "
+                f"Context:\n{_lineage_prompt(lineage)}",
+            )
+        )
+        if len(events) == 1:
+            events.append("Handed off to Narrator")
+        result = await present_task(board_id, task_id, user, db)
+        events.append(f"Narrator produced {len(result.beats)} beats")
+        return AgentRunResult(action="present", status="ok", events=events, present=result)
+
+    if payload.action == "review":
+        events.append("Handed off to Reviewer")
+        if not task.pr_url:
+            return AgentRunResult(
+                action="review",
+                status="needs_pr",
+                events=events + ["No pull request on this task yet"],
+                detail="Link a PR first",
+            )
+        lineage = assemble_lineage(db, task)
+        events.extend(
+            await mistral_service.start_specialist_conversation(
+                "review",
+                f"Check PR '{task.pr_title}' ({task.pr_url}) against constraints "
+                f"for '{task.title}'. Context:\n{_lineage_prompt(lineage)}",
+            )
+        )
+        result = await review_checklist(board_id, task_id, user, db)
+        events.append(f"Reviewer checked {len(result.items)} constraint(s)")
+        return AgentRunResult(action="review", status="ok", events=events, review=result)
+
+    return AgentRunResult(
+        action=payload.action,
+        status="unsupported",
+        events=events,
+        detail="Sense runs automatically on upload; use Align, Present, or Review here.",
+    )
+
+
+def _lineage_prompt(lineage) -> str:
+    lines = []
+    for node in lineage.nodes[:40]:
+        lines.append(f"- [{node.kind}] ({node.id}) {node.title}: {(node.body or '')[:240]}")
+    return "\n".join(lines)
 
 
 @router.post("/{board_id}/tasks/{task_id}/assign", response_model=NodeOut)
