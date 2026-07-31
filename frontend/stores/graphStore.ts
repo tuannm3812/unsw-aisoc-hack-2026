@@ -89,6 +89,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     try {
       const payload = await api.graph(boardId)
       set({
+        lastSync: Date.now(),
         board: payload.board,
         members: payload.members,
         nodes: payload.nodes,

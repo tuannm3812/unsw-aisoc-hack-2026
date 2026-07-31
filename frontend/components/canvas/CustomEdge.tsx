@@ -19,6 +19,11 @@ export function CustomEdge({
   data,
   style,
   markerEnd,
+  label,
+  labelStyle,
+  labelBgStyle,
+  labelBgPadding,
+  labelBgBorderRadius,
 }: EdgeProps) {
   const menuRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -42,7 +47,10 @@ export function CustomEdge({
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
+      <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd}
+        label={label} labelX={labelX} labelY={labelY}
+        labelStyle={labelStyle} labelBgStyle={labelBgStyle}
+        labelBgPadding={labelBgPadding} labelBgBorderRadius={labelBgBorderRadius} />
       <EdgeLabelRenderer>
         {!menuOpen && (
           <button
