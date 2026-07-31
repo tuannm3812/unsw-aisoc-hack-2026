@@ -84,8 +84,7 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
   return (
     <div
       className={cn(
-        "group bg-card w-[264px] rounded-xl border border-l-3 transition-[opacity,box-shadow,border-color] duration-200",
-        meta.accent,
+        "group bg-card w-[264px] rounded-none border-[3px] border-[#1B1712] shadow-[3px_3px_0_#1B1712] transition-[opacity,box-shadow,border-color] duration-200",
         dimmed && "pointer-events-none opacity-25",
         inLineage && !isFocusedTask && "ring-primary/60 border-primary/30 ring-2",
         isFocusedTask && "ring-primary ring-2",
