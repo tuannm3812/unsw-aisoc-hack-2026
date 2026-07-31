@@ -107,7 +107,7 @@
   <sc-if value="{{ isBoard }}" hint-placeholder-val="{{ false }}">
     <div style="position:absolute;inset:0">
 
-      <div onPointerDown="{{ onBgDown }}" style="position:absolute;inset:0;top:58px;cursor:grab">
+      <div onPointerDown="{{ onBgDown }}" style="position:absolute;inset:0;top:58px;cursor:grab;touch-action:none;user-select:none">
         <div style="{{ worldStyle }}">
           <svg style="position:absolute;left:0;top:0;width:3000px;height:2000px;overflow:visible;pointer-events:none">
             <sc-for list="{{ edges }}" as="edge" hint-placeholder-count="0">
@@ -297,18 +297,37 @@ class Component extends DCLogic {
     ],
   };
 
+  DRAG_DEAD = 3;
   componentDidMount() {
     this._move = (e) => {
-      if (this.drag) { const dx=(e.clientX-this.drag.sx)/this.state.scale, dy=(e.clientY-this.drag.sy)/this.state.scale; this.setState({nodes:this.state.nodes.map(n=>n.id===this.drag.id?{...n,x:this.drag.ox+dx,y:this.drag.oy+dy}:n)}); }
-      else if (this.panning) { this.setState({panX:this.panning.ox+(e.clientX-this.panning.sx),panY:this.panning.oy+(e.clientY-this.panning.sy)}); }
+      if (this.drag) {
+        if (!this.drag.active) {
+          if (Math.abs(e.clientX-this.drag.sx)>this.DRAG_DEAD||Math.abs(e.clientY-this.drag.sy)>this.DRAG_DEAD) this.drag.active=true;
+          else return;
+        }
+        if(this._el) this._el.style.cursor="grabbing";
+        const dx=(e.clientX-this.drag.sx)/this.state.scale, dy=(e.clientY-this.drag.sy)/this.state.scale;
+        this.setState({nodes:this.state.nodes.map(n=>n.id===this.drag.id?{...n,x:this.drag.ox+dx,y:this.drag.oy+dy}:n)});
+      } else if (this.panning) {
+        if (!this.panning.active) {
+          if (Math.abs(e.clientX-this.panning.sx)>this.DRAG_DEAD||Math.abs(e.clientY-this.panning.sy)>this.DRAG_DEAD) this.panning.active=true;
+          else return;
+        }
+        this.setState({panX:this.panning.ox+(e.clientX-this.panning.sx),panY:this.panning.oy+(e.clientY-this.panning.sy)});
+      }
     };
-    this._up = () => { this.drag = null; this.panning = null; };
+    this._up = () => {
+      if (this._el) { this._el.releasePointerCapture(this._ptr); this._el.style.cursor="grab"; }
+      this.drag = null; this.panning = null; this._el = null;
+    };
     window.addEventListener("pointermove", this._move);
     window.addEventListener("pointerup", this._up);
+    window.addEventListener("pointercancel", this._up);
   }
   componentWillUnmount() {
     window.removeEventListener("pointermove", this._move);
     window.removeEventListener("pointerup", this._up);
+    window.removeEventListener("pointercancel", this._up);
   }
 
   addNode(kind) {
@@ -326,7 +345,7 @@ class Component extends DCLogic {
     const nodes = s.nodes.map((n) => {
       const meta = this.KIND[n.kind], sel = n.id === s.selectedId, dim = s.myTasks && n.kind !== "task";
       const showFooter = !!(n.page || n.priority || (n.assignee && n.kind === "task") || n.jira);
-      return { id: n.id, glyph: meta.glyph, accent: meta.accent, label: meta.label, title: n.title, body: n.body || "", quote: n.quote || "", page: n.page || "", priority: n.priority || "", assignee: n.kind === "task" ? (n.assignee || "") : "", jira: n.jira || "", meta: n.kind === "finding" ? "finding" : (n.kind === "constraint" ? "rule" : ""), wrapStyle: { position: "absolute", left: n.x + "px", top: n.y + "px", width: this.WIDTH + "px", zIndex: sel ? 20 : 5, cursor: "grab", pointerEvents: dim ? "none" : "auto", opacity: dim ? 0.28 : 1 }, cardStyle: { background: "#fff", border: "3px solid " + (sel ? meta.accent : "#1B1712"), boxShadow: (sel ? "6px 6px 0 " : "4px 4px 0 ") + meta.accent, paddingBottom: showFooter ? "0" : "11px" }, footerStyle: showFooter ? { display: "flex", alignItems: "center", gap: "8px", padding: "9px 11px", marginTop: "10px", borderTop: "2px solid #E4DCC7" } : { display: "none" }, onDown: (e) => { e.stopPropagation(); e.target.setPointerCapture(e.pointerId); this.setState({ selectedId: n.id }); this.drag = { id: n.id, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y }; } };
+      return { id: n.id, glyph: meta.glyph, accent: meta.accent, label: meta.label, title: n.title, body: n.body || "", quote: n.quote || "", page: n.page || "", priority: n.priority || "", assignee: n.kind === "task" ? (n.assignee || "") : "", jira: n.jira || "", meta: n.kind === "finding" ? "finding" : (n.kind === "constraint" ? "rule" : ""), wrapStyle: { position: "absolute", left: n.x + "px", top: n.y + "px", width: this.WIDTH + "px", zIndex: sel ? 20 : 5, cursor: "grab", pointerEvents: dim ? "none" : "auto", opacity: dim ? 0.28 : 1, touchAction: "none", userSelect: "none", WebkitUserSelect: "none" }, cardStyle: { background: "#fff", border: "3px solid " + (sel ? meta.accent : "#1B1712"), boxShadow: (sel ? "6px 6px 0 " : "4px 4px 0 ") + meta.accent, paddingBottom: showFooter ? "0" : "11px" }, footerStyle: showFooter ? { display: "flex", alignItems: "center", gap: "8px", padding: "9px 11px", marginTop: "10px", borderTop: "2px solid #E4DCC7" } : { display: "none" }, onDown: (e) => { e.stopPropagation(); e.target.setPointerCapture(e.pointerId); this._el = e.target; this._ptr = e.pointerId; this.setState({ selectedId: n.id }); this.drag = { id: n.id, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y, active: false }; } };
     });
 
     const edges = s.edges.map((e, i) => {
@@ -346,7 +365,7 @@ class Component extends DCLogic {
       isLanding: s.screen === "landing", isLogin: s.screen === "login", isBoard: s.screen === "board",
       goLanding: () => this.setState({ screen: "landing" }), goLogin: () => this.setState({ screen: "login" }), goBoard: () => this.setState({ screen: "board" }),
       worldStyle: { position: "absolute", left: "0", top: "0", transformOrigin: "0 0", transform: "translate(" + s.panX + "px," + s.panY + "px) scale(" + s.scale + ")" },
-      onBgDown: (e) => { this.setState({ selectedId: null }); this.panning = { sx: e.clientX, sy: e.clientY, ox: s.panX, oy: s.panY }; },
+      onBgDown: (e) => { e.target.setPointerCapture(e.pointerId); this._el = e.target; this._ptr = e.pointerId; this.setState({ selectedId: null }); this.panning = { sx: e.clientX, sy: e.clientY, ox: s.panX, oy: s.panY, active: false }; },
       zoomIn: () => this.setState({ scale: Math.min(2, s.scale * 1.15) }), zoomOut: () => this.setState({ scale: Math.max(0.4, s.scale / 1.15) }), resetView: () => this.setState({ scale: 1, panX: 40, panY: 20 }),
       nodes, edges, miniNodes, nodeCount: s.nodes.length, taskCount: s.nodes.filter((n) => n.kind === "task").length,
       toggleMyTasks: () => this.setState({ myTasks: !s.myTasks }), myTasksBg: s.myTasks ? "#E10500" : "#fff", myTasksTextColor: s.myTasks ? "#fff" : "#1B1712",
