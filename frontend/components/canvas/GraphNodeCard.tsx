@@ -1,6 +1,6 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { Handle, Position, type NodeProps } from "@xyflow/react"
 import {
   FileText,
@@ -13,6 +13,8 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { countAncestors } from "@/lib/lineage"
+import { useGraphStore } from "@/stores/graphStore"
 import type { GraphNode, NodeKind, ParseState } from "@/lib/types"
 
 export interface GraphNodeData extends Record<string, unknown> {
@@ -95,6 +97,12 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
   const Icon = meta.icon
   const isTask = node.kind === "task"
   const priority = isTask ? detectPriority(node) : null
+  const storeNodes = useGraphStore((s) => s.nodes)
+  const storeEdges = useGraphStore((s) => s.edges)
+  const groundedCount = useMemo(
+    () => isTask ? countAncestors(node.id, storeNodes, storeEdges) : 0,
+    [node.id, isTask, storeNodes, storeEdges],
+  )
 
   return (
     <div
@@ -174,6 +182,9 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
               <span className={cn("text-2xs rounded px-1.5 py-0.5 font-medium", node.task_status === "done" || node.task_status === "in_review" ? "bg-success/15 text-success" : node.task_status === "in_progress" || node.task_status === "assigned" ? "bg-info/15 text-info" : "bg-muted text-muted-foreground")}>
                 {(node.task_status || "open").replace(/_/g, " ")}
               </span>
+              {groundedCount > 0 && (
+                <span className="text-2xs text-muted-foreground font-mono">grounded in {groundedCount}</span>
+              )}
               {priority && (
               <span className={cn("text-2xs rounded px-1.5 py-0.5 font-mono font-semibold", PRIORITY_COLORS[priority])}>
                 {priority}
