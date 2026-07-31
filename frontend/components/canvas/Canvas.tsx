@@ -132,9 +132,36 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   }, [nodes, members, assets, selectedNodeId, lineageActive, lineageIds, focusedTaskId, measured])
 
   const flowEdges = useMemo<FlowEdge[]>(
-    () =>
-      edges.map((edge) => {
+    () => {
+      // Role colours: scientist (derived_from) → teal, PM (supports/constrains) → indigo, engineer (implements) → purple
+      const relationColor = (rel: string) => {
+        if (rel === "derived_from") return "#00b894"
+        if (rel === "implements") return "#7c3aed"
+        return "#4f46e5" // supports, constrains
+      }
+      // Pipeline status from target task: done → solid, in_progress/assigned → dash-dot, open → dotted
+      const dashForStatus = (status: string): string | undefined => {
+        if (status === "done") return undefined          // solid
+        if (status === "in_progress" || status === "assigned") return "8 4 2 4" // dash-dot
+        if (status === "open") return "4 4"              // dotted
+        return undefined                                  // non-task target → solid
+      }
+
+      return edges.map((edge) => {
+        const targetNode = nodes.find((n) => n.id === edge.target_id)
+        const targetStatus = targetNode?.task_status ?? ""
         const inLineage = lineageActive && lineageIds.has(edge.source_id) && lineageIds.has(edge.target_id)
+        const color = relationColor(edge.relation)
+        const isActive = targetStatus === "in_progress" || targetStatus === "assigned"
+        const isOpen = targetStatus === "open"
+
+        const classes = [
+          lineageActive ? (inLineage ? "lineage" : "dimmed") : "",
+          isActive ? "edge-active" : "",
+          isOpen ? "edge-open" : "",
+          targetStatus === "done" ? "edge-done" : "",
+        ].filter(Boolean).join(" ")
+
         return {
           id: edge.id,
           source: edge.source_id,
@@ -142,7 +169,9 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           type: "custom",
           data: { onDerive: handleDerive, edgeRelation: edge.relation },
           label: RELATION_LABEL[edge.relation],
-          className: lineageActive ? (inLineage ? "lineage" : "dimmed") : undefined,
+          className: classes || undefined,
+          style: { stroke: color, strokeWidth: isActive ? 2.5 : 1.5 },
+          markerEnd: { type: "arrowclosed", color },
           labelBgPadding: [5, 2] as [number, number],
           labelBgBorderRadius: 4,
           labelStyle: {
@@ -152,8 +181,9 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           },
           labelBgStyle: { fill: "var(--background)", fillOpacity: 0.92 },
         }
-      }),
-    [edges, lineageActive, lineageIds],
+      })
+    },
+    [edges, nodes, handleDerive, lineageActive, lineageIds],
   )
 
   const onNodesChange = useCallback(

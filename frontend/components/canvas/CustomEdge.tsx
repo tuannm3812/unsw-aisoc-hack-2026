@@ -16,6 +16,7 @@ export function CustomEdge({
   sourcePosition,
   targetPosition,
   data,
+  style,
 }: EdgeProps) {
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -31,7 +32,7 @@ export function CustomEdge({
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} />
+      <BaseEdge id={id} path={edgePath} style={style} />
       <EdgeLabelRenderer>
         <button
           className="nodrag nopan absolute cursor-pointer rounded-full bg-primary text-primary-foreground flex size-5 items-center justify-center text-[11px] font-bold leading-none opacity-25 transition-all hover:scale-125 hover:opacity-100 hover:shadow-lg"

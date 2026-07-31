@@ -212,6 +212,10 @@
   50% { stroke-opacity: 0.45; }
 }
 
+@keyframes edgeDashWalk {
+  to { stroke-dashoffset: -24; }
+}
+
 /* React Flow */
 .react-flow__pane { cursor: grab; }
 .react-flow__pane:active { cursor: grabbing; }
@@ -231,6 +235,18 @@
 
 .react-flow__edge.dimmed .react-flow__edge-path {
   stroke-opacity: 0.25;
+}
+
+/* Edge pipeline status: dash patterns reflect connected task status */
+.react-flow__edge.edge-active .react-flow__edge-path {
+  stroke-dasharray: 8 4 2 4;
+  animation: edgeDashWalk 0.6s linear infinite;
+}
+.react-flow__edge.edge-open .react-flow__edge-path {
+  stroke-dasharray: 4 4;
+}
+.react-flow__edge.edge-done .react-flow__edge-path {
+  stroke-dasharray: none;
 }
 
 .react-flow__attribution {

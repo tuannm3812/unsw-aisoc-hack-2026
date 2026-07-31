@@ -1,0 +1,36 @@
+- generic [active] [ref=f10e1]:
+  - generic [ref=f10e2]:
+    - banner [ref=f10e3]:
+      - generic [ref=f10e4]: Spatial Brain
+      - generic [ref=f10e9]:
+        - paragraph [ref=f10e10]: Board
+        - paragraph [ref=f10e11]: 0 nodes · 0 tasks
+      - generic [ref=f10e12]:
+        - generic [ref=f10e13]:
+          - generic [ref=f10e14]: Mistral
+          - generic [ref=f10e17]: Jira
+        - button "Sign out" [ref=f10e20]
+    - generic [ref=f10e25]:
+      - generic [ref=f10e26]:
+        - application [ref=f10e27]:
+          - generic "Control Panel" [ref=f10e30]:
+            - button "Zoom In" [ref=f10e31] [cursor=pointer]
+            - button "Zoom Out" [ref=f10e34] [cursor=pointer]
+            - button "Fit View" [ref=f10e37] [cursor=pointer]
+          - img "Mini Map" [ref=f10e41]
+        - generic:
+          - generic:
+            - paragraph: This board is empty
+            - paragraph: Drop a research PDF anywhere, or add a node from the toolbar.
+      - generic [ref=f10e43]:
+        - button "Finding" [ref=f10e44]
+        - button "Constraint" [ref=f10e47]
+        - button "Task" [ref=f10e54]
+        - button "Document" [ref=f10e59]
+        - generic [ref=f10e64]:
+          - generic [ref=f10e65]: new links mean
+          - combobox [ref=f10e66]
+          - combobox [ref=f10e69]
+        - button "Sprint Review" [ref=f10e71]
+  - region "Notifications (F8)":
+    - list
