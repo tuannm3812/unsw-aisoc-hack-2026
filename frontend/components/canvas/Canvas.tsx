@@ -170,7 +170,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           data: { onDerive: handleDerive, edgeRelation: edge.relation },
           label: RELATION_LABEL[edge.relation],
           className: classes || undefined,
-          style: inLineage ? undefined : { stroke: color, strokeWidth: isActive ? 2.5 : 1.5 },
+          style: inLineage ? undefined : { stroke: color, strokeWidth: isActive ? 3.5 : 2.5 },
           markerEnd: { type: "arrowclosed", color },
           labelBgPadding: [5, 2] as [number, number],
           labelBgBorderRadius: 4,

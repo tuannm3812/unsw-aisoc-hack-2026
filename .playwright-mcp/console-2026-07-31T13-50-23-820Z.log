@@ -17,3 +17,292 @@
 [  321777ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
 [  321842ms] [LOG] [Fast Refresh] done in 64ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
 [  322918ms] [LOG] [Fast Refresh] done in 1141ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  685516ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  685692ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  685778ms] [LOG] [Fast Refresh] done in 85ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  686178ms] [LOG] [Fast Refresh] done in 485ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  699258ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  699416ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  699438ms] [LOG] [Fast Refresh] done in 22ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  699713ms] [LOG] [Fast Refresh] done in 297ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  709653ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  709775ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  709800ms] [LOG] [Fast Refresh] done in 26ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  710717ms] [LOG] [Fast Refresh] done in 943ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  710779ms] [LOG] [HMR] Detected local css modules. Reload all css @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/mini-css-extract-plugin/hmr/hotModuleReplacement.js:1
+[  713887ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  713887ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  713887ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  718372ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  718372ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  718372ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  720124ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  720255ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  720276ms] [LOG] [Fast Refresh] done in 21ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  720620ms] [LOG] [Fast Refresh] done in 366ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  723761ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  723761ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  723762ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  728380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  728380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  728381ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  730747ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  730929ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  730949ms] [LOG] [Fast Refresh] done in 20ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  731220ms] [LOG] [Fast Refresh] done in 292ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  734360ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  734360ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  734360ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  738375ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  738375ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  738375ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  742534ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  742681ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  742704ms] [LOG] [Fast Refresh] done in 23ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  743210ms] [LOG] [Fast Refresh] done in 529ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  748378ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  748378ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  748378ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  753384ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  753384ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  753384ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  758367ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  758367ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  758367ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  763378ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  763378ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  763378ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  764737ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  765048ms] [LOG] [Fast Refresh] done in 311ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  768383ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  768383ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  768383ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  773372ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  773372ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  773372ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  774430ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  774536ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  774557ms] [LOG] [Fast Refresh] done in 21ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  774946ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ webpack-internal:///(app-pages-browser)/./node_modules/@xyflow/system/dist/esm/index.js:739
+[  774959ms] [LOG] [Fast Refresh] done in 423ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  778374ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  778374ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  778374ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  783379ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  783380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  783380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  788393ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  788393ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  788393ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  793381ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  793382ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  793382ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  798380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  798380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  798380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  798413ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  798567ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  798588ms] [LOG] [Fast Refresh] done in 22ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  798881ms] [LOG] [Fast Refresh] done in 315ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  803385ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  803386ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  803386ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  808374ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  808374ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  808374ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  810621ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  810738ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  810763ms] [LOG] [Fast Refresh] done in 26ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  811094ms] [LOG] [Fast Refresh] done in 357ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  814298ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  814298ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  814298ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  818376ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  818376ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  818376ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  820645ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  820748ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  820767ms] [LOG] [Fast Refresh] done in 18ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  821129ms] [LOG] [Fast Refresh] done in 380ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[  824290ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  824291ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  824292ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  828377ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  828377ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  828377ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  833383ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  833383ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  833383ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  838377ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  838377ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  838377ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  843380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  843380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  843380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  848374ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  848374ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  848374ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  853384ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  853384ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  853384ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  858389ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  858390ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  858390ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  863370ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  863370ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  863370ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  868373ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  868373ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  868373ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  873380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/board/%5BboardId%5D/page.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  873380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534601 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  873380ms] [WARNING] The resource http://localhost:3100/_next/static/css/app/layout.css?1785506534600 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  875260ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  875467ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:183
+[  875506ms] [ERROR] ./components/canvas/Toolbar.tsx
+Error:   x Expected '</', got '{'
+     ,-[C:\Users\Lenovo\Desktop\线下黑客松\frontend\components\canvas\Toolbar.tsx:226:1]
+ 223 |       </Tooltip>
+ 224 |     </div>
+ 225 | 
+ 226 |     {/* Sprint Review Dialog */}
+     :     ^
+ 227 |     {reviewOpen && reviewData && (
+ 228 |       <div className="border-border bg-card animate-review-in fixed inset-4 z-50 flex flex-col overflow-hidden rounded-none border-[3px] shadow-[5px_5px_0_#1B1712] md:inset-10 lg:inset-x-60">
+ 228 |         <header className="border-border flex items-center justify-between border-b px-5 py-3.5">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/canvas/Toolbar.tsx
+./app/board/[boardId]/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[  875538ms] [LOG] {file: Object} @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/next-devtools/index.js:1630
+[  875842ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3100/_next/static/webpack/d8271d7c0b6becb8.webpack.hot-update.json:0
+[  878267ms] [ERROR] ./components/canvas/Toolbar.tsx
+Error:   x Expected '</', got '{'
+     ,-[C:\Users\Lenovo\Desktop\线下黑客松\frontend\components\canvas\Toolbar.tsx:226:1]
+ 223 |       </Tooltip>
+ 224 |     </div>
+ 225 | 
+ 226 |     {/* Sprint Review Dialog */}
+     :     ^
+ 227 |     {reviewOpen && reviewData && (
+ 228 |       <div className="border-border bg-card animate-review-in fixed inset-4 z-50 flex flex-col overflow-hidden rounded-none border-[3px] shadow-[5px_5px_0_#1B1712] md:inset-10 lg:inset-x-60">
+ 228 |         <header className="border-border flex items-center justify-between border-b px-5 py-3.5">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/canvas/Toolbar.tsx
+./app/board/[boardId]/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[  878275ms] [LOG] {file: Object} @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/next-devtools/index.js:1630
+[  879256ms] [ERROR] ./components/canvas/Toolbar.tsx
+Error:   x Expected '</', got '{'
+     ,-[C:\Users\Lenovo\Desktop\线下黑客松\frontend\components\canvas\Toolbar.tsx:226:1]
+ 223 |       </Tooltip>
+ 224 |     </div>
+ 225 | 
+ 226 |     {/* Sprint Review Dialog */}
+     :     ^
+ 227 |     {reviewOpen && reviewData && (
+ 228 |       <div className="border-border bg-card animate-review-in fixed inset-4 z-50 flex flex-col overflow-hidden rounded-none border-[3px] shadow-[5px_5px_0_#1B1712] md:inset-10 lg:inset-x-60">
+ 228 |         <header className="border-border flex items-center justify-between border-b px-5 py-3.5">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/canvas/Toolbar.tsx
+./app/board/[boardId]/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[  879768ms] [ERROR] ./components/canvas/Toolbar.tsx
+Error:   x Expected '</', got '{'
+     ,-[C:\Users\Lenovo\Desktop\线下黑客松\frontend\components\canvas\Toolbar.tsx:226:1]
+ 223 |       </Tooltip>
+ 224 |     </div>
+ 225 | 
+ 226 |     {/* Sprint Review Dialog */}
+     :     ^
+ 227 |     {reviewOpen && reviewData && (
+ 228 |       <div className="border-border bg-card animate-review-in fixed inset-4 z-50 flex flex-col overflow-hidden rounded-none border-[3px] shadow-[5px_5px_0_#1B1712] md:inset-10 lg:inset-x-60">
+ 228 |         <header className="border-border flex items-center justify-between border-b px-5 py-3.5">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/canvas/Toolbar.tsx
+./app/board/[boardId]/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[  879985ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3100/board/brd_96b6fb8fbc47?_rsc=1bnny:0
+[  880034ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3100/board/brd_96b6fb8fbc47:0
+[  880611ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:28004
+[  880931ms] ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):
+Error:   x Expected '</', got '{'
+     ,-[C:\Users\Lenovo\Desktop\线下黑客松\frontend\components\canvas\Toolbar.tsx:226:1]
+ 223 |       </Tooltip>
+ 224 |     </div>
+ 225 | 
+ 226 |     {/* Sprint Review Dialog */}
+     :     ^
+ 227 |     {reviewOpen && reviewData && (
+ 228 |       <div className="border-border bg-card animate-review-in fixed inset-4 z-50 flex flex-col overflow-hidden rounded-none border-[3px] shadow-[5px_5px_0_#1B1712] md:inset-10 lg:inset-x-60">
+ 228 |         <header className="border-border flex items-center justify-between border-b px-5 py-3.5">
+     `----
+
+
+Caused by:
+    Syntax Error
+    at processResult (file://C:\Users\Lenovo\Desktop\线下黑客松\frontend\node_modules\next\dist\compiled\webpack\bundle5.js:29:407086)
+    at <unknown> (file://C:\Users\Lenovo\Desktop\线下黑客松\frontend\node_modules\next\dist\compiled\webpack\bundle5.js:29:408881)
+    at <unknown> (file://C:\Users\Lenovo\Desktop\线下黑客松\frontend\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:8645)
+    at <unknown> (file://C:\Users\Lenovo\Desktop\线下黑客松\frontend\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:5019)
+    at r.callback (file://C:\Users\Lenovo\Desktop\线下黑客松\frontend\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:4039)
+[  880932ms] [LOG] [HMR] connected @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/client/dev/hot-reloader/pages/websocket.js:45
+[  880939ms] [ERROR] ./components/canvas/Toolbar.tsx
+Error:   x Expected '</', got '{'
+     ,-[C:\Users\Lenovo\Desktop\线下黑客松\frontend\components\canvas\Toolbar.tsx:226:1]
+ 223 |       </Tooltip>
+ 224 |     </div>
+ 225 | 
+ 226 |     {/* Sprint Review Dialog */}
+     :     ^
+ 227 |     {reviewOpen && reviewData && (
+ 228 |       <div className="border-border bg-card animate-review-in fixed inset-4 z-50 flex flex-col overflow-hidden rounded-none border-[3px] shadow-[5px_5px_0_#1B1712] md:inset-10 lg:inset-x-60">
+ 228 |         <header className="border-border flex items-center justify-between border-b px-5 py-3.5">
+     `----
+
+Caused by:
+    Syntax Error @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/next-devtools/userspace/pages/pages-dev-overlay-setup.js:76
+[  880951ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3100/favicon.ico:0
+[  881096ms] [LOG] {file: Object} @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/compiled/next-devtools/index.js:1630
+[  919556ms] [ERROR] ./components/canvas/Toolbar.tsx
+Error:   x Expected '</', got '{'
+     ,-[C:\Users\Lenovo\Desktop\线下黑客松\frontend\components\canvas\Toolbar.tsx:226:1]
+ 223 |       </Tooltip>
+ 224 |     </div>
+ 225 | 
+ 226 |     {/* Sprint Review Dialog */}
+     :     ^
+ 227 |     {reviewOpen && reviewData && (
+ 228 |       <div className="border-border bg-card animate-review-in fixed inset-4 z-50 flex flex-col overflow-hidden rounded-none border-[3px] shadow-[5px_5px_0_#1B1712] md:inset-10 lg:inset-x-60">
+ 228 |         <header className="border-border flex items-center justify-between border-b px-5 py-3.5">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/canvas/Toolbar.tsx
+./app/board/[boardId]/page.tsx @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/next-devtools/userspace/pages/pages-dev-overlay-setup.js:76
+[  919561ms] [LOG] {file: Object} @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/compiled/next-devtools/index.js:1630
+[  919698ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/client/dev/hot-reloader/pages/hot-reloader-pages.js:197
+[  919708ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3100/_next/static/webpack/e53e9cc47bf63987.webpack.hot-update.json:0
+[  919709ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/client/dev/hot-reloader/pages/hot-reloader-pages.js:338
+[  919944ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3100/_next/static/webpack/e53e9cc47bf63987.webpack.hot-update.json:0
+[  919944ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/client/dev/hot-reloader/pages/hot-reloader-pages.js:338
+[  921246ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25630

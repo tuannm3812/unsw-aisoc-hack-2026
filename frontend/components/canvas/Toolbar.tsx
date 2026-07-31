@@ -76,6 +76,7 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
   const addNode = useGraphStore((state) => state.addNode)
   const nodes = useGraphStore((state) => state.nodes)
   const fileInput = useRef<HTMLInputElement>(null)
+  const [expanded, setExpanded] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
   const [reviewLoading, setReviewLoading] = useState(false)
   const [reviewData, setReviewData] = useState<{
@@ -123,7 +124,12 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
 
   return (
     <>
-    <div className="border-border bg-card/95 absolute bottom-5 left-5 z-10 flex items-center gap-1 rounded-xl border p-1.5 backdrop-blur">
+    {!expanded && (
+      <button onClick={() => setExpanded(true)} className="border-border bg-card absolute bottom-5 left-5 z-10 flex size-11 items-center justify-center rounded-none border-[3px] shadow-[3px_3px_0_#1B1712] text-lg font-bold pixel-btn" title="Open toolbar">+</button>
+    )}
+    {expanded && (
+    <div className="border-border bg-card absolute bottom-5 left-5 z-10 flex items-center gap-1 rounded-none border-[3px] shadow-[3px_3px_0_#1B1712] p-1.5">
+      <button onClick={() => setExpanded(false)} className="hover:bg-accent flex h-8 items-center rounded-none border-[2px] border-[#1B1712] px-2 text-xs font-bold pixel-btn" title="Collapse">×</button>
       {ADD_BUTTONS.map(({ kind, label, icon: Icon, hint }) => (
         <Tooltip key={kind}>
           <TooltipTrigger asChild>
@@ -216,6 +222,7 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
         <TooltipContent side="top">Mistral summarises what shipped, what's blocked, what's next</TooltipContent>
       </Tooltip>
     </div>
+    )}
 
     {/* Sprint Review Dialog */}
     {reviewOpen && reviewData && (

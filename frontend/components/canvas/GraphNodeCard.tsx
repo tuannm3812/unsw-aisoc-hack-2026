@@ -99,13 +99,16 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
   return (
     <div
       className={cn(
-        "group bg-card w-[264px] rounded-none border-[3px] border-[#1B1712] shadow-[3px_3px_0_#1B1712]",
+        "group bg-card w-[264px] rounded-none border-[3px] border-[#1B1712] shadow-[3px_3px_0_#1B1712] transition-[opacity,box-shadow,border-color] duration-200",
         dimmed && "pointer-events-none opacity-25",
         inLineage && !isFocusedTask && "ring-primary ring-2",
         isFocusedTask && "ring-primary ring-2",
         selected && !inLineage && "ring-ring ring-2",
       )}
+      style={{ borderTopColor: meta.accent?.split("-l-")?.[2] ? `var(--${meta.accent?.split("-l-kind-")?.[1] ?? ""})` : undefined }}
     >
+      <div className="bg-kind-asset h-[4px] w-full -mx-0 -mt-0 mb-2 rounded-none"
+        style={{ backgroundColor: `var(--kind-${node.kind})` }} />
       <Handle
         type="target"
         position={Position.Left}
