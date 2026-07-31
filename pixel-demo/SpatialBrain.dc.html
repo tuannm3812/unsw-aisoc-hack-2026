@@ -299,21 +299,29 @@ class Component extends DCLogic {
 
   DRAG_DEAD = 3;
   componentDidMount() {
+    this._pending = null;
     this._move = (e) => {
+      if (this._pending) return; // rAF throttle: drop excess frames
       if (this.drag) {
         if (!this.drag.active) {
           if (Math.abs(e.clientX-this.drag.sx)>this.DRAG_DEAD||Math.abs(e.clientY-this.drag.sy)>this.DRAG_DEAD) this.drag.active=true;
           else return;
         }
         if(this._el) this._el.style.cursor="grabbing";
-        const dx=(e.clientX-this.drag.sx)/this.state.scale, dy=(e.clientY-this.drag.sy)/this.state.scale;
-        this.setState({nodes:this.state.nodes.map(n=>n.id===this.drag.id?{...n,x:this.drag.ox+dx,y:this.drag.oy+dy}:n)});
+        this._pending = requestAnimationFrame(() => {
+          this._pending = null;
+          const dx=(e.clientX-this.drag.sx)/this.state.scale, dy=(e.clientY-this.drag.sy)/this.state.scale;
+          this.setState({nodes:this.state.nodes.map(n=>n.id===this.drag.id?{...n,x:this.drag.ox+dx,y:this.drag.oy+dy}:n)});
+        });
       } else if (this.panning) {
         if (!this.panning.active) {
           if (Math.abs(e.clientX-this.panning.sx)>this.DRAG_DEAD||Math.abs(e.clientY-this.panning.sy)>this.DRAG_DEAD) this.panning.active=true;
           else return;
         }
-        this.setState({panX:this.panning.ox+(e.clientX-this.panning.sx),panY:this.panning.oy+(e.clientY-this.panning.sy)});
+        this._pending = requestAnimationFrame(() => {
+          this._pending = null;
+          this.setState({panX:this.panning.ox+(e.clientX-this.panning.sx),panY:this.panning.oy+(e.clientY-this.panning.sy)});
+        });
       }
     };
     this._up = () => {

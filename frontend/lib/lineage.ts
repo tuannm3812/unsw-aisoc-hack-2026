@@ -12,24 +12,7 @@ export function countAncestors(
   edges: GraphEdge[],
   max = 60,
 ): number {
-  // Walk backwards: ancestors are sources of edges that target the current node
-  const sourcesOf = new Map<string, string[]>()
-  for (const e of edges) {
-    if (!CONTEXT_RELATIONS.has(e.relation)) continue
-    const list = sourcesOf.get(e.target_id) ?? []
-    list.push(e.source_id)
-    sourcesOf.set(e.target_id, list)
-  }
-
-  const visited = new Set<string>()
-  const queue = [taskId]
-  while (queue.length > 0 && visited.size < max) {
-    const current = queue.shift()!
-    for (const n of (sourcesOf.get(current) ?? [])) {
-      if (!visited.has(n) && n !== taskId) { visited.add(n); queue.push(n) }
-    }
-  }
-  return visited.size
+  return getAncestorIds(taskId, nodes, edges, max).length
 }
 
 /**
