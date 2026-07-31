@@ -2,12 +2,15 @@ import type { GraphEdge, GraphNode } from "./types"
 
 const CONTEXT_RELATIONS = new Set(["derived_from", "supports", "constrains", "implements"])
 
+// ponytail: heuristic — single-letter \bs\b/\bm\b/\bl\b false-positives on any isolated
+// S/M/L in prose. Only match full words and multi-letter abbreviations; if real story-point
+// fields land in the DB, switch to those.
 export function detectEffort(title: string, body: string): string | null {
   const text = `${title} ${body}`.toLowerCase()
   if (/\bxs\b|\btiny\b/.test(text)) return "XS"
-  if (/\bs\b|\bsmall\b/.test(text)) return "S"
-  if (/\bm\b|\bmedium\b/.test(text)) return "M"
-  if (/\bl\b|\blarge\b/.test(text)) return "L"
+  if (/\bsmall\b/.test(text)) return "S"
+  if (/\bmedium\b/.test(text)) return "M"
+  if (/\blarge\b/.test(text)) return "L"
   if (/\bxl\b|\bhuge\b/.test(text)) return "XL"
   return null
 }

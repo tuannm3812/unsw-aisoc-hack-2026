@@ -18,10 +18,14 @@ import {
 } from "@xyflow/react"
 
 import { useToast } from "@/components/ui/use-toast"
-import { RELATION_LABEL, type RelationType } from "@/lib/types"
+import { countAncestors, countDependents } from "@/lib/lineage"
+import { RELATION_LABEL, type GraphEdge, type RelationType } from "@/lib/types"
 import { useGraphStore } from "@/stores/graphStore"
 
+import { CustomEdge } from "./CustomEdge"
+import { EdgeContextMenu } from "./EdgeContextMenu"
 import { GraphNodeCard, type GraphNodeData } from "./GraphNodeCard"
+import { NodeContextMenu } from "./NodeContextMenu"
 
 import "@xyflow/react/dist/style.css"
 
@@ -32,6 +36,8 @@ const nodeTypes: NodeTypes = {
   task: GraphNodeCard,
 } as unknown as NodeTypes
 
+const edgeTypes = { default: CustomEdge }
+
 const RELATION_COLOR: Record<string, string> = {
   supports: "#3FA34D",
   constrains: "#FF6A00",
@@ -39,12 +45,19 @@ const RELATION_COLOR: Record<string, string> = {
   depends_on: "#1B1712",
 }
 
-/** Task status → edge CSS class for dash pattern. */
 function edgeStatusClass(taskStatus: string | undefined): string {
   if (!taskStatus) return ""
   if (taskStatus === "done") return "edge-done"
   if (taskStatus === "in_progress" || taskStatus === "in_review") return "edge-active"
-  return "edge-open" // open / assigned — work not started
+  return "edge-open"
+}
+
+interface ContextMenuState {
+  type: "edge" | "node" | "canvas"
+  x: number
+  y: number
+  edgeId?: string
+  nodeId?: string
 }
 
 interface CanvasProps {
@@ -54,9 +67,10 @@ interface CanvasProps {
 
 export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const wrapper = useRef<HTMLDivElement>(null)
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, setCenter } = useReactFlow()
   const { toast } = useToast()
   const [dragOver, setDragOver] = useState(false)
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
 
   const nodes = useGraphStore((state) => state.nodes)
   const edges = useGraphStore((state) => state.edges)
@@ -71,25 +85,40 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const persistPosition = useGraphStore((state) => state.persistPosition)
   const setDragging = useGraphStore((state) => state.setDragging)
   const addEdge = useGraphStore((state) => state.addEdge)
+  const addNode = useGraphStore((state) => state.addNode)
   const removeNode = useGraphStore((state) => state.removeNode)
+  const removeEdge = useGraphStore((state) => state.removeEdge)
+  const focusLineage = useGraphStore((state) => state.focusLineage)
 
   const lineageActive = focusedTaskId !== null && lineageIds.size > 0
 
   const [measured, setMeasured] = useState<Record<string, { width: number; height: number }>>({})
 
-  // Gate nodePop / edgeDraw to first appearance only — avoids re-animating on every store change.
   const seenNodeIds = useRef<Set<string>>(new Set())
   const seenEdgeIds = useRef<Set<string>>(new Set())
 
   const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
 
+  // Build lineage counts per task node (grounded in / depended on).
+  const lineageCounts = useMemo(() => {
+    const counts = new Map<string, { ancestors: number; dependents: number }>()
+    for (const node of nodes) {
+      if (node.kind !== "task") continue
+      counts.set(node.id, {
+        ancestors: countAncestors(node.id, nodes, edges),
+        dependents: countDependents(node.id, edges),
+      })
+    }
+    return counts
+  }, [nodes, edges])
+
   const flowNodes = useMemo<FlowNode<GraphNodeData>[]>(() => {
-    const memberNames = new Map(members.map((member) => [member.id, member.name]))
-    const parseStates = new Map(assets.map((asset) => [asset.id, asset.parse_state]))
+    const memberNames = new Map(members.map((m) => [m.id, m.name]))
 
     return nodes.map((node) => {
       const isNew = !seenNodeIds.current.has(node.id)
       if (isNew) seenNodeIds.current.add(node.id)
+      const lc = lineageCounts.get(node.id)
 
       return {
         id: node.id,
@@ -101,18 +130,35 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
         data: {
           node,
           assigneeName: node.assignee_id ? memberNames.get(node.assignee_id) ?? "" : "",
-          parseState:
-            node.kind === "asset" && node.source_asset_id
-              ? parseStates.get(node.source_asset_id) ?? null
-              : null,
+          parseState: null,
           dimmed: lineageActive && !lineageIds.has(node.id),
           inLineage: lineageActive && lineageIds.has(node.id),
           isFocusedTask: node.id === focusedTaskId,
           depth: null,
+          ancestorCount: lc?.ancestors ?? 0,
+          dependentCount: lc?.dependents ?? 0,
         },
       }
     })
-  }, [nodes, members, assets, selectedNodeId, lineageActive, lineageIds, focusedTaskId, measured])
+  }, [nodes, members, selectedNodeId, lineageActive, lineageIds, focusedTaskId, measured, lineageCounts])
+
+  // Build onDerive per-edge callback referencing latest store state via refs.
+  const nodesRef = useRef(nodes)
+  nodesRef.current = nodes
+
+  const onDerive = useCallback(
+    (edgeId: string, kind: "finding" | "constraint" | "task", position: { x: number; y: number }) => {
+      const edge = edges.find((e) => e.id === edgeId)
+      if (!edge) return
+      const label = kind === "finding" ? "New finding" : kind === "constraint" ? "New constraint" : "New task"
+      const rel = kind === "constraint" ? "constrains" : "supports"
+      // Create new node near the ⊕ location, then auto-connect from the edge source.
+      addNode(kind, label, position.x + 20, position.y + 20).then((newNode) => {
+        if (newNode) addEdge(edge.source_id, newNode.id, rel as RelationType)
+      })
+    },
+    [edges, addNode, addEdge],
+  )
 
   const flowEdges = useMemo<FlowEdge[]>(
     () =>
@@ -161,9 +207,37 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
             strokeWidth: 1.5,
             fillOpacity: 1,
           },
+          data: { onDerive },
         }
       }),
-    [edges, lineageActive, lineageIds, nodeMap],
+    [edges, lineageActive, lineageIds, nodeMap, onDerive],
+  )
+
+  const closeContextMenu = useCallback(() => setContextMenu(null), [])
+
+  const handleEdgeContextMenu = useCallback(
+    (event: React.MouseEvent, edge: FlowEdge) => {
+      event.preventDefault()
+      setContextMenu({ type: "edge", x: event.clientX, y: event.clientY, edgeId: edge.id })
+    },
+    [],
+  )
+
+  const handleNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: FlowNode<GraphNodeData>) => {
+      event.preventDefault()
+      setContextMenu({ type: "node", x: event.clientX, y: event.clientY, nodeId: node.id })
+    },
+    [],
+  )
+
+  const handlePaneContextMenu = useCallback(
+    (event: React.MouseEvent | MouseEvent) => {
+      event.preventDefault()
+      const pos = "clientX" in event ? { x: event.clientX, y: event.clientY } : { x: (event as MouseEvent).clientX, y: (event as MouseEvent).clientY }
+      setContextMenu({ type: "canvas", x: pos.x, y: pos.y })
+    },
+    [],
   )
 
   const onNodesChange = useCallback(
@@ -174,10 +248,10 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
         }
         if (change.type === "dimensions" && change.dimensions) {
           const { width, height } = change.dimensions
-          setMeasured((previous) =>
-            previous[change.id]?.width === width && previous[change.id]?.height === height
-              ? previous
-              : { ...previous, [change.id]: { width, height } },
+          setMeasured((prev) =>
+            prev[change.id]?.width === width && prev[change.id]?.height === height
+              ? prev
+              : { ...prev, [change.id]: { width, height } },
           )
         }
       }
@@ -211,23 +285,23 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
     [screenToFlowPosition, onUpload],
   )
 
+  const contextEdge = contextMenu?.type === "edge" && contextMenu.edgeId
+    ? edges.find((e) => e.id === contextMenu.edgeId) ?? null
+    : null
+
   return (
     <div
       ref={wrapper}
       className="relative h-full w-full"
-      onDragOver={(event) => {
-        event.preventDefault()
-        setDragOver(true)
-      }}
-      onDragLeave={(event) => {
-        if (event.currentTarget === event.target) setDragOver(false)
-      }}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+      onDragLeave={(e) => { if (e.currentTarget === e.target) setDragOver(false) }}
       onDrop={handleDrop}
     >
       <ReactFlow
         nodes={flowNodes}
         edges={flowEdges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onNodeDragStart={(_, node) => setDragging(node.id)}
         onNodeDragStop={(_, node) => {
@@ -235,9 +309,12 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           void persistPosition(node.id, node.position.x, node.position.y)
         }}
         onNodeClick={(_, node) => select(node.id)}
+        onNodeContextMenu={handleNodeContextMenu}
+        onEdgeContextMenu={handleEdgeContextMenu}
         onPaneClick={() => select(null)}
+        onPaneContextMenu={handlePaneContextMenu}
         onConnect={onConnect}
-        onNodesDelete={(deleted) => deleted.forEach((node) => removeNode(node.id))}
+        onNodesDelete={(deleted) => deleted.forEach((n) => removeNode(n.id))}
         connectionLineType={ConnectionLineType.Straight}
         defaultEdgeOptions={{
           type: "default",
@@ -263,11 +340,76 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           position="bottom-right"
           className="!border-[3px] !border-[#1B1712] !bg-white"
           maskColor="rgba(120, 120, 130, 0.14)"
-          nodeClassName={(node) => `mm-${node.type ?? "asset"}`}
+          nodeClassName={(n) => `mm-${n.type ?? "asset"}`}
           nodeStrokeWidth={0}
           nodeBorderRadius={3}
         />
       </ReactFlow>
+
+      {/* Context menus */}
+      {contextMenu?.type === "edge" && contextEdge && (
+        <EdgeContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          currentRelation={contextEdge.relation}
+          onClose={closeContextMenu}
+          onDelete={() => removeEdge(contextEdge.id)}
+          onChangeRelation={(relation) => {
+            // No update-edge API — delete old edge and recreate with new relation.
+            removeEdge(contextEdge.id)
+            addEdge(contextEdge.source_id, contextEdge.target_id, relation)
+            closeContextMenu()
+          }}
+        />
+      )}
+
+      {contextMenu?.type === "node" && contextMenu.nodeId && (
+        <NodeContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          sourceKind={nodeMap.get(contextMenu.nodeId)?.kind}
+          isTask={nodeMap.get(contextMenu.nodeId)?.kind === "task"}
+          isDone={nodeMap.get(contextMenu.nodeId)?.task_status === "done"}
+          onClose={closeContextMenu}
+          onCreate={(kind, label, relation) => {
+            const src = nodeMap.get(contextMenu.nodeId!)
+            if (!src) return
+            const pos = { x: src.x + 280, y: src.y + 60 }
+            addNode(kind, label, pos.x, pos.y).then((newNode) => {
+              if (newNode && relation) addEdge(contextMenu.nodeId!, newNode.id, relation as RelationType)
+            })
+            closeContextMenu()
+          }}
+          onDelete={() => { removeNode(contextMenu.nodeId!); closeContextMenu() }}
+          onFocus={() => {
+            const n = nodeMap.get(contextMenu.nodeId!)
+            if (n) setCenter(n.x, n.y, { duration: 300, zoom: 0.9 })
+            closeContextMenu()
+          }}
+          onCopyId={() => {
+            navigator.clipboard.writeText(contextMenu.nodeId!)
+            toast({ title: "ID copied" })
+            closeContextMenu()
+          }}
+          onMarkDone={() => {
+            useGraphStore.getState().patchNode(contextMenu.nodeId!, { task_status: "done" })
+            closeContextMenu()
+          }}
+        />
+      )}
+
+      {contextMenu?.type === "canvas" && (
+        <NodeContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={closeContextMenu}
+          onCreate={(kind, label) => {
+            const pos = screenToFlowPosition({ x: contextMenu.x, y: contextMenu.y })
+            addNode(kind, label, pos.x, pos.y)
+            closeContextMenu()
+          }}
+        />
+      )}
 
       {dragOver && (
         <div className="pointer-events-none absolute inset-3 z-20 flex items-center justify-center border-[3px] border-dashed border-[#1B1712] bg-[#F3EEE1]/70">

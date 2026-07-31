@@ -24,6 +24,8 @@ export interface GraphNodeData extends Record<string, unknown> {
   inLineage: boolean
   isFocusedTask: boolean
   depth: number | null
+  ancestorCount: number
+  dependentCount: number
 }
 
 const KIND_META: Record<
@@ -87,7 +89,7 @@ function memberChip(name: string) {
 }
 
 function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData }) {
-  const { node, assigneeName, parseState, dimmed, inLineage, isFocusedTask, depth } = data
+  const { node, assigneeName, parseState, dimmed, inLineage, isFocusedTask, depth, ancestorCount, dependentCount } = data
   const meta = KIND_META[node.kind]
   const Icon = meta.icon
   const isTask = node.kind === "task"
@@ -187,6 +189,9 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
               )}
               {dueDate && (
                 <span className="footer-badge bg-[#F3EEE1] text-[#1B1712] font-mono">due {dueDate}</span>
+              )}
+              {ancestorCount > 0 && (
+                <span className="footer-badge bg-[#F2A100]/15 text-[#8A5C00] font-mono" title={`Grounded in ${ancestorCount} upstream node${ancestorCount === 1 ? "" : "s"}`}>←{ancestorCount}</span>
               )}
               {assigneeChip ? (
                 <span

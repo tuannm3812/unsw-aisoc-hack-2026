@@ -152,6 +152,7 @@
 /* Animations — steps() for pixel feel */
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes menuPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.animate-menu-pop { animation: menuPop 0.12s steps(2) both; }
 @keyframes nodePop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 @keyframes edgeDraw { from { stroke-dashoffset: 200; } to { stroke-dashoffset: 0; } }
 @keyframes edgeDashWalk { to { stroke-dashoffset: -36; } }
