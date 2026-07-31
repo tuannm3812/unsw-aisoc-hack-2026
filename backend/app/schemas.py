@@ -63,6 +63,13 @@ class NodeOut(BaseModel):
     pr_state: str
     pr_reported_by: str
     pr_reported_at: datetime | None = None
+    decision_state: str = ""
+    decision_rationale: str = ""
+    decision_by: str = ""
+    decision_at: datetime | None = None
+    alignment_payload: dict | None = None
+    present_payload: dict | None = None
+    review_checklist: list | None = None
     created_by: str
     revision: int
     updated_at: datetime
@@ -92,12 +99,37 @@ class AssetOut(BaseModel):
     created_at: datetime
 
 
+class CandidateOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    asset_id: str
+    kind: str
+    title: str
+    body: str
+    source_page: int | None = None
+    source_quote: str
+    confidence: float | None = None
+    promoted_node_id: str | None = None
+    dismissed: bool
+
+
+class CandidateSelection(BaseModel):
+    candidate_ids: list[str] = Field(min_length=1, max_length=60)
+
+
+class PromotionResult(BaseModel):
+    nodes: list[NodeOut]
+    edges: list[EdgeOut]
+
+
 class GraphOut(BaseModel):
     board: BoardOut
     members: list[MemberOut]
     nodes: list[NodeOut]
     edges: list[EdgeOut]
     assets: list[AssetOut]
+    candidates: list[CandidateOut] = Field(default_factory=list)
 
 
 class NodeCreate(BaseModel):
@@ -112,6 +144,8 @@ class NodeUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=400)
     body: str | None = None
     task_status: str | None = None
+    decision_state: str | None = None
+    decision_rationale: str | None = None
 
 
 class NodeMove(BaseModel):
@@ -178,6 +212,93 @@ class TaskContextOut(BaseModel):
     jira_url: str = ""
     lineage: LineageOut
     brief: TaskBrief
+
+
+class AlignmentConflict(BaseModel):
+    node_a_id: str
+    node_b_id: str
+    node_a_title: str = ""
+    node_b_title: str = ""
+    description: str
+
+
+class AlignmentResult(BaseModel):
+    task_id: str
+    conflicts: list[AlignmentConflict] = Field(default_factory=list)
+    summary: str = ""
+    generated_by: str = ""
+
+
+class DecisionRequest(BaseModel):
+    state: str = Field(pattern="^(decided|deferred|rejected)$")
+    rationale: str = Field(default="", max_length=2000)
+
+
+class PresentBeat(BaseModel):
+    kind: str = ""
+    title: str = ""
+    body: str = ""
+    node_id: str | None = None
+    quote: str = ""
+
+
+class PresentResult(BaseModel):
+    task_id: str
+    headline: str = ""
+    audience_summary: str = ""
+    beats: list[PresentBeat] = Field(default_factory=list)
+    open_risks: list[str] = Field(default_factory=list)
+    citations: list[str] = Field(default_factory=list)
+    image_url: str = ""
+    generated_by: str = ""
+
+
+class ReviewCheckItem(BaseModel):
+    constraint_id: str
+    title: str
+    status: str  # pass | fail | unknown
+    note: str = ""
+
+
+class ReviewChecklistResult(BaseModel):
+    task_id: str
+    items: list[ReviewCheckItem] = Field(default_factory=list)
+    summary: str = ""
+    generated_by: str = ""
+
+
+class AgentRunRequest(BaseModel):
+    action: str = Field(pattern="^(align|present|review|sense)$")
+    message: str = ""
+
+
+class AgentRunResult(BaseModel):
+    action: str
+    status: str
+    events: list[str] = Field(default_factory=list)
+    alignment: AlignmentResult | None = None
+    present: PresentResult | None = None
+    review: ReviewChecklistResult | None = None
+    detail: str = ""
+
+
+class RecommendedTask(BaseModel):
+    title: str
+    body: str = ""
+    rationale: str = ""
+    relation: str = "supports"  # supports | constrains
+    priority: str = "medium"  # high | medium | low
+    source_node_id: str = ""
+
+
+class TaskRecommendationResult(BaseModel):
+    source_node_id: str
+    summary: str = ""
+    tasks: list[RecommendedTask] = Field(default_factory=list)
+    created_nodes: list[NodeOut] = Field(default_factory=list)
+    created_edges: list[EdgeOut] = Field(default_factory=list)
+    events: list[str] = Field(default_factory=list)
+    generated_by: str = ""
 
 
 PR_STATES = ("open", "draft", "merged", "closed")

@@ -17,9 +17,25 @@ from sqlalchemy.orm import Session
 from ..auth import board_for_user, current_user
 from ..config import settings
 from ..db import SessionLocal, get_db
-from ..models import Asset, Node, NodeKind, ParseState, Relation, User, new_id
-from ..schemas import AssetOut, ExtractionResult
-from ..services.graph import connect, create_node, log_activity, place_extracted_nodes
+from ..models import (
+    Asset,
+    Candidate,
+    Edge,
+    Node,
+    NodeKind,
+    ParseState,
+    Relation,
+    User,
+    new_id,
+)
+from ..schemas import (
+    AssetOut,
+    CandidateOut,
+    CandidateSelection,
+    ExtractionResult,
+    PromotionResult,
+)
+from ..services.graph import connect, create_node, log_activity, place_promoted_nodes
 from ..services.mistral_service import (
     MistralError,
     count_pdf_pages,
@@ -33,6 +49,13 @@ router = APIRouter(prefix="/api/boards", tags=["assets"])
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 TEXT_SUFFIXES = {".md", ".markdown", ".txt", ".rst"}
 PDF_SUFFIXES = {".pdf"}
+IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
+TABULAR_SUFFIXES = {".csv", ".json"}
+ALLOWED_SUFFIXES = TEXT_SUFFIXES | PDF_SUFFIXES | IMAGE_SUFFIXES | TABULAR_SUFFIXES
+
+# A review list is only useful if it can be read in one sitting. Past this the
+# extra proposals are noise, and the highest-confidence ones come first anyway.
+MAX_CANDIDATES_PER_KIND = 15
 
 
 @router.post(
@@ -53,10 +76,10 @@ async def upload_asset(
 
     filename = file.filename or "untitled"
     suffix = ("." + filename.rsplit(".", 1)[-1].lower()) if "." in filename else ""
-    if suffix not in TEXT_SUFFIXES | PDF_SUFFIXES:
+    if suffix not in ALLOWED_SUFFIXES:
         raise HTTPException(
             status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            "Drop a PDF, Markdown or plain text file",
+            "Drop a PDF, image, CSV/JSON, Markdown or plain text file",
         )
 
     payload = await file.read()
@@ -136,6 +159,157 @@ async def reparse_asset(
     return asset
 
 
+def _asset_or_404(db: Session, board_id: str, asset_id: str) -> Asset:
+    asset = db.query(Asset).filter(Asset.id == asset_id, Asset.board_id == board_id).one_or_none()
+    if asset is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Asset not found")
+    return asset
+
+
+@router.get("/{board_id}/assets/{asset_id}/candidates", response_model=list[CandidateOut])
+def list_candidates(
+    board_id: str,
+    asset_id: str,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> list[Candidate]:
+    """What Mistral proposed from this document, best-supported first."""
+    board_for_user(db, board_id, user)
+    _asset_or_404(db, board_id, asset_id)
+    rows = db.query(Candidate).filter(Candidate.asset_id == asset_id).all()
+    return sorted(rows, key=lambda c: (c.kind, -(c.confidence or 0.0), c.title))
+
+
+@router.post(
+    "/{board_id}/assets/{asset_id}/candidates/promote",
+    response_model=PromotionResult,
+)
+def promote_candidates(
+    board_id: str,
+    asset_id: str,
+    selection: CandidateSelection,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> PromotionResult:
+    """Turn chosen proposals into real nodes, linked back to the document."""
+    board_for_user(db, board_id, user)
+    asset = _asset_or_404(db, board_id, asset_id)
+
+    chosen = (
+        db.query(Candidate)
+        .filter(
+            Candidate.asset_id == asset_id,
+            Candidate.id.in_(selection.candidate_ids),
+            Candidate.promoted_node_id.is_(None),
+        )
+        .all()
+    )
+    if not chosen:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Those proposals are already on the canvas or no longer exist",
+        )
+    chosen.sort(key=lambda c: (c.kind, -(c.confidence or 0.0)))
+
+    anchor = (
+        db.query(Node)
+        .filter(Node.source_asset_id == asset.id, Node.kind == NodeKind.asset.value)
+        .one_or_none()
+    )
+    anchor_x = anchor.x if anchor else 0.0
+    anchor_y = anchor.y if anchor else 0.0
+
+    # Rows already used by earlier promotions, so a second batch lands below the
+    # first rather than on top of it.
+    taken = {
+        kind: db.query(Node)
+        .filter(Node.source_asset_id == asset.id, Node.kind == kind)
+        .count()
+        for kind in (NodeKind.finding.value, NodeKind.constraint.value)
+    }
+    positions = place_promoted_nodes(anchor_x, anchor_y, [c.kind for c in chosen], taken)
+
+    created: list[Node] = []
+    for candidate, (px, py) in zip(chosen, positions, strict=True):
+        node = create_node(
+            db,
+            board_id=board_id,
+            kind=candidate.kind,
+            title=candidate.title,
+            body=candidate.body,
+            x=px,
+            y=py,
+            created_by=user.id,
+            evidence_class="extracted",
+            source_asset_id=asset.id,
+            source_page=candidate.source_page,
+            source_quote=candidate.source_quote,
+            confidence=candidate.confidence,
+            extraction_revision=candidate.extraction_revision,
+        )
+        created.append(node)
+        candidate.promoted_node_id = node.id
+        candidate.dismissed = False
+
+    db.flush()
+
+    edges: list[Edge] = []
+    if anchor is not None:
+        for node in created:
+            edges.append(
+                connect(
+                    db,
+                    board_id=board_id,
+                    source_id=anchor.id,
+                    target_id=node.id,
+                    relation=Relation.derived_from.value,
+                    created_by=user.id,
+                )
+            )
+
+    log_activity(
+        db,
+        board_id=board_id,
+        actor=user.name,
+        action="candidates.promoted",
+        subject_id=asset.id,
+        detail={"count": len(created), "titles": [n.title for n in created][:8]},
+    )
+    db.commit()
+    for node in created:
+        db.refresh(node)
+    return PromotionResult(nodes=created, edges=[e for e in edges if e is not None])
+
+
+@router.post(
+    "/{board_id}/assets/{asset_id}/candidates/dismiss",
+    response_model=list[CandidateOut],
+)
+def dismiss_candidates(
+    board_id: str,
+    asset_id: str,
+    selection: CandidateSelection,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> list[Candidate]:
+    """Hide proposals that are not worth keeping, without deleting the record."""
+    board_for_user(db, board_id, user)
+    _asset_or_404(db, board_id, asset_id)
+    rows = (
+        db.query(Candidate)
+        .filter(
+            Candidate.asset_id == asset_id,
+            Candidate.id.in_(selection.candidate_ids),
+            Candidate.promoted_node_id.is_(None),
+        )
+        .all()
+    )
+    for row in rows:
+        row.dismissed = True
+    db.commit()
+    return rows
+
+
 async def _parse_asset(asset_id: str, suffix: str, actor_id: str) -> None:
     """Run Mistral extraction and write the result as nodes. Owns its own session."""
     db = SessionLocal()
@@ -148,6 +322,12 @@ async def _parse_asset(asset_id: str, suffix: str, actor_id: str) -> None:
             raw = open(asset.stored_path, "rb").read()
             if suffix in PDF_SUFFIXES:
                 result = await mistral_service.extract_from_pdf(raw, asset.filename)
+            elif suffix in IMAGE_SUFFIXES:
+                result = await mistral_service.extract_from_image(raw, asset.filename)
+            elif suffix in TABULAR_SUFFIXES:
+                text = raw.decode("utf-8", errors="replace")
+                asset.markdown = text[:200_000]
+                result = await mistral_service.extract_from_tabular(text, asset.filename)
             else:
                 text = raw.decode("utf-8", errors="replace")
                 asset.markdown = text[:200_000]
@@ -169,85 +349,96 @@ async def _parse_asset(asset_id: str, suffix: str, actor_id: str) -> None:
         db.close()
 
 
+def _normalise(text: str) -> str:
+    """Collapse a title to a comparison key, for spotting the same claim twice."""
+    return " ".join("".join(c for c in text.lower() if c.isalnum() or c.isspace()).split())
+
+
+def _valid_page(page: int | None, page_count: int) -> int | None:
+    """Keep a page number only if it can actually be opened in the file.
+
+    Models tend to report the page number printed on the page, which for a journal
+    paper is often something like 601 in a nine-page PDF. A citation nobody can
+    follow is worse than no citation, so an out-of-range value is dropped.
+    """
+    if page is None or page_count <= 0:
+        return None
+    return page if 1 <= page <= page_count else None
+
+
 def _write_extraction(
     db: Session,
     asset: Asset,
     result: ExtractionResult,
     actor_id: str,
 ) -> None:
-    """One transaction: nodes, edges, asset state. Positions are assigned once."""
+    """Store what Mistral proposed. Nothing reaches the canvas without a person.
+
+    Everything is written as candidates against the asset, deduplicated and capped.
+    Promotion happens later, from the review panel on the source node.
+    """
     anchor = (
         db.query(Node)
         .filter(Node.source_asset_id == asset.id, Node.kind == NodeKind.asset.value)
         .one_or_none()
     )
-    anchor_x = anchor.x if anchor else 0.0
-    anchor_y = anchor.y if anchor else 0.0
-
     revision = asset.extraction_revision + 1
-    finding_positions, constraint_positions = place_extracted_nodes(
-        anchor_x, anchor_y, len(result.findings), len(result.constraints)
-    )
 
-    finding_nodes: list[Node] = []
-    for item, (px, py) in zip(result.findings, finding_positions, strict=False):
-        node = create_node(
-            db,
-            board_id=asset.board_id,
-            kind=NodeKind.finding.value,
-            title=item.title,
-            body=item.detail,
-            x=px,
-            y=py,
-            created_by=actor_id,
-            evidence_class="extracted",
-            source_asset_id=asset.id,
-            source_page=item.page,
-            source_quote=item.quote,
-            confidence=item.confidence,
-            extraction_revision=revision,
+    # A re-parse replaces the proposals but leaves promoted nodes alone: those are
+    # the user's now, and deleting them would undo a decision they already made.
+    db.query(Candidate).filter(
+        Candidate.asset_id == asset.id, Candidate.promoted_node_id.is_(None)
+    ).delete(synchronize_session=False)
+
+    seen: set[str] = set()
+    counts = {NodeKind.finding.value: 0, NodeKind.constraint.value: 0}
+    kept = 0
+
+    promoted_keys = {
+        _normalise(candidate.title)
+        for candidate in db.query(Candidate).filter(
+            Candidate.asset_id == asset.id, Candidate.promoted_node_id.isnot(None)
         )
-        finding_nodes.append(node)
+    }
+    seen |= promoted_keys
 
-    constraint_nodes: list[Node] = []
-    for item, (px, py) in zip(result.constraints, constraint_positions, strict=False):
-        node = create_node(
-            db,
-            board_id=asset.board_id,
-            kind=NodeKind.constraint.value,
-            title=item.title,
-            body=item.detail,
-            x=px,
-            y=py,
-            created_by=actor_id,
-            evidence_class="extracted",
-            source_asset_id=asset.id,
-            source_page=item.page,
-            source_quote=item.quote,
-            confidence=item.confidence,
-            extraction_revision=revision,
-        )
-        constraint_nodes.append(node)
-
-    db.flush()
-
-    if anchor is not None:
-        for node in finding_nodes + constraint_nodes:
-            connect(
-                db,
-                board_id=asset.board_id,
-                source_id=anchor.id,
-                target_id=node.id,
-                relation=Relation.derived_from.value,
-                created_by=actor_id,
+    for kind, items in (
+        (NodeKind.finding.value, result.findings),
+        (NodeKind.constraint.value, result.constraints),
+    ):
+        ranked = sorted(items, key=lambda i: i.confidence or 0.0, reverse=True)
+        for item in ranked:
+            if counts[kind] >= MAX_CANDIDATES_PER_KIND:
+                break
+            key = _normalise(item.title)
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            db.add(
+                Candidate(
+                    id=new_id("cnd"),
+                    board_id=asset.board_id,
+                    asset_id=asset.id,
+                    kind=kind,
+                    title=item.title[:400],
+                    body=item.detail,
+                    source_page=_valid_page(item.page, asset.page_count),
+                    source_quote=item.quote,
+                    confidence=item.confidence,
+                    extraction_revision=revision,
+                )
             )
+            counts[kind] += 1
+            kept += 1
 
     asset.parse_state = ParseState.parsed.value
     asset.extraction_revision = revision
     if result.summary:
         asset.markdown = asset.markdown or result.summary
-    if anchor is not None and result.summary:
-        anchor.body = result.summary[:1200]
+    if anchor is not None:
+        summary = (result.summary or "").strip()
+        headline = f"{kept} proposed: {counts['finding']} findings, {counts['constraint']} constraints"
+        anchor.body = f"{headline}\n\n{summary}"[:1200] if summary else headline
 
     log_activity(
         db,
@@ -256,8 +447,10 @@ def _write_extraction(
         action="asset.parsed",
         subject_id=asset.id,
         detail={
-            "findings": len(finding_nodes),
-            "constraints": len(constraint_nodes),
+            "candidates": kept,
+            "findings": counts["finding"],
+            "constraints": counts["constraint"],
+            "dropped_duplicates": len(result.findings) + len(result.constraints) - kept,
             "revision": revision,
         },
     )

@@ -139,6 +139,34 @@ class Asset(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class Candidate(Base):
+    """Something Mistral proposes from a document, before a person accepts it.
+
+    Extraction used to write nodes directly, which turned one paper into dozens of
+    cards nobody had read. A candidate is the same content held on the source node
+    until someone promotes it, so the canvas only ever shows what a human chose.
+    """
+
+    __tablename__ = "candidates"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True, default=lambda: new_id("cnd"))
+    board_id: Mapped[str] = mapped_column(ForeignKey("boards.id"), index=True)
+    asset_id: Mapped[str] = mapped_column(ForeignKey("assets.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(30))
+    title: Mapped[str] = mapped_column(String(400))
+    body: Mapped[str] = mapped_column(Text, default="")
+    source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    source_quote: Mapped[str] = mapped_column(Text, default="")
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    extraction_revision: Mapped[int] = mapped_column(Integer, default=1)
+
+    # Set when someone accepts it, so the review list can show what is already on
+    # the canvas rather than offering the same thing twice.
+    promoted_node_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    dismissed: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class Node(Base):
     __tablename__ = "nodes"
 
@@ -175,6 +203,17 @@ class Node(Base):
     pr_reported_by: Mapped[str] = mapped_column(String(120), default="")
     pr_reported_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     pr_comment_synced: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Alignment leaves an audit trail on the task, not a separate node kind.
+    decision_state: Mapped[str] = mapped_column(String(40), default="")
+    decision_rationale: Mapped[str] = mapped_column(Text, default="")
+    decision_by: Mapped[str] = mapped_column(String(120), default="")
+    decision_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Last Check Alignment / Present / Review outputs, so the UI can reopen them.
+    alignment_payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    present_payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    review_checklist: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     created_by: Mapped[str] = mapped_column(String(40), default="")
     revision: Mapped[int] = mapped_column(Integer, default=1)

@@ -24,6 +24,33 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False
 
 def init_db() -> None:
     Base.metadata.create_all(engine)
+    _ensure_sqlite_columns()
+
+
+def _ensure_sqlite_columns() -> None:
+    """Add columns introduced after the first create_all, without a full migration tool."""
+    if not settings.database_url.startswith("sqlite"):
+        return
+    additions = {
+        "nodes": {
+            "decision_state": "VARCHAR(40) DEFAULT ''",
+            "decision_rationale": "TEXT DEFAULT ''",
+            "decision_by": "VARCHAR(120) DEFAULT ''",
+            "decision_at": "DATETIME",
+            "alignment_payload": "JSON",
+            "present_payload": "JSON",
+            "review_checklist": "JSON",
+        }
+    }
+    with engine.begin() as conn:
+        for table, columns in additions.items():
+            existing = {
+                row[1] for row in conn.exec_driver_sql(f"PRAGMA table_info({table})").fetchall()
+            }
+            for name, ddl in columns.items():
+                if name in existing:
+                    continue
+                conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
 
 
 def get_db() -> Iterator[Session]:

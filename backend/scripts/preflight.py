@@ -149,6 +149,21 @@ async def check_board(http: httpx.AsyncClient) -> None:
 
     record(READY, f"{len(graph['members'])} members assignable")
 
+    # Step 2 of the demo is choosing from proposals. A parsed document with an empty
+    # review list means there is nothing to click, which is worth knowing beforehand.
+    parsed = [a for a in graph["assets"] if a["parse_state"] == "parsed"]
+    waiting = len(graph.get("candidates", []))
+    if not parsed:
+        record(READY, "no document parsed yet", "step 2 uploads one live")
+    elif waiting:
+        record(READY, f"{waiting} proposals awaiting review")
+    else:
+        record(
+            DEGRADED,
+            "a parsed document has nothing left to review",
+            "re-read it from the inspector, or upload a fresh document in step 2",
+        )
+
     # Test runs write to the same board, and a canvas full of Smoke task nodes
     # undercuts the story more than any bug would.
     litter = [n for n in nodes if "smoke" in n["title"].lower() or "mcp-check" in (n.get("pr_reported_by") or "")]

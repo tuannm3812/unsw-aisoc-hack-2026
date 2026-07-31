@@ -61,9 +61,93 @@ export interface GraphNode {
   pr_state: string
   pr_reported_by: string
   pr_reported_at: string | null
+  decision_state?: string
+  decision_rationale?: string
+  decision_by?: string
+  decision_at?: string | null
+  alignment_payload?: AlignmentResult | null
+  present_payload?: PresentResult | null
+  review_checklist?: ReviewCheckItem[] | null
   created_by: string
   revision: number
   updated_at: string
+}
+
+export interface AlignmentConflict {
+  node_a_id: string
+  node_b_id: string
+  node_a_title: string
+  node_b_title: string
+  description: string
+}
+
+export interface AlignmentResult {
+  task_id: string
+  conflicts: AlignmentConflict[]
+  summary: string
+  generated_by: string
+}
+
+export interface PresentBeat {
+  kind: string
+  title: string
+  body: string
+  node_id: string | null
+  quote: string
+}
+
+export interface PresentResult {
+  task_id: string
+  headline: string
+  audience_summary: string
+  beats: PresentBeat[]
+  open_risks: string[]
+  citations: string[]
+  image_url: string
+  generated_by: string
+}
+
+export interface ReviewCheckItem {
+  constraint_id: string
+  title: string
+  status: "pass" | "fail" | "unknown" | string
+  note: string
+}
+
+export interface ReviewChecklistResult {
+  task_id: string
+  items: ReviewCheckItem[]
+  summary: string
+  generated_by: string
+}
+
+export interface AgentRunResult {
+  action: string
+  status: string
+  events: string[]
+  alignment?: AlignmentResult | null
+  present?: PresentResult | null
+  review?: ReviewChecklistResult | null
+  detail: string
+}
+
+export interface RecommendedTask {
+  title: string
+  body: string
+  rationale: string
+  relation: string
+  priority: string
+  source_node_id: string
+}
+
+export interface TaskRecommendationResult {
+  source_node_id: string
+  summary: string
+  tasks: RecommendedTask[]
+  created_nodes: GraphNode[]
+  created_edges: GraphEdge[]
+  events: string[]
+  generated_by: string
 }
 
 export interface GraphEdge {
@@ -86,12 +170,27 @@ export interface GraphAsset {
   created_at: string
 }
 
+/** Something Mistral proposed from a document, waiting for a person to accept it. */
+export interface Candidate {
+  id: string
+  asset_id: string
+  kind: NodeKind
+  title: string
+  body: string
+  source_page: number | null
+  source_quote: string
+  confidence: number | null
+  promoted_node_id: string | null
+  dismissed: boolean
+}
+
 export interface GraphPayload {
   board: Board
   members: Member[]
   nodes: GraphNode[]
   edges: GraphEdge[]
   assets: GraphAsset[]
+  candidates: Candidate[]
 }
 
 export interface LineageNode {
