@@ -76,11 +76,11 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const addNode = useGraphStore((state) => state.addNode)
 
   const handleDerive = useCallback(
-    (edgeId: string, position: { x: number; y: number }) => {
-      // position is already in flow coordinates from EdgeLabelRenderer via getSmoothStepPath
+    (edgeId: string, kind: "finding" | "constraint" | "task", position: { x: number; y: number }) => {
       const edge = edges.find((e) => e.id === edgeId)
       if (!edge) return
-      void addNode("finding", "Branch Idea", position.x, position.y + 40).then((newNode) => {
+      const titles: Record<string, string> = { finding: "New finding", constraint: "New constraint", task: "New task" }
+      void addNode(kind, titles[kind], position.x, position.y + 50).then((newNode) => {
         if (newNode) void addEdge(edge.source_id, newNode.id, "derived_from")
       })
     },

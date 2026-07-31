@@ -170,15 +170,19 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
 
           {isTask && (
             <>
+              {/* Status pill */}
+              <span className={cn("text-2xs rounded px-1.5 py-0.5 font-medium", node.task_status === "done" || node.task_status === "in_review" ? "bg-success/15 text-success" : node.task_status === "in_progress" || node.task_status === "assigned" ? "bg-info/15 text-info" : "bg-muted text-muted-foreground")}>
+                {(node.task_status || "open").replace(/_/g, " ")}
+              </span>
               {priority && (
               <span className={cn("text-2xs rounded px-1.5 py-0.5 font-mono font-semibold", PRIORITY_COLORS[priority])}>
                 {priority}
               </span>
             )}
             {assigneeName ? (
-                <span className="text-2xs text-muted-foreground truncate">{assigneeName}</span>
+                <span className="bg-accent text-accent-foreground text-2xs rounded px-1.5 py-0.5 font-medium" title={assigneeName}>{assigneeName.charAt(0)}</span>
               ) : (
-                <span className="text-2xs text-muted-foreground/70">Unassigned</span>
+                <span className="text-2xs text-muted-foreground/70">—</span>
               )}
 
               <span className="ml-auto flex shrink-0 items-center gap-1.5">

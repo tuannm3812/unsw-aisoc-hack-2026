@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+<style>
+  body { margin: 0; }
+  .react-flow__node { position: absolute; animation: nodePop 0.15s steps(2) both; }
+  @keyframes nodePop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+</style>
+</head>
+<body>
+  <div class="react-flow__node" id="n1" style="transform: translate(300px,200px);">node A</div>
+  <div class="react-flow__node" id="n2" style="transform: translate(600px,400px);">node B</div>
+  <script>
+    window.__result = null;
+    setTimeout(() => {
+      const n1 = document.getElementById('n1');
+      const n2 = document.getElementById('n2');
+      const r1 = n1.getBoundingClientRect();
+      const r2 = n2.getBoundingClientRect();
+      window.__result = {
+        computed1: getComputedStyle(n1).transform,
+        computed2: getComputedStyle(n2).transform,
+        rect1: { x: r1.x, y: r1.y, w: r1.width, h: r1.height },
+        rect2: { x: r2.x, y: r2.y, w: r2.width, h: r2.height },
+      };
+      document.title = 'DONE';
+    }, 600);
+  </script>
+</body>
+</html>

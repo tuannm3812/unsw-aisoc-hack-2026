@@ -283,10 +283,10 @@ function TaskInspector({ node }: { node: GraphNode }) {
       // ponytail: demo mock — wire to Mistral API when backend supports it
       await new Promise((resolve) => setTimeout(resolve, 1200))
       const subtasksList = [
-        { title: "Implement Stripe PaymentElement integration", body: "Replace current payment form with Stripe PaymentElement. Handle card validation, error states, and 3D Secure flow." },
-        { title: "Build saved-payment selector UI", body: "Design and implement the saved-card picker component. Show last-4 digits, brand icon, and expiry. Support add/remove." },
-        { title: "Migrate address autofill from account profile", body: "Pre-fill step 1 with user's saved address. Handle multi-address accounts and billing/shipping toggle." },
-        { title: "Add analytics tracking for checkout funnel", body: "Instrument each step with custom events. Track drop-off rates, time-to-complete, and payment method selection." },
+        { title: "Instrument retrieval latency pipeline", body: "Add tracing spans to measure p50/p95/p99 at each stage: query parsing, embedding lookup, reranking, source-span assembly." },
+        { title: "Build source-span citation UI", body: "Render inline citations with page numbers and quote previews. Support hover-to-preview and click-to-scroll-to-source." },
+        { title: "Implement cross-finding contradiction detection", body: "Mistral-powered check that flags when two connected findings make incompatible claims, with node-pair citation." },
+        { title: "Design reviewer trust A/B test", body: "Protocol comparing answers with and without inline source spans. Metrics: rejection rate, time-to-verify, confidence score." },
       ]
       setSubtasks(subtasksList)
     } catch {
