@@ -1,0 +1,72 @@
+[     674ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "{{ edge.d }}". @ http://localhost:8877/SpatialBrain.dc.html:113
+[     690ms] [ERROR] ReferenceError: sx is not defined
+    at eval (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:106:122)
+    at Array.map (<anonymous>)
+    at Component.renderVals (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:102:27)
+    at StreamableComponent.render (http://localhost:8877/support.js:1084:48)
+    at Af (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:133:101)
+    at ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:132:399)
+    at Qk (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:252:71)
+    at Ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:185)
+    at Ok (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:116)
+    at Nd (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:194:492) @ http://localhost:8877/support.js:1085
+[     708ms] [ERROR] ReferenceError: sx is not defined
+    at eval (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:106:122)
+    at Array.map (<anonymous>)
+    at Component.renderVals (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:102:27)
+    at StreamableComponent.render (http://localhost:8877/support.js:1084:48)
+    at Af (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:133:101)
+    at ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:132:399)
+    at Qk (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:252:71)
+    at Ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:185)
+    at Ok (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:116)
+    at Nd (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:194:492) @ http://localhost:8877/support.js:1085
+[     709ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8877/favicon.ico:0
+[   40653ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "{{ edge.d }}". @ http://localhost:8877/SpatialBrain.dc.html:113
+[   40669ms] [ERROR] ReferenceError: sx is not defined
+    at eval (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:106:122)
+    at Array.map (<anonymous>)
+    at Component.renderVals (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:102:27)
+    at StreamableComponent.render (http://localhost:8877/support.js:1084:48)
+    at Af (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:133:101)
+    at ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:132:399)
+    at Qk (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:252:71)
+    at Ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:185)
+    at Ok (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:116)
+    at Nd (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:194:492) @ http://localhost:8877/support.js:1085
+[   40678ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8877/favicon.ico:0
+[   40679ms] [ERROR] ReferenceError: sx is not defined
+    at eval (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:106:122)
+    at Array.map (<anonymous>)
+    at Component.renderVals (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:102:27)
+    at StreamableComponent.render (http://localhost:8877/support.js:1084:48)
+    at Af (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:133:101)
+    at ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:132:399)
+    at Qk (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:252:71)
+    at Ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:185)
+    at Ok (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:116)
+    at Nd (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:194:492) @ http://localhost:8877/support.js:1085
+[   41248ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "{{ edge.d }}". @ http://localhost:8877/SpatialBrain.dc.html:113
+[   41252ms] [ERROR] ReferenceError: sx is not defined
+    at eval (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:106:122)
+    at Array.map (<anonymous>)
+    at Component.renderVals (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:102:27)
+    at StreamableComponent.render (http://localhost:8877/support.js:1084:48)
+    at Af (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:133:101)
+    at ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:132:399)
+    at Qk (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:252:71)
+    at Ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:185)
+    at Ok (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:116)
+    at Nd (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:194:492) @ http://localhost:8877/support.js:1085
+[   41260ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8877/favicon.ico:0
+[   41263ms] [ERROR] ReferenceError: sx is not defined
+    at eval (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:106:122)
+    at Array.map (<anonymous>)
+    at Component.renderVals (eval at evalDcLogic (http://localhost:8877/support.js:844:16), <anonymous>:102:27)
+    at StreamableComponent.render (http://localhost:8877/support.js:1084:48)
+    at Af (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:133:101)
+    at ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:132:399)
+    at Qk (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:252:71)
+    at Ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:185)
+    at Ok (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:116)
+    at Nd (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:194:492) @ http://localhost:8877/support.js:1085

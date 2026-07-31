@@ -46,13 +46,14 @@ interface CanvasProps {
 
 export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const wrapper = useRef<HTMLDivElement>(null)
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, setCenter } = useReactFlow()
   const { toast } = useToast()
   const [dragOver, setDragOver] = useState(false)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string; kind: string; isTask?: boolean; isDone?: boolean } | null>(null)
   const [edgeMenu, setEdgeMenu] = useState<{ x: number; y: number; edgeId: string; relation: string } | null>(null)
   // ponytail: kind is string not NodeKind because "" signals canvas context menu
   const connectingSource = useRef<{ nodeId: string; kind: NodeKind } | null>(null)
+  const taskStatusMapPrev = useRef<{ map: Map<string, string>; len: number; ids: string[]; stats: string[] } | null>(null)
 
   const nodes = useGraphStore((state) => state.nodes)
   const edges = useGraphStore((state) => state.edges)
@@ -131,11 +132,15 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
     }))
   }, [nodes, members, assets, selectedNodeId, lineageActive, lineageIds, focusedTaskId, measured])
 
-  // Precompute task statuses from nodes — avoids O(E×N) on every drag frame
-  const taskStatusMap = useMemo(
-    () => new Map(nodes.filter((n) => n.kind === "task").map((n) => [n.id, n.task_status])),
-    [nodes.map((n) => n.id + n.task_status).join(",")],
-  )
+  // Precompute task statuses — avoids O(E×N) on every drag frame
+  const taskStatusMap = useMemo(() => {
+    const prev = taskStatusMapPrev.current
+    const same = prev && nodes.length === prev.len && nodes.every((n, i) => n.id === prev.ids[i] && n.task_status === prev.stats[i])
+    if (same) return prev.map
+    const map = new Map(nodes.filter((n) => n.kind === "task").map((n) => [n.id, n.task_status]))
+    taskStatusMapPrev.current = { map, len: nodes.length, ids: nodes.map((n) => n.id), stats: nodes.map((n) => n.task_status) }
+    return map
+  }, [nodes])
 
   const flowEdges = useMemo<FlowEdge[]>(
     () => {
@@ -343,8 +348,8 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           onCreate={handleContextMenuAction}
           onDelete={() => { removeNode(contextMenu.nodeId); setContextMenu(null); }}
           onFocus={() => {
-            const nodeEl = document.querySelector(`.react-flow__node[data-id="${contextMenu.nodeId}"]`)
-            if (nodeEl) nodeEl.scrollIntoView({ behavior: "smooth", block: "center" })
+            const node = nodes.find((n) => n.id === contextMenu.nodeId)
+            if (node) setCenter(node.x + 132, node.y + 50, { duration: 300 })
             setContextMenu(null)
           }}
           onCopyId={() => {
