@@ -125,29 +125,27 @@ def touch(node: Node) -> None:
     node.updated_at = utcnow()
 
 
-def place_extracted_nodes(
+def place_promoted_nodes(
     anchor_x: float,
     anchor_y: float,
-    findings: int,
-    constraints: int,
-) -> tuple[list[tuple[float, float]], list[tuple[float, float]]]:
-    """Findings fan out to the right of the asset, constraints sit below them.
+    kinds: list[str],
+    taken_rows: dict[str, int],
+) -> list[tuple[float, float]]:
+    """Position nodes a user just promoted: findings in one column, constraints in the next.
 
-    Positions are computed once at insert time and then owned by the user, so a
-    re-parse never moves anything they have arranged.
+    Rows continue below whatever the asset already produced, so promoting in several
+    passes stacks neatly instead of overlapping. Positions are assigned once here and
+    then belong to the user, so a re-parse never moves anything they arranged.
     """
-    finding_positions = [
-        (anchor_x + COLUMN_WIDTH, anchor_y + index * ROW_HEIGHT - (findings - 1) * ROW_HEIGHT / 2)
-        for index in range(findings)
-    ]
-    constraint_positions = [
-        (
-            anchor_x + COLUMN_WIDTH * 2,
-            anchor_y + index * ROW_HEIGHT - (constraints - 1) * ROW_HEIGHT / 2,
-        )
-        for index in range(constraints)
-    ]
-    return finding_positions, constraint_positions
+    columns = {NodeKind.finding.value: 1, NodeKind.constraint.value: 2}
+    rows = dict(taken_rows)
+    positions: list[tuple[float, float]] = []
+    for kind in kinds:
+        row = rows.get(kind, 0)
+        rows[kind] = row + 1
+        column = columns.get(kind, 1)
+        positions.append((anchor_x + COLUMN_WIDTH * column, anchor_y + row * ROW_HEIGHT))
+    return positions
 
 
 def task_description_paragraphs(task: Node, lineage_titles: list[str]) -> list[str]:

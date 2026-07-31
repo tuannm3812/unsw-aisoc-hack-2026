@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .db import init_db
-from .routers import agent, assets, auth_routes, boards, tasks
+from .routers import agent, assets, auth_routes, boards, tasks, webhooks
 from .services.jira_service import JiraError, jira_service
 from .services.mistral_service import MistralError, mistral_service
 
@@ -28,6 +28,7 @@ app.include_router(boards.router)
 app.include_router(assets.router)
 app.include_router(tasks.router)
 app.include_router(agent.router)
+app.include_router(webhooks.router)
 
 
 @app.on_event("startup")

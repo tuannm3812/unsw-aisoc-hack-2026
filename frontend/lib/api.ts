@@ -1,5 +1,8 @@
 import type {
+  AgentRunResult,
+  AlignmentResult,
   Board,
+  Candidate,
   CurrentUser,
   GraphAsset,
   GraphEdge,
@@ -7,8 +10,11 @@ import type {
   GraphPayload,
   Health,
   NodeKind,
+  PresentResult,
   RelationType,
+  ReviewChecklistResult,
   TaskContext,
+  TaskRecommendationResult,
 } from "./types"
 
 export class ApiError extends Error {
@@ -115,6 +121,21 @@ export const api = {
   reparseAsset: (boardId: string, assetId: string) =>
     request<GraphAsset>(`/api/boards/${boardId}/assets/${assetId}/reparse`, { method: "POST" }),
 
+  candidates: (boardId: string, assetId: string) =>
+    request<Candidate[]>(`/api/boards/${boardId}/assets/${assetId}/candidates`),
+
+  promoteCandidates: (boardId: string, assetId: string, candidateIds: string[]) =>
+    request<{ nodes: GraphNode[]; edges: GraphEdge[] }>(
+      `/api/boards/${boardId}/assets/${assetId}/candidates/promote`,
+      { method: "POST", body: JSON.stringify({ candidate_ids: candidateIds }) },
+    ),
+
+  dismissCandidates: (boardId: string, assetId: string, candidateIds: string[]) =>
+    request<Candidate[]>(`/api/boards/${boardId}/assets/${assetId}/candidates/dismiss`, {
+      method: "POST",
+      body: JSON.stringify({ candidate_ids: candidateIds }),
+    }),
+
   taskContext: (boardId: string, taskId: string, refresh = false) =>
     request<TaskContext>(
       `/api/boards/${boardId}/tasks/${taskId}/context${refresh ? "?refresh=true" : ""}`,
@@ -131,4 +152,41 @@ export const api = {
       `/api/boards/${boardId}/tasks/${taskId}/jira-retry${force ? "?force=true" : ""}`,
       { method: "POST" },
     ),
+
+  checkAlignment: (boardId: string, taskId: string) =>
+    request<AlignmentResult>(`/api/boards/${boardId}/tasks/${taskId}/align`, { method: "POST" }),
+
+  recordDecision: (
+    boardId: string,
+    taskId: string,
+    state: "decided" | "deferred" | "rejected",
+    rationale = "",
+  ) =>
+    request<GraphNode>(`/api/boards/${boardId}/tasks/${taskId}/decision`, {
+      method: "POST",
+      body: JSON.stringify({ state, rationale }),
+    }),
+
+  presentTask: (boardId: string, taskId: string) =>
+    request<PresentResult>(`/api/boards/${boardId}/tasks/${taskId}/present`, { method: "POST" }),
+
+  reviewChecklist: (boardId: string, taskId: string) =>
+    request<ReviewChecklistResult>(`/api/boards/${boardId}/tasks/${taskId}/review-checklist`, {
+      method: "POST",
+    }),
+
+  agentRun: (
+    boardId: string,
+    taskId: string,
+    action: "align" | "present" | "review" | "brief" | "sense",
+  ) =>
+    request<AgentRunResult>(`/api/boards/${boardId}/tasks/${taskId}/agent-run`, {
+      method: "POST",
+      body: JSON.stringify({ action }),
+    }),
+
+  recommendTasks: (boardId: string, nodeId: string) =>
+    request<TaskRecommendationResult>(`/api/boards/${boardId}/nodes/${nodeId}/recommend-tasks`, {
+      method: "POST",
+    }),
 }

@@ -2,7 +2,7 @@
 
 import { useRef } from "react"
 import { useReactFlow } from "@xyflow/react"
-import { FlaskConical, ListChecks, Ruler, Upload } from "lucide-react"
+import { FlaskConical, LayoutGrid, ListChecks, Ruler, Upload } from "lucide-react"
 
 import {
   Select,
@@ -71,8 +71,9 @@ interface ToolbarProps {
 }
 
 export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarProps) {
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, fitView } = useReactFlow()
   const addNode = useGraphStore((state) => state.addNode)
+  const arrangeLayout = useGraphStore((state) => state.arrangeLayout)
   const nodes = useGraphStore((state) => state.nodes)
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -87,6 +88,14 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
   async function handleAdd(kind: NodeKind) {
     const position = findFreeSpot(nodes, centreOfView())
     await addNode(kind, PLACEHOLDER[kind], position.x, position.y)
+  }
+
+  async function handleArrange() {
+    await arrangeLayout()
+    // Let React Flow measure the moved nodes, then frame them.
+    requestAnimationFrame(() => {
+      fitView({ padding: 0.18, duration: 400 })
+    })
   }
 
   return (
@@ -113,6 +122,23 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
         <TooltipTrigger asChild>
           <button
             type="button"
+            onClick={() => void handleArrange()}
+            disabled={nodes.length === 0}
+            className="hover:bg-accent focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-40"
+          >
+            <LayoutGrid className="size-3.5" strokeWidth={2} />
+            Arrange
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          Cluster by links: connected nodes stay together
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
             onClick={() => fileInput.current?.click()}
             className="hover:bg-accent focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
           >
@@ -128,7 +154,7 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
       <input
         ref={fileInput}
         type="file"
-        accept=".pdf,.md,.markdown,.txt"
+        accept=".pdf,.png,.jpg,.jpeg,.webp,.csv,.json,.md,.markdown,.txt"
         multiple
         className="hidden"
         onChange={(event) => {

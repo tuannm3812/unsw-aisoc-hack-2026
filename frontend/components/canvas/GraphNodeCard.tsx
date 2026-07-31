@@ -23,6 +23,8 @@ export interface GraphNodeData extends Record<string, unknown> {
   inLineage: boolean
   isFocusedTask: boolean
   depth: number | null
+  /** Proposals from this source that nobody has accepted or dismissed yet. */
+  pendingCandidates: number
 }
 
 const KIND_META: Record<
@@ -72,10 +74,20 @@ const PR_BADGE_LABEL: Record<string, string> = {
 }
 
 function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData }) {
-  const { node, assigneeName, parseState, dimmed, inLineage, isFocusedTask, depth } = data
+  const {
+    node,
+    assigneeName,
+    parseState,
+    dimmed,
+    inLineage,
+    isFocusedTask,
+    depth,
+    pendingCandidates,
+  } = data
   const meta = KIND_META[node.kind]
   const Icon = meta.icon
   const isTask = node.kind === "task"
+  const toReview = node.kind === "asset" ? pendingCandidates : 0
 
   return (
     <div
@@ -142,10 +154,29 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
         )}
       </div>
 
-      {(isTask || node.source_page !== null) && (
+      {(isTask || node.source_page !== null || toReview > 0 || Boolean(node.decision_state) || (node.alignment_payload?.conflicts?.length ?? 0) > 0) && (
         <div className="border-border flex items-center gap-2 border-t px-3.5 py-2">
           {node.source_page !== null && (
             <span className="text-2xs text-muted-foreground font-mono">p.{node.source_page}</span>
+          )}
+
+          {toReview > 0 && (
+            <span className="text-2xs bg-primary/10 text-primary rounded px-1.5 py-0.5 font-medium">
+              {toReview} to review
+            </span>
+          )}
+
+          {node.kind === "task" && node.decision_state && (
+            <span className="text-2xs bg-secondary text-secondary-foreground rounded px-1.5 py-0.5 font-medium">
+              {node.decision_state}
+            </span>
+          )}
+
+          {node.kind === "task" && (node.alignment_payload?.conflicts?.length ?? 0) > 0 && (
+            <span className="text-2xs text-warning-foreground bg-warning/15 rounded px-1.5 py-0.5 font-medium">
+              {node.alignment_payload!.conflicts.length} conflict
+              {node.alignment_payload!.conflicts.length === 1 ? "" : "s"}
+            </span>
           )}
 
           {isTask && (

@@ -55,14 +55,31 @@ if ($Check) {
     exit 0
 }
 
+# A killed uvicorn reloader can leave its worker behind, still holding the port and
+# still serving the code it loaded hours ago. That looks exactly like a mysterious
+# bug, so clear the port before binding it rather than trusting it is free.
+function Clear-Port($port) {
+    $owners = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue |
+        Select-Object -ExpandProperty OwningProcess -Unique
+    foreach ($owner in $owners) {
+        $process = Get-Process -Id $owner -ErrorAction SilentlyContinue
+        if (-not $process) { continue }
+        Write-Host "    freeing port $port from $($process.ProcessName) ($owner)" -ForegroundColor DarkGray
+        Stop-Process -Id $owner -Force -ErrorAction SilentlyContinue
+    }
+    if ($owners) { Start-Sleep -Seconds 2 }
+}
+
 # Ports 8010 and 3100 rather than the usual 8000 and 3000, which are often already
 # taken on a laptop that has been running other projects all day.
 Step "Starting the API on http://127.0.0.1:8010"
+Clear-Port 8010
 Start-Process -FilePath $python `
     -ArgumentList "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8010", "--reload" `
     -WorkingDirectory $backend
 
 Step "Starting the canvas on http://localhost:3100"
+Clear-Port 3100
 Start-Process -FilePath "npm" -ArgumentList "run", "dev" -WorkingDirectory $frontend
 
 Write-Host ""

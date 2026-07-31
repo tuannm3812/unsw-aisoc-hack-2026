@@ -1,6 +1,8 @@
 # Demo runbook
 
-Four minutes if nothing goes wrong. Read it once, run it twice, then record it.
+Different teams. Different information. Four HMW verbs on one canvas.
+
+Aim for six minutes live. Read it once, run it twice, then record the fallback.
 
 ## Before you start
 
@@ -8,82 +10,99 @@ Four minutes if nothing goes wrong. Read it once, run it twice, then record it.
 .\start.ps1 -Reset
 ```
 
-Reset matters: the smoke tests write to the same board, and a canvas littered with `Smoke task` nodes undercuts the story.
+Reset matters: smoke tests leave `Smoke task` nodes that undercut the story.
 
-Then run the go / no-go check, which tells you which of the seven steps will work right now and what to say about the ones that will not:
+Then run the go / no-go check:
 
 ```powershell
 cd backend
 .venv\Scripts\python.exe scripts\preflight.py
 ```
 
-It covers the API and canvas being up, the Mistral key and both pinned model names, Jira auth plus a creatable issue type on the project, the board being pre-built and free of test nodes, and all three MCP tools starting over stdio with a matching token. Mistral retires dated model snapshots, so the model check in particular is worth running on the day rather than trusting `.env`.
+Optional but worth it with credit: provision the agent roster once, then authenticate connectors in Studio:
 
-The rest is on you:
+```powershell
+cd backend
+.venv\Scripts\python.exe -m scripts.provision_agents
+```
 
-- [ ] Two browser tabs: the canvas at http://localhost:3100, and your Jira project board.
-- [ ] `demo/retrieval-grounding-study.pdf` findable in two clicks from the file picker.
-- [ ] Cursor window already open on this repo, chat cleared, `spatial-brain` visible under Settings → MCP.
-- [ ] Notifications and other windows closed. The canvas is dense; screen space is the scarce resource.
+Open [Mistral AI Studio](https://console.mistral.ai), authenticate the **Atlassian** and **GitHub** connectors for the Reviewer agent (OAuth is brokered by Mistral — org-scoped, one click each). Without that click, Review still works via our graph tools; connectors just enrich live Jira/GitHub reads.
 
-## The script
+Also prepare:
 
-**Open on the problem, not the product.** Fifteen seconds, no slides.
+- [ ] Canvas at http://localhost:3100 and your Jira project board.
+- [ ] Files ready: `demo/retrieval-grounding-study.pdf`, a whiteboard photo (png/jpg), a small CSV.
+- [ ] Cursor open with `spatial-brain` MCP attached ([`docs/MCP.md`](MCP.md)).
+- [ ] (Optional inbound) `gh webhook forward` and a Cloudflare tunnel for Jira Automation — see below.
 
-> A scientist writes a paper. A PM turns it into a ticket. An engineer reads the ticket. By then the reason the work matters is gone, and nobody notices until review. Every tool in that chain is fine. The handoffs between them are where the reasoning dies.
+## Pitch line (open on this)
 
-**1 · Sign in as Priya.** The board is already partly built: two findings from Aisha, one constraint that follows from the second.
+> Different teams dump different artifacts onto one canvas. A Mistral agent roster senses, aligns, presents, and reviews — the team still decides what becomes true.
 
-> This is a knowledge graph you can rearrange with your hands. Aisha's findings, and a constraint that follows from one of them.
+## The script (teams × information × verbs)
 
-**2 · Drop the PDF onto the canvas.** This is the one live upload. While it parses, say what is happening; it takes a few seconds.
+**1 · Science · PDF — make sense.** Sign in as Priya. Drop `demo/retrieval-grounding-study.pdf`.
 
-> Mistral is reading the paper and pulling out findings and constraints. Not tags. Typed nodes, each one carrying the exact sentence it came from and the page it was on.
+> Mistral proposes findings and constraints. The canvas does not auto-fill. Promote three or four from the source node — including a constraint.
 
-When the nodes land, click one and show the quote and page in the inspector.
+**2 · Design · whiteboard — make sense.** Drop a photo of a sketch or sticky wall.
 
-> That quote is the whole point. Nothing downstream has to trust a summary.
+> Same candidate review UI. Design's whiteboard lands as typed nodes beside Science's paper.
 
-**3 · Add a node and connect it.** Add a finding, type a sentence, drag from an extracted node to it.
+**3 · Ops · spreadsheet — make sense.** Drop a CSV of metrics or thresholds.
 
-> A teammate reacts to the paper. Now their reaction is part of the graph, not a comment nobody will find again.
+> The Data analyst path proposes quantitative findings and threshold constraints. Promote one.
 
-**4 · Create a task node.** Connect it to the constraint and to one finding. Assign to Marco.
+**4 · Product · align on decisions.** Open the seeded task **Ship passwordless account recovery** (Science OTP finding vs Product magic-links-only constraint). Hit **Check alignment**.
 
-> A task is a node like any other, except it points at the knowledge that justifies it.
+> Arbiter flags the contradiction. Record `decided` / `deferred` / `rejected` with a rationale. Watch the activity strip: Coordinator → Arbiter.
 
-**5 · Jira.** The key appears on the node within a second or two. Switch tabs and show the issue exists, with an ADF description.
+**4b · Recommend tasks from knowledge.** Select a promoted finding or constraint → **Create recommended tasks**.
 
-> Real issue, real Jira site. Not a screenshot.
+> Mistral proposes 1–3 engineering tasks grounded in that node (and its neighbours) and places them on the canvas already linked — no blank task typing.
 
-**6 · The part that matters.** In the inspector, hit **Trace ancestry** so the upstream set lights up on the canvas. Leave it lit. Switch to Cursor and ask:
+**5 · All · present ideas.** On the same task, **Generate stakeholder present**.
 
-> List the tasks on the Spatial Brain canvas, then get the full context for the citation task. Tell me what research it came from, quoting the paper, and what constraint I have to respect.
+> Present Mode walks claim → quote → implication → task across disciplines. A generated one-pager image attaches when image generation succeeds.
 
-While it answers, point at the lit canvas.
+**6 · Engineering · review work.** Assign the citation (or recovery) task to Marco → Jira issue appears. Link a PR (MCP or webhook). Run **Constraint checklist**.
 
-> The agent is walking exactly that path. Not searching, not embedding. Walking the relations the team drew, back to the original document, and it can quote the paper with page numbers because the quotes travelled with the nodes.
+> Reviewer maps lineage constraints to the PR: pass / fail / unknown. Inbound GitHub/Jira webhooks keep the node from going stale.
 
-**7 · Close the loop.** Ask the agent to open a pull request and report it back. Do not touch the browser: the badge arrives on its own.
+**Land it.**
 
-> And the scientist, looking at the canvas she started, can see her paper turned into shipped code. Every hop still visible.
+> Nothing here is a new place to work. It is the missing edge between the places people already work — and the agents that package, pressure-test, present, and review on that edge.
 
-Show the Jira comment carrying the same link.
+## Inbound review setup (Phase D)
 
-**Land it in one sentence.**
+**GitHub (local):**
 
-> Nothing here is a new place to work. It is the missing edge between the places people already work.
+```powershell
+gh webhook forward --repo OWNER/REPO --events=pull_request `
+  --url=http://127.0.0.1:8010/api/webhooks/github `
+  --secret=$env:GITHUB_WEBHOOK_SECRET
+```
+
+**Jira Automation:** rule on issue transition → Send web request:
+
+- URL: `https://<your-tunnel>/api/webhooks/jira`
+- Header: `X-Spatial-Secret: spatial-jira-demo` (or your `JIRA_WEBHOOK_SECRET`)
+- Body: `{"issue_key":"{{issue.key}}","status":"{{issue.fields.status.name}}","task_id":"{{issue.properties.spatial_task_id}}"}`
+
+Tunnel only needed for inbound Jira. Agent→graph calls stay on the backend (no public MCP for Mistral).
 
 ## If something breaks
 
 | Breaks | Do this |
 | --- | --- |
-| Parsing hangs or fails | Say the key is rate limited, keep going. The seeded findings and constraint carry steps 3 to 7 alone. |
-| Jira create fails | The inspector shows the error with a **Retry**. Retry once. If it fails again, say Jira is a boundary you cross deliberately, and carry on: nothing downstream needs the issue. |
-| Jira times out | State is recorded as ambiguous rather than retried, because the issue may exist. Say exactly that. It is a better answer than a spinner and judges notice. |
-| MCP tool missing in Cursor | Restart Cursor. If it still fails, curl the same endpoint: `Invoke-RestMethod -Uri "http://127.0.0.1:8010/api/agent/tasks/<id>/context" -Headers @{Authorization="Bearer dev-mcp-token"}`. Less theatrical, identical payload. |
-| Brief looks thin | It says `generated_by: lineage-fallback`. The key is missing or rate limited. The structured lineage is still real, and that is the part you are claiming. |
-| No network at all | Play the recording. |
+| Parsing hangs | Say rate limited; seeded findings/constraint still carry align + present. |
+| Nothing to review on source | Open the source node; re-read from inspector, or move on with seeded nodes. |
+| Alignment finds nothing | Use the seeded recovery task (OTP vs magic links) — heuristic fallback still flags it. |
+| Present image empty | Brief and beats still ship; say image generation soft-failed. |
+| Connectors unauthenticated | Align/Present/Review graph tools still run; note Studio OAuth as the production path. |
+| Jira create fails | Retry once from inspector; continue canvas-only if it fails again. |
+| MCP missing in Cursor | Restart Cursor, or curl the same endpoint with `MCP_TOKEN`. |
+| No network | Play `demo/fallback.mp4`. |
 
 ## Recording the submission video
 
@@ -92,21 +111,21 @@ Show the Jira comment carrying the same link.
 Record the run above end to end, once you have rehearsed it twice and the timing is comfortable. Keep it, unedited, at `demo/submission.mp4`.
 
 - 1080p, whole screen, cursor visible.
-- Real network for steps 2, 5, 6 and 7. A recording of the mocked path proves nothing.
-- Do not cut the parse wait or the agent thinking. That the wait is short is part of the claim.
-- Say the words out loud while recording. If you have to narrate live over silent video you will talk over the beat that matters.
-- Mistral's guidance is that they'll probe whether the team can explain the technical build, not just show it working — consider a brief "how it works" narration beat (lineage as a graph walk, not a prompt; Jira as a real outbound create) rather than only a feature walkthrough. See `STRATEGY.md` §8a.
+- Real network for PDF upload, Jira, Present, and MCP (not the mocked/fallback path — a recording of that proves nothing).
+- Do not cut parse waits or agent thinking. That the wait is short is part of the claim.
+- Narrate out loud while recording. If you have to narrate live over silent video you will talk over the beat that matters.
+- Mistral's guidance is that they'll probe whether the team can explain the technical build, not just show it working — consider a brief "how it works" narration beat (lineage as a graph walk, not a prompt; Jira as a real outbound create) rather than only a feature walkthrough. See `docs/STRATEGY.md` §8a.
 
 If selected for the live Top Teams Pitch, the same rehearsed run works live — the video isn't wasted effort, it's the dress rehearsal for that too.
 
 ## Questions you will get
 
-**How is this different from a Jira integration on a whiteboard tool?** Those sync a card. This sends the reasoning: an agent asks about a task and receives the research chain with quotes and pages, because the edges are typed and traversable.
+**How is this different from a Jira integration on a whiteboard?** Those sync a card. This sends the reasoning: an agent asks about a task and receives the research chain with quotes and pages.
 
-**What if the graph is wrong?** Then the agent tells you it is wrong, with citations, which is better than a ticket that hides it. Every node carries who asserted it or which model extracted it, at what confidence, from which page.
+**What about whiteboard photos and spreadsheets?** Same promote/dismiss path as PDFs. Different teams, different information, one candidate review.
 
-**Does the model invent the lineage?** No. The traversal is a graph walk in `lineage.py` with no model involved. Mistral only writes the summary layered on top, and the agent is told the nodes are authoritative.
+**Who decides what is true?** Humans. Agents propose and pressure-test; promotion and decision trail are explicit.
 
-**Why is the PR state whatever the agent claims?** Deliberate. GitHub authentication and state polling were cut so there is nothing to fail on conference wifi. The reporter and timestamp are recorded, so the claim is attributable.
+**Does the model invent the lineage?** No. Traversal is a graph walk in `lineage.py`. Mistral writes summaries and alignment on top.
 
-**Does this scale past a few dozen nodes?** Unknown, honestly. Traversal is capped at a depth and node count today, dropping findings before constraints. Past that it needs relevance ranking, which is the next thing we would build.
+**Why Mistral Agents?** Coordinator handoffs to Sense / Data / Arbiter / Narrator / Reviewer map to the HMW verbs. Canvas buttons call Conversations when agent ids are provisioned, then always write through Spatial Brain graph tools.

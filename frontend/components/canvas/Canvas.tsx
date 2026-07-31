@@ -46,6 +46,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const edges = useGraphStore((state) => state.edges)
   const members = useGraphStore((state) => state.members)
   const assets = useGraphStore((state) => state.assets)
+  const candidates = useGraphStore((state) => state.candidates)
   const selectedNodeId = useGraphStore((state) => state.selectedNodeId)
   const focusedTaskId = useGraphStore((state) => state.focusedTaskId)
   const lineageIds = useGraphStore((state) => state.lineageIds)
@@ -68,6 +69,12 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
     const memberNames = new Map(members.map((member) => [member.id, member.name]))
     const parseStates = new Map(assets.map((asset) => [asset.id, asset.parse_state]))
 
+    const pendingByAsset = new Map<string, number>()
+    for (const candidate of candidates) {
+      if (candidate.promoted_node_id) continue
+      pendingByAsset.set(candidate.asset_id, (pendingByAsset.get(candidate.asset_id) ?? 0) + 1)
+    }
+
     return nodes.map((node) => ({
       id: node.id,
       type: node.kind,
@@ -85,9 +92,22 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
         inLineage: lineageActive && lineageIds.has(node.id),
         isFocusedTask: node.id === focusedTaskId,
         depth: null,
+        pendingCandidates: node.source_asset_id
+          ? pendingByAsset.get(node.source_asset_id) ?? 0
+          : 0,
       },
     }))
-  }, [nodes, members, assets, selectedNodeId, lineageActive, lineageIds, focusedTaskId, measured])
+  }, [
+    nodes,
+    members,
+    assets,
+    candidates,
+    selectedNodeId,
+    lineageActive,
+    lineageIds,
+    focusedTaskId,
+    measured,
+  ])
 
   const flowEdges = useMemo<FlowEdge[]>(
     () =>

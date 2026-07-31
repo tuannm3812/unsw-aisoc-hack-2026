@@ -6,6 +6,7 @@ import { ReactFlowProvider } from "@xyflow/react"
 import { Loader2 } from "lucide-react"
 
 import { Canvas } from "@/components/canvas/Canvas"
+import { AgentActivityStrip } from "@/components/canvas/AgentActivityStrip"
 import { Inspector } from "@/components/canvas/Inspector"
 import { Toolbar } from "@/components/canvas/Toolbar"
 import { TopBar } from "@/components/canvas/TopBar"
@@ -36,11 +37,13 @@ export default function BoardPage() {
   const error = useGraphStore((state) => state.error)
   const board = useGraphStore((state) => state.board)
   const assets = useGraphStore((state) => state.assets)
+  const candidates = useGraphStore((state) => state.candidates)
   const nodes = useGraphStore((state) => state.nodes)
   const boardId = params.boardId
 
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const seenPrs = useRef<Set<string> | null>(null)
+  const seenParsed = useRef<Set<string> | null>(null)
 
   useEffect(() => {
     api
@@ -93,6 +96,30 @@ export default function BoardPage() {
     }
   }, [nodes, toast])
 
+  // A finished parse changes nothing visible on its own now that proposals wait on
+  // the source node, so say so once rather than leaving the canvas looking idle.
+  useEffect(() => {
+    const parsed = assets.filter((asset) => asset.parse_state === "parsed")
+
+    if (!seenParsed.current) {
+      seenParsed.current = new Set(parsed.map((asset) => asset.id))
+      return
+    }
+
+    for (const asset of parsed) {
+      if (seenParsed.current.has(asset.id)) continue
+      seenParsed.current.add(asset.id)
+      const waiting = candidates.filter((candidate) => candidate.asset_id === asset.id).length
+      toast({
+        title: `Mistral read ${asset.filename}`,
+        description:
+          waiting > 0
+            ? `${waiting} proposals are waiting on the source node. Open it to choose what joins the graph.`
+            : "It found nothing worth proposing.",
+      })
+    }
+  }, [assets, candidates, toast])
+
   const handleUpload = useCallback(
     async (file: File, x: number, y: number) => {
       if (!boardId) return
@@ -102,7 +129,7 @@ export default function BoardPage() {
         toast({
           title: `Reading ${file.name}`,
           description: health?.mistral_configured
-            ? "Mistral is pulling out findings and constraints."
+            ? "Mistral will propose findings and constraints for you to review on the source node."
             : "Stored, but MISTRAL_API_KEY is not set so nothing will be extracted.",
         })
       } catch (err) {
@@ -154,6 +181,7 @@ export default function BoardPage() {
                 onRelationChange={setActiveRelation}
                 onUpload={handleUpload}
               />
+              <AgentActivityStrip />
             </div>
           </ReactFlowProvider>
           <Inspector />

@@ -1,8 +1,10 @@
 import { create } from "zustand"
 
 import { api } from "@/lib/api"
+import { computeAutoLayout } from "@/lib/autoLayout"
 import type {
   Board,
+  Candidate,
   GraphAsset,
   GraphEdge,
   GraphNode,
@@ -11,6 +13,13 @@ import type {
   RelationType,
 } from "@/lib/types"
 
+export interface AgentActivityEvent {
+  id: string
+  message: string
+  kind: "info" | "done" | "error"
+  at: number
+}
+
 interface GraphState {
   boardId: string | null
   board: Board | null
@@ -18,6 +27,8 @@ interface GraphState {
   nodes: GraphNode[]
   edges: GraphEdge[]
   assets: GraphAsset[]
+  /** Proposals from Mistral that nobody has accepted onto the canvas yet. */
+  candidates: Candidate[]
 
   selectedNodeId: string | null
   /** Task whose ancestry is currently highlighted on the canvas. */
@@ -26,6 +37,9 @@ interface GraphState {
 
   /** Node the user has under the cursor right now, so polling leaves it alone. */
   draggingNodeId: string | null
+
+  /** Live Coordinator → specialist narration for Align / Present / Review. */
+  agentEvents: AgentActivityEvent[]
 
   loading: boolean
   error: string | null
@@ -39,6 +53,9 @@ interface GraphState {
   focusLineage: (taskId: string, nodeIds: string[]) => void
   clearLineage: () => void
 
+  pushAgentEvents: (messages: string[], kind?: AgentActivityEvent["kind"]) => void
+  clearAgentEvents: () => void
+
   addNode: (kind: NodeKind, title: string, x: number, y: number) => Promise<GraphNode | null>
   patchNode: (
     nodeId: string,
@@ -47,6 +64,11 @@ interface GraphState {
   nudgeNode: (nodeId: string, x: number, y: number) => void
   persistPosition: (nodeId: string, x: number, y: number) => Promise<void>
   removeNode: (nodeId: string) => Promise<void>
+
+  arrangeLayout: () => Promise<void>
+
+  promoteCandidates: (assetId: string, candidateIds: string[]) => Promise<number>
+  dismissCandidates: (assetId: string, candidateIds: string[]) => Promise<void>
 
   addEdge: (
     sourceId: string,
@@ -66,10 +88,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   edges: [],
   assets: [],
 
+  candidates: [],
+
   selectedNodeId: null,
   focusedTaskId: null,
   lineageIds: new Set<string>(),
   draggingNodeId: null,
+  agentEvents: [],
 
   loading: false,
   error: null,
@@ -84,6 +109,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         nodes: payload.nodes,
         edges: payload.edges,
         assets: payload.assets,
+        candidates: payload.candidates,
         loading: false,
       })
     } catch (error) {
@@ -102,6 +128,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         nodes: payload.nodes,
         edges: payload.edges,
         assets: payload.assets,
+        candidates: payload.candidates,
       })
     } catch (error) {
       set({ error: (error as Error).message })
@@ -140,6 +167,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       nodes,
       edges: payload.edges,
       assets: payload.assets,
+      candidates: payload.candidates,
     })
   },
 
@@ -151,6 +179,21 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     set({ focusedTaskId: taskId, lineageIds: new Set(nodeIds) }),
 
   clearLineage: () => set({ focusedTaskId: null, lineageIds: new Set<string>() }),
+
+  pushAgentEvents: (messages, kind = "info") => {
+    const now = Date.now()
+    const next = messages
+      .filter(Boolean)
+      .map((message, index) => ({
+        id: `${now}-${index}-${Math.random().toString(36).slice(2, 7)}`,
+        message,
+        kind,
+        at: now + index,
+      }))
+    if (!next.length) return
+    set({ agentEvents: [...get().agentEvents, ...next].slice(-12) })
+  },
+  clearAgentEvents: () => set({ agentEvents: [] }),
 
   addNode: async (kind, title, x, y) => {
     const boardId = get().boardId
@@ -197,6 +240,31 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     }
   },
 
+  arrangeLayout: async () => {
+    const boardId = get().boardId
+    const { nodes, edges } = get()
+    if (!boardId || nodes.length === 0) return
+
+    const layout = computeAutoLayout(nodes, edges)
+    const next = nodes.map((node) => {
+      const pos = layout.get(node.id)
+      return pos ? { ...node, x: pos.x, y: pos.y } : node
+    })
+    set({ nodes: next })
+
+    await Promise.all(
+      next.map(async (node) => {
+        const before = nodes.find((item) => item.id === node.id)
+        if (!before || (before.x === node.x && before.y === node.y)) return
+        try {
+          await api.moveNode(boardId, node.id, node.x, node.y)
+        } catch (error) {
+          set({ error: (error as Error).message })
+        }
+      }),
+    )
+  },
+
   removeNode: async (nodeId) => {
     const boardId = get().boardId
     if (!boardId) return
@@ -212,6 +280,44 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       }))
     } catch (error) {
       set({ error: (error as Error).message })
+    }
+  },
+
+  /** Accept proposals: they become nodes here, and drop out of the review list. */
+  promoteCandidates: async (assetId, candidateIds) => {
+    const boardId = get().boardId
+    if (!boardId || candidateIds.length === 0) return 0
+    try {
+      const { nodes, edges } = await api.promoteCandidates(boardId, assetId, candidateIds)
+      const chosen = new Set(candidateIds)
+      set((state) => ({
+        nodes: [...state.nodes, ...nodes],
+        edges: [
+          ...state.edges,
+          ...edges.filter((edge) => !state.edges.some((existing) => existing.id === edge.id)),
+        ],
+        candidates: state.candidates.filter((candidate) => !chosen.has(candidate.id)),
+        selectedNodeId: nodes[0]?.id ?? state.selectedNodeId,
+      }))
+      return nodes.length
+    } catch (error) {
+      set({ error: (error as Error).message })
+      return 0
+    }
+  },
+
+  dismissCandidates: async (assetId, candidateIds) => {
+    const boardId = get().boardId
+    if (!boardId || candidateIds.length === 0) return
+    const chosen = new Set(candidateIds)
+    const previous = get().candidates
+    set((state) => ({
+      candidates: state.candidates.filter((candidate) => !chosen.has(candidate.id)),
+    }))
+    try {
+      await api.dismissCandidates(boardId, assetId, candidateIds)
+    } catch (error) {
+      set({ candidates: previous, error: (error as Error).message })
     }
   },
 

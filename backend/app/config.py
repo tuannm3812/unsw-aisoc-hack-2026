@@ -44,6 +44,18 @@ class Settings(BaseSettings):
     # MCP agents authenticate with a static token rather than a user session.
     mcp_token: str = "dev-mcp-token"
 
+    # Inbound webhook secrets (optional; empty skips verification for local demos).
+    github_webhook_secret: str = ""
+    jira_webhook_secret: str = "spatial-jira-demo"
+
+    # Provisioned Mistral agent ids (filled by scripts/provision_agents.py).
+    mistral_agent_coordinator: str = ""
+    mistral_agent_sense: str = ""
+    mistral_agent_data: str = ""
+    mistral_agent_align: str = ""
+    mistral_agent_present: str = ""
+    mistral_agent_review: str = ""
+
     lineage_max_depth: int = 6
     lineage_max_nodes: int = 60
 

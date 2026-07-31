@@ -111,23 +111,68 @@ def main() -> int:
             check("asset node created", any(n["kind"] == "asset" for n in asset_nodes))
 
             if state == "parsed":
-                extracted = [n for n in asset_nodes if n["kind"] in {"finding", "constraint"}]
-                check("nodes extracted", len(extracted) > 0, "nothing came back")
-                quoted = [n for n in extracted if n["source_quote"]]
-                check("extracted nodes quote the source", len(quoted) > 0)
-                paged = [n for n in extracted if n["source_page"] is not None]
-                check("extracted nodes cite a page", len(paged) > 0)
-                edges_now = graph_now["edges"]
-                anchor = next(n for n in asset_nodes if n["kind"] == "asset")
-                linked = [
-                    e
-                    for e in edges_now
-                    if e["source_id"] == anchor["id"] and e["relation"] == "derived_from"
-                ]
-                check("extracted nodes link to the source", len(linked) > 0)
+                # A parse proposes and stops. Nothing may reach the canvas on its own.
+                auto = [n for n in asset_nodes if n["kind"] in {"finding", "constraint"}]
+                check("parse created no nodes by itself", len(auto) == 0, f"{len(auto)} appeared")
+
+                proposals = [c for c in graph_now["candidates"] if c["asset_id"] == asset["id"]]
+                check("proposals waiting for review", len(proposals) > 0, "nothing came back")
+                check(
+                    "proposals quote the source",
+                    any(c["source_quote"] for c in proposals),
+                )
+                pages = [c["source_page"] for c in proposals if c["source_page"] is not None]
+                check(
+                    "no proposal cites a page outside the file",
+                    all(1 <= page <= asset["page_count"] for page in pages),
+                    f"pages {sorted(set(pages))} against {asset['page_count']} pages",
+                )
+                titles = [c["title"].strip().lower() for c in proposals]
+                check("no proposal is a duplicate", len(titles) == len(set(titles)))
                 print(
-                    f"       {len([n for n in extracted if n['kind'] == 'finding'])} findings, "
-                    f"{len([n for n in extracted if n['kind'] == 'constraint'])} constraints"
+                    f"       {sum(1 for c in proposals if c['kind'] == 'finding')} findings, "
+                    f"{sum(1 for c in proposals if c['kind'] == 'constraint')} constraints proposed"
+                )
+
+                # Promoting is the only path onto the canvas.
+                chosen = [proposals[0]["id"]]
+                promoted = client.post(
+                    f"/api/boards/{board_id}/assets/{asset['id']}/candidates/promote",
+                    json={"candidate_ids": chosen},
+                )
+                check("promotion accepted", promoted.status_code == 200, promoted.text[:200])
+                if promoted.status_code == 200:
+                    made = promoted.json()["nodes"]
+                    check("promotion created a node", len(made) == 1)
+                    check(
+                        "promoted node keeps its evidence",
+                        bool(made[0]["source_quote"]) and made[0]["source_asset_id"] == asset["id"],
+                    )
+
+                    graph_now = client.get(f"/api/boards/{board_id}/graph").json()
+                    anchor = next(n for n in asset_nodes if n["kind"] == "asset")
+                    linked = [
+                        e
+                        for e in graph_now["edges"]
+                        if e["source_id"] == anchor["id"]
+                        and e["target_id"] == made[0]["id"]
+                        and e["relation"] == "derived_from"
+                    ]
+                    check("promoted node links back to the source", len(linked) == 1)
+                    check(
+                        "review list shrank",
+                        len([c for c in graph_now["candidates"] if c["asset_id"] == asset["id"]])
+                        == len(proposals) - 1,
+                    )
+
+                repeat = client.post(
+                    f"/api/boards/{board_id}/assets/{asset['id']}/candidates/promote",
+                    json={"candidate_ids": chosen},
+                )
+                check(
+                    "promoting the same proposal twice is refused",
+                    repeat.status_code == 409,
+                    f"got {repeat.status_code}",
                 )
             else:
                 current = next(

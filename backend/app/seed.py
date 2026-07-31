@@ -20,6 +20,7 @@ from .models import (
     Asset,
     Board,
     BriefCache,
+    Candidate,
     Edge,
     Membership,
     Node,
@@ -73,6 +74,13 @@ SEED_FINDINGS = [
         -120.0,
         -70.0,
     ),
+    (
+        "Email OTP is required for account recovery",
+        "Security review concluded that magic-link-only recovery fails compliance: "
+        "every recovery path must include a one-time email code.",
+        -120.0,
+        80.0,
+    ),
 ]
 
 SEED_CONSTRAINTS = [
@@ -81,6 +89,13 @@ SEED_CONSTRAINTS = [
         "A claim without a retrievable span is treated as unusable by the review team.",
         220.0,
         -140.0,
+    ),
+    (
+        "Magic links only — no passwords or OTP codes",
+        "Product decided the auth UX must stay passwordless with magic links alone; "
+        "OTP codes and passwords are out of scope.",
+        220.0,
+        80.0,
     ),
 ]
 
@@ -117,7 +132,17 @@ def seed(reset: bool = False) -> dict[str, str]:
         if reset:
             # Everything, so a rehearsal starts from the same board every time. The
             # brief cache in particular would otherwise answer for deleted nodes.
-            for model in (Edge, Node, Asset, BriefCache, ActivityLog, Membership, Board, User):
+            for model in (
+                Edge,
+                Candidate,
+                Node,
+                Asset,
+                BriefCache,
+                ActivityLog,
+                Membership,
+                Board,
+                User,
+            ):
                 db.query(model).delete()
             db.commit()
 
@@ -195,7 +220,7 @@ def seed(reset: bool = False) -> dict[str, str]:
         ]
         db.flush()
 
-        # The constraint follows from the trust finding.
+        # The citation constraint follows from the trust finding.
         connect(
             db,
             board_id=board.id,
@@ -203,6 +228,39 @@ def seed(reset: bool = False) -> dict[str, str]:
             target_id=constraints[0].id,
             relation=Relation.supports.value,
             created_by=scientist.id,
+        )
+
+        # Cross-discipline contradiction for Check Alignment: Science OTP finding
+        # vs Product magic-links-only constraint.
+        pm = users["priya@spatialbrain.dev"]
+        constraints[1].created_by = pm.id
+        task = create_node(
+            db,
+            board_id=board.id,
+            kind=NodeKind.task.value,
+            title="Ship passwordless account recovery",
+            body="Implement recovery so a locked-out user can get back in without a password.",
+            x=520.0,
+            y=-40.0,
+            created_by=pm.id,
+            evidence_class="asserted",
+        )
+        db.flush()
+        connect(
+            db,
+            board_id=board.id,
+            source_id=findings[2].id,
+            target_id=task.id,
+            relation=Relation.supports.value,
+            created_by=scientist.id,
+        )
+        connect(
+            db,
+            board_id=board.id,
+            source_id=constraints[1].id,
+            target_id=task.id,
+            relation=Relation.constrains.value,
+            created_by=pm.id,
         )
         db.commit()
 
