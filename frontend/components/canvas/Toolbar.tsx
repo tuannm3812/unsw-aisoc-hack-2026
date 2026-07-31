@@ -92,15 +92,15 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
       await new Promise((resolve) => setTimeout(resolve, 800))
       setReviewData({
         shipped: [
-          { title: "Build 2-Step Checkout", assignee: "Marco", summary: "PaymentElement integration complete, saved-payment selector working E2E." },
-          { title: "Auth System Migration", assignee: "Aisha", summary: "Magic-link auth replaces OTP — clean migration for 100% of users." },
+          { title: "Retrieval latency instrumentation", assignee: "Marco", summary: "Instrumentation across three pilot teams confirmed retrieval dominates 68% of end-to-end latency. Findings flagged for the answer renderer." },
+          { title: "Source-span citation in answers", assignee: "Marco", summary: "Every generated claim now carries an inline source span. Reviewers verify 11 of 12 now pass source checks (up from 2 of 9)." },
         ],
         blocked: [
-          { title: "Payment Selector UI", assignee: "Priya", summary: "Waiting on final design mockups — feedback sent, expecting final by EOD Friday." },
+          { title: "Cross-document contradiction detection", assignee: "Aisha", summary: "Mistral OCR extraction on the July 28 meeting notes conflicts with the design decision log on auth strategy. Blocked until the team aligns." },
         ],
         next: [
-          { title: "PCI Compliance Audit", assignee: "Marco", summary: "External audit scheduled Aug 5. SAQ-A self-assessment + documentation." },
-          { title: "Onboarding Flow Rewrite", assignee: "Aisha", summary: "Move from 5-step to 2-step. Design specs finalised." },
+          { title: "Semantic retrieval pipeline", assignee: "Marco", summary: "Replace keyword retrieval with dense embeddings. Target: sub-200ms p95 latency with 90%+ precision@5." },
+          { title: "Reviewer trust study", assignee: "Aisha", summary: "Analyse the shadowing data from the sprint to quantify how source-span presence changes rejection rate. Six sessions recorded." },
         ],
       })
       setReviewOpen(true)
