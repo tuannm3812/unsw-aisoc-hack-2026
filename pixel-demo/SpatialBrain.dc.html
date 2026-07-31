@@ -275,9 +275,9 @@ class Component extends DCLogic {
     { num: "03", label: "Code comes back", glyph: "task", bg: "#E10500", copy: "An agent reads the task's ancestry over MCP and opens a PR." },
   ];
   review = [
-    { title: "SHIPPED", color: "#3FA34D", items: [{ title: "2-step checkout", who: "Marco", summary: "PaymentElement integration complete." }, { title: "Auth migration", who: "Aisha", summary: "Magic-link auth replaces OTP." }] },
-    { title: "BLOCKED", color: "#E10500", items: [{ title: "Payment selector UI", who: "Priya", summary: "Waiting on final mockups." }] },
-    { title: "NEXT", color: "#FF6A00", items: [{ title: "PCI audit", who: "Marco", summary: "External audit Aug 5." }, { title: "Onboarding rewrite", who: "Aisha", summary: "5-step to 2-step." }] },
+    { title: "SHIPPED", color: "#3FA34D", items: [{ title: "Retrieval latency instrumentation", who: "Marco", summary: "Instrumentation confirms retrieval dominates 68% of latency." }, { title: "Source-span citation UI", who: "Marco", summary: "Every claim carries inline source span. 11 of 12 now pass." }] },
+    { title: "BLOCKED", color: "#E10500", items: [{ title: "Cross-document contradiction", who: "Aisha", summary: "Meeting notes vs design log conflict. Blocked until the team aligns." }] },
+    { title: "NEXT", color: "#FF6A00", items: [{ title: "Semantic retrieval pipeline", who: "Marco", summary: "Dense embeddings to replace keyword retrieval." }, { title: "Reviewer trust study", who: "Aisha", summary: "Quantify source-span impact on rejection rate." }] },
   ];
 
   state = {
@@ -343,7 +343,7 @@ class Component extends DCLogic {
     s.nodes.forEach((n) => (byId[n.id] = n));
 
     const nodes = s.nodes.map((n) => {
-      const meta = this.KIND[n.kind], sel = n.id === s.selectedId, dim = s.myTasks && n.kind !== "task";
+      const meta = this.KIND[n.kind], sel = n.id === s.selectedId, dim = s.myTasks && !(n.kind === "task" && (n.assignee || "Aisha") === "Aisha");
       const showFooter = !!(n.page || n.priority || (n.assignee && n.kind === "task") || n.jira);
       return { id: n.id, glyph: meta.glyph, accent: meta.accent, label: meta.label, title: n.title, body: n.body || "", quote: n.quote || "", page: n.page || "", priority: n.priority || "", assignee: n.kind === "task" ? (n.assignee || "") : "", jira: n.jira || "", meta: n.kind === "finding" ? "finding" : (n.kind === "constraint" ? "rule" : ""), wrapStyle: { position: "absolute", left: n.x + "px", top: n.y + "px", width: this.WIDTH + "px", zIndex: sel ? 20 : 5, cursor: "grab", pointerEvents: dim ? "none" : "auto", opacity: dim ? 0.28 : 1, touchAction: "none", userSelect: "none", WebkitUserSelect: "none" }, cardStyle: { background: "#fff", border: "3px solid " + (sel ? meta.accent : "#1B1712"), boxShadow: (sel ? "6px 6px 0 " : "4px 4px 0 ") + meta.accent, paddingBottom: showFooter ? "0" : "11px" }, footerStyle: showFooter ? { display: "flex", alignItems: "center", gap: "8px", padding: "9px 11px", marginTop: "10px", borderTop: "2px solid #E4DCC7" } : { display: "none" }, onDown: (e) => { e.stopPropagation(); e.target.setPointerCapture(e.pointerId); this._el = e.target; this._ptr = e.pointerId; this.setState({ selectedId: n.id }); this.drag = { id: n.id, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y, active: false }; } };
     });
