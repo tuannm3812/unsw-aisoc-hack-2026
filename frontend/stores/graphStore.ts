@@ -31,6 +31,7 @@ interface GraphState {
   candidates: Candidate[]
 
   selectedNodeId: string | null
+  selectedEdgeId: string | null
   /** Task whose ancestry is currently highlighted on the canvas. */
   focusedTaskId: string | null
   lineageIds: Set<string>
@@ -53,6 +54,7 @@ interface GraphState {
   setDragging: (nodeId: string | null) => void
 
   select: (nodeId: string | null) => void
+  selectEdge: (edgeId: string | null) => void
   focusLineage: (taskId: string, nodeIds: string[]) => void
   clearLineage: () => void
 
@@ -79,6 +81,7 @@ interface GraphState {
     relation: RelationType,
   ) => Promise<GraphEdge | null>
   removeEdge: (edgeId: string) => Promise<void>
+  patchEdge: (edgeId: string, relation: RelationType) => Promise<void>
 
   replaceNode: (node: GraphNode) => void
 }
@@ -94,6 +97,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   candidates: [],
 
   selectedNodeId: null,
+  selectedEdgeId: null,
   focusedTaskId: null,
   lineageIds: new Set<string>(),
   draggingNodeId: null,
@@ -179,7 +183,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   setDragging: (nodeId) => set({ draggingNodeId: nodeId }),
 
-  select: (nodeId) => set({ selectedNodeId: nodeId }),
+  select: (nodeId) => set({ selectedNodeId: nodeId, selectedEdgeId: null }),
+  selectEdge: (edgeId) => set({ selectedEdgeId: edgeId, selectedNodeId: null }),
 
   focusLineage: (taskId, nodeIds) =>
     set({ focusedTaskId: taskId, lineageIds: new Set(nodeIds) }),
@@ -356,7 +361,23 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     if (!boardId) return
     try {
       await api.deleteEdge(boardId, edgeId)
-      set((state) => ({ edges: state.edges.filter((edge) => edge.id !== edgeId) }))
+      set((state) => ({
+        edges: state.edges.filter((edge) => edge.id !== edgeId),
+        selectedEdgeId: state.selectedEdgeId === edgeId ? null : state.selectedEdgeId,
+      }))
+    } catch (error) {
+      set({ error: (error as Error).message })
+    }
+  },
+
+  patchEdge: async (edgeId, relation) => {
+    const boardId = get().boardId
+    if (!boardId) return
+    try {
+      const updated = await api.updateEdge(boardId, edgeId, relation)
+      set((state) => ({
+        edges: state.edges.map((edge) => (edge.id === edgeId ? updated : edge)),
+      }))
     } catch (error) {
       set({ error: (error as Error).message })
     }

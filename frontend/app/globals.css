@@ -147,6 +147,9 @@
   padding: 1px 5px;
   font-size: 0.625rem;
   line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
 }
 
 /* Animations — steps() for pixel feel */

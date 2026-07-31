@@ -239,6 +239,9 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
               {ancestorCount > 0 && (
                 <span className="footer-badge bg-[#F2A100]/15 text-[#8A5C00] font-mono" title={`Grounded in ${ancestorCount} upstream node${ancestorCount === 1 ? "" : "s"}`}>←{ancestorCount}</span>
               )}
+              {dependentCount > 0 && (
+                <span className="footer-badge bg-[#E10500]/10 text-[#8B0000] font-mono" title={`${dependentCount} downstream task${dependentCount === 1 ? "" : "s"} depend${dependentCount === 1 ? "s" : ""} on this`}>→{dependentCount}</span>
+              )}
               {assigneeChip ? (
                 <span
                   className="flex size-[22px] shrink-0 items-center justify-center border-[1.5px] border-[#1B1712] font-pixel text-[6px] text-white"

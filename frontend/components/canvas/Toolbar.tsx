@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { DRAWABLE_RELATIONS, type NodeKind, type RelationType } from "@/lib/types"
+import { findFreeSpot } from "@/lib/utils"
 import { useGraphStore } from "@/stores/graphStore"
 
 const ADD_BUTTONS: { kind: NodeKind; label: string; icon: typeof FlaskConical; hint: string }[] = [
@@ -41,27 +42,6 @@ const PLACEHOLDER: Record<NodeKind, string> = {
   finding: "New finding",
   constraint: "New constraint",
   task: "New task",
-}
-
-const COLUMN = 300
-const ROW = 168
-
-/** Walk down and then across from the viewport centre until nothing is in the way. */
-function findFreeSpot(
-  nodes: { x: number; y: number }[],
-  start: { x: number; y: number },
-): { x: number; y: number } {
-  for (let column = 0; column < 6; column += 1) {
-    for (let row = 0; row < 6; row += 1) {
-      const x = start.x + column * COLUMN
-      const y = start.y + row * ROW
-      const occupied = nodes.some(
-        (node) => Math.abs(node.x - x) < COLUMN * 0.9 && Math.abs(node.y - y) < ROW * 0.9,
-      )
-      if (!occupied) return { x, y }
-    }
-  }
-  return start
 }
 
 interface ToolbarProps {

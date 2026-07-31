@@ -32,20 +32,22 @@ export function CustomEdge({
     targetX, targetY,
   })
 
-  const onDerive = (data as Record<string, unknown> | undefined)
-    ?.onDerive as ((edgeId: string, kind: "finding" | "constraint" | "task", position: { x: number; y: number }) => void) | undefined
+  const extra = (data as Record<string, unknown> | undefined)
+  const onDerive = extra?.onDerive as ((edgeId: string, kind: "finding" | "constraint" | "task", position: { x: number; y: number }) => void) | undefined
+  const labelOffsetY = (extra?.labelOffsetY as number) ?? 0
+  const shiftedLabelY = labelY + labelOffsetY
 
   return (
     <>
       <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd}
-        label={label} labelX={labelX} labelY={labelY}
+        label={label} labelX={labelX} labelY={shiftedLabelY}
         labelStyle={labelStyle} labelBgStyle={labelBgStyle}
         labelBgPadding={labelBgPadding} labelBgBorderRadius={labelBgBorderRadius} />
       <EdgeLabelRenderer>
         {!menuOpen && (
           <button
             className="nodrag nopan absolute cursor-pointer flex size-5 items-center justify-center border-[2px] border-[#1B1712] bg-white text-[11px] font-bold leading-none opacity-[0.01] hover:opacity-100 hover:bg-[#E10500] hover:text-white hover:scale-125 transition-all"
-            style={{ left: labelX, top: labelY, transform: "translate(-50%, -50%)" }}
+            style={{ left: labelX, top: shiftedLabelY, transform: "translate(-50%, -50%)" }}
             onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
             title="Branch from here"
           >⊕</button>
@@ -53,11 +55,11 @@ export function CustomEdge({
         {menuOpen && (
           <div ref={menuRef}
             className="nodrag nopan animate-menu-pop absolute z-50 min-w-[140px] rounded-none border-[3px] border-[#1B1712] bg-white shadow-[3px_3px_0_#1B1712] py-0.5"
-            style={{ left: labelX, top: labelY, transform: "translate(-50%, -50%)" }}>
+            style={{ left: labelX, top: shiftedLabelY, transform: "translate(-50%, -50%)" }}>
             {(["finding", "constraint", "task"] as const).map((kind) => (
               <button key={kind}
                 className="hover:bg-[#F3EEE1] flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-bold transition-colors"
-                onClick={(e) => { e.stopPropagation(); onDerive?.(id, kind, { x: labelX, y: labelY }); setMenuOpen(false) }}>
+                onClick={(e) => { e.stopPropagation(); onDerive?.(id, kind, { x: labelX, y: shiftedLabelY }); setMenuOpen(false) }}>
                 {kind === "finding" ? "Add Finding" : kind === "constraint" ? "Add Constraint" : "Create Task"}
               </button>
             ))}

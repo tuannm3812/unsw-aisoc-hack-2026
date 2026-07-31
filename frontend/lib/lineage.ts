@@ -59,8 +59,11 @@ export function countAncestors(taskId: string, nodes: GraphNode[], edges: GraphE
   return getAncestorIds(taskId, nodes, edges, max).length
 }
 
-export function countDependents(nodeId: string, edges: GraphEdge[]): number {
+export function countDependents(nodeId: string, edges: GraphEdge[], nodes: GraphNode[]): number {
+  const taskIds = new Set(nodes.filter((n) => n.kind === "task").map((n) => n.id))
   const deps = new Set<string>()
-  for (const e of edges) { if (e.source_id === nodeId && !deps.has(e.target_id)) deps.add(e.target_id) }
+  for (const e of edges) {
+    if (e.source_id === nodeId && taskIds.has(e.target_id) && !deps.has(e.target_id)) deps.add(e.target_id)
+  }
   return deps.size
 }

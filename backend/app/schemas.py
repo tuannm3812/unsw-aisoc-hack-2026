@@ -159,6 +159,10 @@ class EdgeCreate(BaseModel):
     relation: Relation = Relation.supports
 
 
+class EdgeUpdate(BaseModel):
+    relation: Relation
+
+
 class AssignRequest(BaseModel):
     assignee_id: str
     create_jira_issue: bool = True

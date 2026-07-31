@@ -109,6 +109,12 @@ export const api = {
   deleteEdge: (boardId: string, edgeId: string) =>
     request<{ ok: boolean }>(`/api/boards/${boardId}/edges/${edgeId}`, { method: "DELETE" }),
 
+  updateEdge: (boardId: string, edgeId: string, relation: RelationType) =>
+    request<GraphEdge>(`/api/boards/${boardId}/edges/${edgeId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ relation }),
+    }),
+
   uploadAsset: (boardId: string, file: File, x: number, y: number) => {
     const form = new FormData()
     form.append("file", file)

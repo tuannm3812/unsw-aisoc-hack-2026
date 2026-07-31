@@ -12,7 +12,6 @@ import {
   useReactFlow,
   type Connection,
   type Edge as FlowEdge,
-  type EdgeTypes,
   type Node as FlowNode,
   type NodeChange,
   type NodeTypes,
@@ -20,7 +19,8 @@ import {
 
 import { useToast } from "@/components/ui/use-toast"
 import { countAncestors, countDependents } from "@/lib/lineage"
-import { RELATION_LABEL, type NodeKind, type RelationType } from "@/lib/types"
+import { RELATION_LABEL, type GraphEdge, type RelationType } from "@/lib/types"
+import { findFreeSpot } from "@/lib/utils"
 import { useGraphStore } from "@/stores/graphStore"
 
 import { CustomEdge } from "./CustomEdge"
@@ -37,7 +37,7 @@ const nodeTypes: NodeTypes = {
   task: GraphNodeCard,
 } as unknown as NodeTypes
 
-const edgeTypes = { default: CustomEdge } as unknown as EdgeTypes
+const edgeTypes = { default: CustomEdge }
 
 const RELATION_COLOR: Record<string, string> = {
   supports: "#3FA34D",
@@ -72,21 +72,16 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const { toast } = useToast()
   const [dragOver, setDragOver] = useState(false)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
-  // Source node of a connection drag, so dropping on empty canvas can still
-  // offer kind-appropriate create options for that source.
-  const connectingSource = useRef<{ nodeId: string; kind: NodeKind } | null>(null)
 
   const nodes = useGraphStore((state) => state.nodes)
   const edges = useGraphStore((state) => state.edges)
   const members = useGraphStore((state) => state.members)
   const assets = useGraphStore((state) => state.assets)
-  const candidates = useGraphStore((state) => state.candidates)
   const selectedNodeId = useGraphStore((state) => state.selectedNodeId)
   const focusedTaskId = useGraphStore((state) => state.focusedTaskId)
   const lineageIds = useGraphStore((state) => state.lineageIds)
 
   const select = useGraphStore((state) => state.select)
-  const myTaskFilter = useGraphStore((state) => state.myTaskFilter)
   const nudgeNode = useGraphStore((state) => state.nudgeNode)
   const persistPosition = useGraphStore((state) => state.persistPosition)
   const setDragging = useGraphStore((state) => state.setDragging)
@@ -94,7 +89,9 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const addNode = useGraphStore((state) => state.addNode)
   const removeNode = useGraphStore((state) => state.removeNode)
   const removeEdge = useGraphStore((state) => state.removeEdge)
-  const patchNode = useGraphStore((state) => state.patchNode)
+  const patchEdge = useGraphStore((state) => state.patchEdge)
+  const selectEdge = useGraphStore((state) => state.selectEdge)
+  const focusLineage = useGraphStore((state) => state.focusLineage)
 
   const lineageActive = focusedTaskId !== null && lineageIds.size > 0
 
@@ -112,7 +109,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
       if (node.kind !== "task") continue
       counts.set(node.id, {
         ancestors: countAncestors(node.id, nodes, edges),
-        dependents: countDependents(node.id, edges),
+        dependents: countDependents(node.id, edges, nodes),
       })
     }
     return counts
@@ -120,13 +117,6 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
 
   const flowNodes = useMemo<FlowNode<GraphNodeData>[]>(() => {
     const memberNames = new Map(members.map((m) => [m.id, m.name]))
-    const parseStates = new Map(assets.map((asset) => [asset.id, asset.parse_state]))
-
-    const pendingByAsset = new Map<string, number>()
-    for (const candidate of candidates) {
-      if (candidate.promoted_node_id) continue
-      pendingByAsset.set(candidate.asset_id, (pendingByAsset.get(candidate.asset_id) ?? 0) + 1)
-    }
 
     return nodes.map((node) => {
       const isNew = !seenNodeIds.current.has(node.id)
@@ -143,37 +133,21 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
         data: {
           node,
           assigneeName: node.assignee_id ? memberNames.get(node.assignee_id) ?? "" : "",
-          parseState:
-            node.kind === "asset" && node.source_asset_id
-              ? parseStates.get(node.source_asset_id) ?? null
-              : null,
-          dimmed:
-            (lineageActive && !lineageIds.has(node.id)) ||
-            (!!myTaskFilter && node.kind === "task" && node.assignee_id !== myTaskFilter),
+          parseState: null,
+          dimmed: lineageActive && !lineageIds.has(node.id),
           inLineage: lineageActive && lineageIds.has(node.id),
           isFocusedTask: node.id === focusedTaskId,
           depth: null,
-          pendingCandidates: node.source_asset_id
-            ? pendingByAsset.get(node.source_asset_id) ?? 0
-            : 0,
           ancestorCount: lc?.ancestors ?? 0,
           dependentCount: lc?.dependents ?? 0,
         },
       }
     })
-  }, [
-    nodes,
-    members,
-    assets,
-    candidates,
-    selectedNodeId,
-    lineageActive,
-    lineageIds,
-    focusedTaskId,
-    measured,
-    myTaskFilter,
-    lineageCounts,
-  ])
+  }, [nodes, members, selectedNodeId, lineageActive, lineageIds, focusedTaskId, measured, lineageCounts])
+
+  // Build onDerive per-edge callback referencing latest store state via refs.
+  const nodesRef = useRef(nodes)
+  nodesRef.current = nodes
 
   const onDerive = useCallback(
     (edgeId: string, kind: "finding" | "constraint" | "task", position: { x: number; y: number }) => {
@@ -181,17 +155,25 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
       if (!edge) return
       const label = kind === "finding" ? "New finding" : kind === "constraint" ? "New constraint" : "New task"
       const rel = kind === "constraint" ? "constrains" : "supports"
-      // Create new node near the ⊕ location, then auto-connect from the edge source.
-      addNode(kind, label, position.x + 20, position.y + 20).then((newNode) => {
+      // ponytail: avoid overlapping existing nodes.
+      const spot = findFreeSpot(nodesRef.current, { x: position.x + 20, y: position.y + 20 })
+      addNode(kind, label, spot.x, spot.y).then((newNode) => {
         if (newNode) addEdge(edge.source_id, newNode.id, rel as RelationType)
       })
     },
     [edges, addNode, addEdge],
   )
 
-  const flowEdges = useMemo<FlowEdge[]>(
-    () =>
-      edges.map((edge) => {
+  const flowEdges = useMemo<FlowEdge[]>(() => {
+      // ponytail: detect parallel edges (same source→target) so labels don't overlap.
+      const parallel = new Map<string, number>()
+      for (const edge of edges) {
+        const key = `${edge.source_id}→${edge.target_id}`
+        parallel.set(key, (parallel.get(key) ?? 0) + 1)
+      }
+      const seen = new Map<string, number>()
+
+      return edges.map((edge) => {
         const inLineage = lineageActive && lineageIds.has(edge.source_id) && lineageIds.has(edge.target_id)
         const targetNode = nodeMap.get(edge.target_id)
         const statusClass = targetNode?.kind === "task" ? edgeStatusClass(targetNode.task_status) : ""
@@ -204,6 +186,13 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           lineageActive ? (inLineage ? "lineage" : "dimmed") : "",
           statusClass,
         ].filter(Boolean).join(" ")
+
+        const pairKey = `${edge.source_id}→${edge.target_id}`
+        const pairTotal = parallel.get(pairKey) ?? 1
+        const pairIndex = seen.get(pairKey) ?? 0
+        seen.set(pairKey, pairIndex + 1)
+        // ponytail: spread parallel labels vertically by 14px per sibling.
+        const labelOffsetY = pairTotal > 1 ? (pairIndex - (pairTotal - 1) / 2) * 14 : 0
 
         return {
           id: edge.id,
@@ -236,11 +225,10 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
             strokeWidth: 1.5,
             fillOpacity: 1,
           },
-          data: { onDerive },
+          data: { onDerive, labelOffsetY },
         }
-      }),
-    [edges, lineageActive, lineageIds, nodeMap, onDerive],
-  )
+      })
+    }, [edges, lineageActive, lineageIds, nodeMap, onDerive])
 
   const closeContextMenu = useCallback(() => setContextMenu(null), [])
 
@@ -291,15 +279,19 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const onConnect = useCallback(
     async (connection: Connection) => {
       if (!connection.source || !connection.target) return
-      const edge = await addEdge(connection.source, connection.target, activeRelation)
+      const sourceNode = nodeMap.get(connection.source)
+      const targetNode = nodeMap.get(connection.target)
+      // ponytail: toolbar controls the relation; inferRelation hint shown in toast for clarity.
+      const relation = activeRelation
+      const edge = await addEdge(connection.source, connection.target, relation)
       if (edge) {
         toast({
-          title: `Connected as "${RELATION_LABEL[activeRelation]}"`,
+          title: `"${sourceNode?.title ?? "…"}" ${RELATION_LABEL[relation]} "${targetNode?.title ?? "…"}"`,
           description: "The link is part of the task's context from now on.",
         })
       }
     },
-    [addEdge, activeRelation, toast],
+    [addEdge, activeRelation, toast, nodeMap],
   )
 
   const handleDrop = useCallback(
@@ -339,28 +331,11 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
         }}
         onNodeClick={(_, node) => select(node.id)}
         onNodeContextMenu={handleNodeContextMenu}
+        onEdgeClick={(_, edge) => selectEdge(edge.id)}
         onEdgeContextMenu={handleEdgeContextMenu}
-        onPaneClick={() => { select(null); closeContextMenu() }}
+        onPaneClick={() => { select(null); selectEdge(null) }}
         onPaneContextMenu={handlePaneContextMenu}
         onConnect={onConnect}
-        isValidConnection={(connection) => connection.source !== connection.target}
-        onConnectStart={(_, { nodeId }) => {
-          if (!nodeId) return
-          const found = nodes.find((n) => n.id === nodeId)
-          if (found) connectingSource.current = { nodeId, kind: found.kind as NodeKind }
-        }}
-        onConnectEnd={(event) => {
-          if (!event.target || (event.target as HTMLElement).classList.contains("react-flow__pane")) {
-            const source = connectingSource.current
-            const pos = event instanceof MouseEvent ? { x: event.clientX, y: event.clientY } : null
-            if (source && pos) {
-              // Reuses the node-context-menu path so the picker offers options
-              // appropriate to the source node's kind.
-              setContextMenu({ type: "node", x: pos.x, y: pos.y, nodeId: source.nodeId })
-            }
-          }
-          connectingSource.current = null
-        }}
         onNodesDelete={(deleted) => deleted.forEach((n) => removeNode(n.id))}
         connectionLineType={ConnectionLineType.Straight}
         defaultEdgeOptions={{
@@ -400,11 +375,9 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           y={contextMenu.y}
           currentRelation={contextEdge.relation}
           onClose={closeContextMenu}
-          onDelete={() => { removeEdge(contextEdge.id); closeContextMenu() }}
+          onDelete={() => removeEdge(contextEdge.id)}
           onChangeRelation={(relation) => {
-            // No update-edge API — delete old edge and recreate with new relation.
-            removeEdge(contextEdge.id)
-            addEdge(contextEdge.source_id, contextEdge.target_id, relation)
+            patchEdge(contextEdge.id, relation)
             closeContextMenu()
           }}
         />
@@ -421,8 +394,8 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           onCreate={(kind, label, relation) => {
             const src = nodeMap.get(contextMenu.nodeId!)
             if (!src) return
-            const pos = { x: src.x + 280, y: src.y + 60 }
-            addNode(kind, label, pos.x, pos.y).then((newNode) => {
+            const spot = findFreeSpot(nodesRef.current, { x: src.x + 280, y: src.y + 60 })
+            addNode(kind, label, spot.x, spot.y).then((newNode) => {
               if (newNode && relation) addEdge(contextMenu.nodeId!, newNode.id, relation as RelationType)
             })
             closeContextMenu()
@@ -435,20 +408,13 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           }}
           onCopyId={() => {
             navigator.clipboard.writeText(contextMenu.nodeId!)
-            toast({ title: "Copied", description: "Paste this ID into your agent" })
+            toast({ title: "ID copied" })
             closeContextMenu()
           }}
           onMarkDone={() => {
-            patchNode(contextMenu.nodeId!, { task_status: "done" })
+            useGraphStore.getState().patchNode(contextMenu.nodeId!, { task_status: "done" })
             closeContextMenu()
           }}
-          onDuplicate={nodeMap.get(contextMenu.nodeId)?.kind !== "asset" ? () => {
-            const src = nodeMap.get(contextMenu.nodeId!)
-            if (src && src.kind !== "asset") {
-              void addNode(src.kind as "finding" | "constraint" | "task", `${src.title} (copy)`, src.x + 40, src.y + 40)
-            }
-            closeContextMenu()
-          } : undefined}
         />
       )}
 
@@ -459,7 +425,8 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           onClose={closeContextMenu}
           onCreate={(kind, label) => {
             const pos = screenToFlowPosition({ x: contextMenu.x, y: contextMenu.y })
-            addNode(kind, label, pos.x, pos.y)
+            const spot = findFreeSpot(nodesRef.current, pos)
+            addNode(kind, label, spot.x, spot.y)
             closeContextMenu()
           }}
         />
@@ -470,18 +437,6 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           <p className="border-[3px] border-[#1B1712] bg-white px-4 py-2.5 text-sm font-bold shadow-[3px_3px_0_#1B1712]">
             Drop a PDF or Markdown file to read it into the graph
           </p>
-        </div>
-      )}
-
-      {lineageActive && (
-        <div className="absolute top-4 left-1/2 z-20 -translate-x-1/2">
-          <button
-            type="button"
-            onClick={() => { useGraphStore.getState().clearLineage(); select(null) }}
-            className="bg-card border-border hover:bg-accent rounded-lg border px-3 py-1.5 text-xs font-medium shadow-sm transition-colors"
-          >
-            Stop highlighting
-          </button>
         </div>
       )}
 
