@@ -72,7 +72,7 @@ export default function Home() {
           {chain.map(({ icon: Icon, label, copy }, index) => (
             <div key={label} className="border-l-[3px] border-[#E4DCC7] pl-4">
               <div className="flex items-center gap-[10px]">
-                <span className="bg-[#FFAF00] w-[30px] h-[30px] border-[3px] border-[#1B1712] flex items-center justify-center">{index === 0 ? <FileText className="size-4" /> : index === 1 ? <Share2 className="size-4" /> : <GitPullRequest className="size-4" />}</span>
+                <span className="bg-[#FFAF00] w-[30px] h-[30px] border-[3px] border-[#1B1712] flex items-center justify-center"><Icon className="size-4" /></span>
                 <span className="font-[family-name:var(--font-label)] text-[10px] text-[#B4A98C]">0{index + 1}</span>
               </div>
               <h2 className="mt-[14px] text-[15px] font-semibold">{label}</h2>

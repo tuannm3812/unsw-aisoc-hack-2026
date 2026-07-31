@@ -206,9 +206,9 @@
 .react-flow__pane { cursor: grab; }
 .react-flow__pane:active { cursor: grabbing; }
 .react-flow__node { cursor: pointer; }
-.react-flow__node { animation: nodePop 0.15s steps(2) both; }
-.react-flow__node.node-deleting { animation: nodeDelete 0.15s steps(2) forwards; }
-.react-flow__node.node-dragging { transform: scale(1.03); }
+.react-flow__node > * { animation: nodePop 0.15s steps(2) both; }
+.react-flow__node-dragging > * { transform: scale(1.03); }
+.react-flow__node-deleting > * { animation: nodeDelete 0.15s steps(2) forwards; }
 .react-flow__handle { cursor: crosshair; }
 
 /* Edge draw animation */

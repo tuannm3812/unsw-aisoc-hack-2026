@@ -35,7 +35,7 @@ export function CustomEdge({
       <EdgeLabelRenderer>
         {!menuOpen && (
           <button
-            className="nodrag nopan absolute cursor-pointer rounded-full bg-primary text-primary-foreground flex size-5 items-center justify-center text-[11px] font-bold leading-none opacity-0 group-hover:opacity-100 transition-opacity hover:scale-125"
+            className="nodrag nopan absolute cursor-pointer rounded-full bg-primary text-primary-foreground flex size-5 items-center justify-center text-[11px] font-bold leading-none opacity-[0.01] hover:opacity-100 hover:scale-125 transition-all"
             style={{ left: labelX, top: labelY, transform: "translate(-50%, -50%)" }}
             onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
             title="Branch from here"

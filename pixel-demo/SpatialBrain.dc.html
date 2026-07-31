@@ -351,6 +351,7 @@ class Component extends DCLogic {
     const edges = s.edges.map((e, i) => {
       const a = byId[e.from], b = byId[e.to];
       if (!a || !b) return { id: i, d: "", labelStyle: { display: "none" } };
+      const sx = a.x + this.WIDTH, sy = a.y + this.ANCHOR, tx = b.x, ty = b.y + this.ANCHOR, mx = (sx + tx) / 2;
       const labelDim = s.myTasks && !((a && a.kind==="task") || (b && b.kind==="task"));
       const route = a.x + this.WIDTH > b.x ? "M " + sx + " " + sy + " H " + (sx + 40) + " V " + ty + " H " + tx : "M " + sx + " " + sy + " H " + mx + " V " + ty + " H " + tx;
       return { id: i, d: route, tag: "S", labelStyle: { position: "absolute", left: (mx - 9) + "px", top: ((sy + ty) / 2 - 9) + "px", width: "18px", height: "18px", background: "#fff", border: "2px solid #1B1712", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "7px", color: "#1B1712", opacity: labelDim ? 0.25 : 1, pointerEvents: "none" } };
