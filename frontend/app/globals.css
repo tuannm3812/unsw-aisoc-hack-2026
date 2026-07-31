@@ -1,0 +1,262 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --container-2xl: 1360px;
+  --radius: 0.5rem;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-kind-asset: var(--kind-asset);
+  --color-kind-finding: var(--kind-finding);
+  --color-kind-constraint: var(--kind-constraint);
+  --color-kind-task: var(--kind-task);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-display: var(--font-instrument), Georgia, serif;
+
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.1875rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.875rem;
+  --text-3xl: 2.375rem;
+  --text-4xl: 3rem;
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-rise: rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@layer base {
+  :root {
+    /* Warm paper neutrals, tinted off pure white. Ink-blue accent. */
+    --background: oklch(0.985 0.004 85);
+    --foreground: oklch(0.21 0.012 250);
+    --card: oklch(1 0.002 85);
+    --card-foreground: var(--foreground);
+    --popover: oklch(1 0.002 85);
+    --popover-foreground: var(--foreground);
+
+    --primary: oklch(0.4 0.078 248);
+    --primary-foreground: oklch(0.985 0.004 85);
+    --secondary: oklch(0.955 0.006 85);
+    --secondary-foreground: oklch(0.28 0.014 250);
+    --muted: oklch(0.945 0.006 85);
+    --muted-foreground: oklch(0.5 0.012 250);
+    --accent: oklch(0.94 0.012 248);
+    --accent-foreground: oklch(0.3 0.05 248);
+
+    --destructive: oklch(0.53 0.18 22);
+    --destructive-foreground: oklch(0.985 0.004 85);
+    --success: oklch(0.52 0.11 152);
+    --success-foreground: oklch(0.985 0.004 85);
+    --warning: oklch(0.68 0.13 72);
+    --warning-foreground: oklch(0.24 0.03 72);
+    --info: oklch(0.55 0.1 248);
+    --info-foreground: oklch(0.985 0.004 85);
+
+    --border: oklch(0.9 0.006 85);
+    --border-strong: oklch(0.8 0.008 85);
+    --input: oklch(0.88 0.006 85);
+    --ring: oklch(0.4 0.078 248);
+
+    /* Node kinds. Asset stays neutral because it is raw material. */
+    --kind-asset: oklch(0.47 0.014 250);
+    --kind-finding: oklch(0.47 0.1 248);
+    --kind-constraint: oklch(0.55 0.13 68);
+    --kind-task: oklch(0.45 0.13 305);
+  }
+
+  .dark {
+    --background: oklch(0.19 0.008 250);
+    --foreground: oklch(0.96 0.004 85);
+    --card: oklch(0.23 0.009 250);
+    --card-foreground: var(--foreground);
+    --popover: oklch(0.24 0.009 250);
+    --popover-foreground: var(--foreground);
+
+    --primary: oklch(0.72 0.1 248);
+    --primary-foreground: oklch(0.18 0.01 250);
+    --secondary: oklch(0.28 0.01 250);
+    --secondary-foreground: oklch(0.96 0.004 85);
+    --muted: oklch(0.28 0.01 250);
+    --muted-foreground: oklch(0.68 0.01 250);
+    --accent: oklch(0.31 0.024 248);
+    --accent-foreground: oklch(0.9 0.03 248);
+
+    --destructive: oklch(0.62 0.18 22);
+    --destructive-foreground: oklch(0.18 0.01 250);
+    --success: oklch(0.66 0.13 152);
+    --success-foreground: oklch(0.18 0.01 250);
+    --warning: oklch(0.76 0.13 72);
+    --warning-foreground: oklch(0.2 0.03 72);
+    --info: oklch(0.68 0.11 248);
+    --info-foreground: oklch(0.18 0.01 250);
+
+    --border: oklch(0.32 0.01 250);
+    --border-strong: oklch(0.42 0.012 250);
+    --input: oklch(0.34 0.01 250);
+    --ring: oklch(0.72 0.1 248);
+
+    --kind-asset: oklch(0.72 0.016 250);
+    --kind-finding: oklch(0.72 0.11 248);
+    --kind-constraint: oklch(0.76 0.13 68);
+    --kind-task: oklch(0.7 0.14 305);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/25 rounded-full border-2 border-transparent bg-clip-padding;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/45;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    border-radius: var(--radius);
+  }
+}
+
+@utility bg-grid-paper {
+  background-image: radial-gradient(circle, var(--border-strong) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+@utility thin-scrollbar {
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+}
+
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lineagePulse {
+  0%, 100% { stroke-opacity: 0.95; }
+  50% { stroke-opacity: 0.45; }
+}
+
+/* React Flow */
+.react-flow__pane { cursor: grab; }
+.react-flow__pane:active { cursor: grabbing; }
+.react-flow__node { cursor: pointer; }
+.react-flow__handle { cursor: crosshair; }
+
+.react-flow__edge-path {
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+
+.react-flow__edge.lineage .react-flow__edge-path {
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  animation: lineagePulse 1.6s ease-in-out infinite;
+}
+
+.react-flow__edge.dimmed .react-flow__edge-path {
+  stroke-opacity: 0.25;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+/* Minimap nodes are plain SVG rects, so they are coloured by class rather than
+   through the nodeColor prop, which cannot resolve a CSS variable. */
+.react-flow__minimap-node.mm-asset { fill: var(--kind-asset); }
+.react-flow__minimap-node.mm-finding { fill: var(--kind-finding); }
+.react-flow__minimap-node.mm-constraint { fill: var(--kind-constraint); }
+.react-flow__minimap-node.mm-task { fill: var(--kind-task); }
+
+.react-flow__controls-button {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  fill: var(--muted-foreground);
+}
+
+.react-flow__controls-button:hover {
+  background: var(--accent);
+  fill: var(--foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-flow__edge.lineage .react-flow__edge-path { animation: none; }
+  [class*="transition-"] { transition-duration: 0.01ms !important; }
+  @keyframes rise { from, to { opacity: 1; transform: none; } }
+}

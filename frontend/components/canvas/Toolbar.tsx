@@ -1,0 +1,166 @@
+"use client"
+
+import { useRef } from "react"
+import { useReactFlow } from "@xyflow/react"
+import { FlaskConical, ListChecks, Ruler, Upload } from "lucide-react"
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { DRAWABLE_RELATIONS, type NodeKind, type RelationType } from "@/lib/types"
+import { useGraphStore } from "@/stores/graphStore"
+
+const ADD_BUTTONS: { kind: NodeKind; label: string; icon: typeof FlaskConical; hint: string }[] = [
+  {
+    kind: "finding",
+    label: "Finding",
+    icon: FlaskConical,
+    hint: "Something the research established",
+  },
+  {
+    kind: "constraint",
+    label: "Constraint",
+    icon: Ruler,
+    hint: "A limit any implementation has to respect",
+  },
+  {
+    kind: "task",
+    label: "Task",
+    icon: ListChecks,
+    hint: "Work that can be assigned and pushed to Jira",
+  },
+]
+
+const PLACEHOLDER: Record<NodeKind, string> = {
+  asset: "Source document",
+  finding: "New finding",
+  constraint: "New constraint",
+  task: "New task",
+}
+
+const COLUMN = 300
+const ROW = 168
+
+/** Walk down and then across from the viewport centre until nothing is in the way. */
+function findFreeSpot(
+  nodes: { x: number; y: number }[],
+  start: { x: number; y: number },
+): { x: number; y: number } {
+  for (let column = 0; column < 6; column += 1) {
+    for (let row = 0; row < 6; row += 1) {
+      const x = start.x + column * COLUMN
+      const y = start.y + row * ROW
+      const occupied = nodes.some(
+        (node) => Math.abs(node.x - x) < COLUMN * 0.9 && Math.abs(node.y - y) < ROW * 0.9,
+      )
+      if (!occupied) return { x, y }
+    }
+  }
+  return start
+}
+
+interface ToolbarProps {
+  activeRelation: RelationType
+  onRelationChange: (relation: RelationType) => void
+  onUpload: (file: File, x: number, y: number) => void
+}
+
+export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarProps) {
+  const { screenToFlowPosition } = useReactFlow()
+  const addNode = useGraphStore((state) => state.addNode)
+  const nodes = useGraphStore((state) => state.nodes)
+  const fileInput = useRef<HTMLInputElement>(null)
+
+  function centreOfView() {
+    // Drop new nodes left of centre so the inspector does not cover them.
+    return screenToFlowPosition({
+      x: window.innerWidth * 0.38,
+      y: window.innerHeight * 0.4,
+    })
+  }
+
+  async function handleAdd(kind: NodeKind) {
+    const position = findFreeSpot(nodes, centreOfView())
+    await addNode(kind, PLACEHOLDER[kind], position.x, position.y)
+  }
+
+  return (
+    <div className="border-border bg-card/95 absolute bottom-5 left-5 z-10 flex items-center gap-1 rounded-xl border p-1.5 backdrop-blur">
+      {ADD_BUTTONS.map(({ kind, label, icon: Icon, hint }) => (
+        <Tooltip key={kind}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => handleAdd(kind)}
+              className="hover:bg-accent focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <Icon className="size-3.5" strokeWidth={2} />
+              {label}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">{hint}</TooltipContent>
+        </Tooltip>
+      ))}
+
+      <span className="bg-border mx-1 h-6 w-px" />
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={() => fileInput.current?.click()}
+            className="hover:bg-accent focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          >
+            <Upload className="size-3.5" strokeWidth={2} />
+            Document
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          Or drop a PDF straight onto the canvas
+        </TooltipContent>
+      </Tooltip>
+
+      <input
+        ref={fileInput}
+        type="file"
+        accept=".pdf,.md,.markdown,.txt"
+        multiple
+        className="hidden"
+        onChange={(event) => {
+          const files = Array.from(event.target.files ?? [])
+          const position = centreOfView()
+          files.forEach((file, index) => onUpload(file, position.x, position.y + index * 150))
+          event.target.value = ""
+        }}
+      />
+
+      <span className="bg-border mx-1 h-6 w-px" />
+
+      <div className="flex items-center gap-2 pr-1 pl-1.5">
+        <span className="text-2xs text-muted-foreground whitespace-nowrap">new links mean</span>
+        <Select value={activeRelation} onValueChange={(value) => onRelationChange(value as RelationType)}>
+          <SelectTrigger className="h-8 w-[9.5rem] border-0 bg-transparent px-2 text-xs font-medium shadow-none focus:ring-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {DRAWABLE_RELATIONS.map((relation) => (
+              <SelectItem
+                key={relation.value}
+                value={relation.value}
+                hint={relation.hint}
+                className="text-xs"
+              >
+                <span className="font-medium">{relation.label}</span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  )
+}
