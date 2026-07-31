@@ -1,0 +1,24 @@
+[     237ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "{{ edge.d }}". @ http://localhost:8765/SpatialBrain.dc.html:113
+[     246ms] [ERROR] ReferenceError: dim is not defined
+    at eval (eval at evalDcLogic (http://localhost:8765/support.js:844:16), <anonymous>:66:368)
+    at Array.map (<anonymous>)
+    at Component.renderVals (eval at evalDcLogic (http://localhost:8765/support.js:844:16), <anonymous>:62:27)
+    at StreamableComponent.render (http://localhost:8765/support.js:1084:48)
+    at Af (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:133:101)
+    at ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:132:399)
+    at Qk (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:252:71)
+    at Ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:185)
+    at Ok (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:116)
+    at Nd (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:194:492) @ http://localhost:8765/support.js:1085
+[     265ms] [ERROR] ReferenceError: dim is not defined
+    at eval (eval at evalDcLogic (http://localhost:8765/support.js:844:16), <anonymous>:66:368)
+    at Array.map (<anonymous>)
+    at Component.renderVals (eval at evalDcLogic (http://localhost:8765/support.js:844:16), <anonymous>:62:27)
+    at StreamableComponent.render (http://localhost:8765/support.js:1084:48)
+    at Af (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:133:101)
+    at ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:132:399)
+    at Qk (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:252:71)
+    at Ri (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:185)
+    at Ok (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:195:116)
+    at Nd (https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js:194:492) @ http://localhost:8765/support.js:1085
+[     271ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8765/favicon.ico:0

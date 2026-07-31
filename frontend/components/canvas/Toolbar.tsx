@@ -219,7 +219,7 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
 
     {/* Sprint Review Dialog */}
     {reviewOpen && reviewData && (
-      <div className="border-border bg-card animate-rise fixed inset-4 z-50 flex flex-col overflow-hidden rounded-xl border shadow-xl md:inset-10 lg:inset-x-60">
+      <div className="border-border bg-card animate-review-in fixed inset-4 z-50 flex flex-col overflow-hidden rounded-none border-[3px] shadow-[5px_5px_0_#1B1712] md:inset-10 lg:inset-x-60">
         <header className="border-border flex items-center justify-between border-b px-5 py-3.5">
           <h2 className="text-sm font-semibold">Sprint Review</h2>
           <button

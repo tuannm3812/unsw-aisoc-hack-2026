@@ -174,12 +174,57 @@
 @keyframes edgeDashWalk {
   to { stroke-dashoffset: -36; }
 }
+@keyframes edgeDraw {
+  from { stroke-dashoffset: 200; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes nodePop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+@keyframes nodeDelete {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0; }
+}
+@keyframes menuPop {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
 
 /* React Flow */
 .react-flow__pane { cursor: grab; }
 .react-flow__pane:active { cursor: grabbing; }
 .react-flow__node { cursor: pointer; }
+.react-flow__node { animation: nodePop 0.15s steps(2) both; }
+.react-flow__node.node-deleting { animation: nodeDelete 0.15s steps(2) forwards; }
+.react-flow__node.node-dragging { transform: scale(1.03); }
 .react-flow__handle { cursor: crosshair; }
+
+/* Edge draw animation */
+.react-flow__edge .react-flow__edge-path {
+  animation: edgeDraw 0.3s steps(4) both;
+}
+
+/* Pixel-active: button press effect */
+.pixel-btn:active {
+  transform: translate(2px, 2px);
+  transition: transform 0.06s steps(1);
+}
+
+/* My Tasks dim transition */
+.react-flow__node {
+  transition: opacity 0.2s steps(1);
+}
+
+/* Context menu */
+.animate-menu-pop {
+  animation: menuPop 0.1s steps(2) both;
+}
+
+/* Sprint Review modal */
+.animate-review-in {
+  animation: nodePop 0.15s steps(3) both;
+}
 
 .react-flow__edge-path {
   stroke: var(--border-strong);
