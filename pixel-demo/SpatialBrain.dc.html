@@ -259,6 +259,27 @@ class Component extends DCLogic {
   };
   WIDTH = 244; ANCHOR = 46;
 
+  addButtons = [
+    { label: "Finding", glyph: "finding", bg: "#fff", add: () => this.addNode("finding") },
+    { label: "Constraint", glyph: "constraint", bg: "#fff", add: () => this.addNode("constraint") },
+    { label: "Task", glyph: "task", bg: "#fff", add: () => this.addNode("task") },
+  ];
+  accounts = [
+    { name: "Aisha Khan", role: "Research", initials: "AI", bg: "#E10500", pick: () => this.setState({ screen: "board" }) },
+    { name: "Marco Alvarez", role: "Engineering", initials: "MA", bg: "#FF6A00", pick: () => this.setState({ screen: "board" }) },
+    { name: "Priya Rao", role: "Product", initials: "PR", bg: "#F2A100", pick: () => this.setState({ screen: "board" }) },
+  ];
+  chain = [
+    { num: "01", label: "Research lands", glyph: "document", bg: "#FFAF00", copy: "Drop the paper. Mistral pulls out findings and constraints." },
+    { num: "02", label: "Work gets connected", glyph: "share", bg: "#FF7A00", copy: "Draw a task off the nodes that justify it." },
+    { num: "03", label: "Code comes back", glyph: "task", bg: "#E10500", copy: "An agent reads the task's ancestry over MCP and opens a PR." },
+  ];
+  review = [
+    { title: "SHIPPED", color: "#3FA34D", items: [{ title: "2-step checkout", who: "Marco", summary: "PaymentElement integration complete." }, { title: "Auth migration", who: "Aisha", summary: "Magic-link auth replaces OTP." }] },
+    { title: "BLOCKED", color: "#E10500", items: [{ title: "Payment selector UI", who: "Priya", summary: "Waiting on final mockups." }] },
+    { title: "NEXT", color: "#FF6A00", items: [{ title: "PCI audit", who: "Marco", summary: "External audit Aug 5." }, { title: "Onboarding rewrite", who: "Aisha", summary: "5-step to 2-step." }] },
+  ];
+
   state = {
     screen: "landing", scale: 1, panX: 40, panY: 20,
     selectedId: null, myTasks: false, reviewOpen: false, nextId: 100,
@@ -294,7 +315,7 @@ class Component extends DCLogic {
     const id = "u" + this.state.nextId;
     const titles = { finding: "New finding", constraint: "New constraint", task: "New task", source: "Source document" };
     const cx = (window.innerWidth * 0.4 - this.state.panX) / this.state.scale;
-    const cy = (window.innerHeight * 0.42 - this.state.panY) / this.state.scale;
+    const cy = (window.innerHeight * 0.42 - this.state.panY) / this.state.scale - 58 / this.state.scale;
     this.setState({ nextId: this.state.nextId + 1, selectedId: id, nodes: [...this.state.nodes, { id, kind, title: titles[kind], body: "", quote: "", x: cx, y: cy, ...(kind==="task"?{priority:"P2",assignee:"Unassigned",jira:""}:{}) }] });
   }
 
@@ -305,7 +326,7 @@ class Component extends DCLogic {
     const nodes = s.nodes.map((n) => {
       const meta = this.KIND[n.kind], sel = n.id === s.selectedId, dim = s.myTasks && n.kind !== "task";
       const showFooter = !!(n.page || n.priority || (n.assignee && n.kind === "task") || n.jira);
-      return { id: n.id, glyph: meta.glyph, accent: meta.accent, label: meta.label, title: n.title, body: n.body || "", quote: n.quote || "", page: n.page || "", priority: n.priority || "", assignee: n.kind === "task" ? (n.assignee || "") : "", jira: n.jira || "", meta: n.kind === "finding" ? "finding" : (n.kind === "constraint" ? "rule" : ""), wrapStyle: { position: "absolute", left: n.x + "px", top: n.y + "px", width: this.WIDTH + "px", zIndex: sel ? 20 : 5, opacity: dim ? 0.28 : 1, cursor: "grab", pointerEvents: dim ? "none" : "auto" }, cardStyle: { background: "#fff", border: "3px solid " + (sel ? meta.accent : "#1B1712"), boxShadow: (sel ? "6px 6px 0 " : "4px 4px 0 ") + meta.accent, paddingBottom: showFooter ? "0" : "11px" }, footerStyle: showFooter ? { display: "flex", alignItems: "center", gap: "8px", padding: "9px 11px", marginTop: "10px", borderTop: "2px solid #E4DCC7" } : { display: "none" }, onDown: (e) => { e.stopPropagation(); this.setState({ selectedId: n.id }); this.drag = { id: n.id, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y }; } };
+      return { id: n.id, glyph: meta.glyph, accent: meta.accent, label: meta.label, title: n.title, body: n.body || "", quote: n.quote || "", page: n.page || "", priority: n.priority || "", assignee: n.kind === "task" ? (n.assignee || "") : "", jira: n.jira || "", meta: n.kind === "finding" ? "finding" : (n.kind === "constraint" ? "rule" : ""), wrapStyle: { position: "absolute", left: n.x + "px", top: n.y + "px", width: this.WIDTH + "px", zIndex: sel ? 20 : 5, cursor: "grab", pointerEvents: dim ? "none" : "auto", opacity: dim ? 0.28 : 1 }, cardStyle: { background: "#fff", border: "3px solid " + (sel ? meta.accent : "#1B1712"), boxShadow: (sel ? "6px 6px 0 " : "4px 4px 0 ") + meta.accent, paddingBottom: showFooter ? "0" : "11px" }, footerStyle: showFooter ? { display: "flex", alignItems: "center", gap: "8px", padding: "9px 11px", marginTop: "10px", borderTop: "2px solid #E4DCC7" } : { display: "none" }, onDown: (e) => { e.stopPropagation(); e.target.setPointerCapture(e.pointerId); this.setState({ selectedId: n.id }); this.drag = { id: n.id, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y }; } };
     });
 
     const edges = s.edges.map((e, i) => {
@@ -329,27 +350,9 @@ class Component extends DCLogic {
       zoomIn: () => this.setState({ scale: Math.min(2, s.scale * 1.15) }), zoomOut: () => this.setState({ scale: Math.max(0.4, s.scale / 1.15) }), resetView: () => this.setState({ scale: 1, panX: 40, panY: 20 }),
       nodes, edges, miniNodes, nodeCount: s.nodes.length, taskCount: s.nodes.filter((n) => n.kind === "task").length,
       toggleMyTasks: () => this.setState({ myTasks: !s.myTasks }), myTasksBg: s.myTasks ? "#E10500" : "#fff", myTasksTextColor: s.myTasks ? "#fff" : "#1B1712",
-      addButtons: [
-        { label: "Finding", glyph: "finding", bg: "#fff", add: () => this.addNode("finding") },
-        { label: "Constraint", glyph: "constraint", bg: "#fff", add: () => this.addNode("constraint") },
-        { label: "Task", glyph: "task", bg: "#fff", add: () => this.addNode("task") },
-      ],
-      addDoc: () => this.addNode("source"), openReview: () => this.setState({ reviewOpen: true }), closeReview: () => this.setState({ reviewOpen: false }), reviewOpen: s.reviewOpen,
-      review: [
-        { title: "SHIPPED", color: "#3FA34D", items: [{ title: "2-step checkout", who: "Marco", summary: "PaymentElement integration complete." }, { title: "Auth migration", who: "Aisha", summary: "Magic-link auth replaces OTP." }] },
-        { title: "BLOCKED", color: "#E10500", items: [{ title: "Payment selector UI", who: "Priya", summary: "Waiting on final mockups." }] },
-        { title: "NEXT", color: "#FF6A00", items: [{ title: "PCI audit", who: "Marco", summary: "External audit Aug 5." }, { title: "Onboarding rewrite", who: "Aisha", summary: "5-step to 2-step." }] },
-      ],
-      accounts: [
-        { name: "Aisha Khan", role: "Research", initials: "AI", bg: "#E10500", pick: () => this.setState({ screen: "board" }) },
-        { name: "Marco Alvarez", role: "Engineering", initials: "MA", bg: "#FF6A00", pick: () => this.setState({ screen: "board" }) },
-        { name: "Priya Rao", role: "Product", initials: "PR", bg: "#F2A100", pick: () => this.setState({ screen: "board" }) },
-      ],
-      chain: [
-        { num: "01", label: "Research lands", glyph: "document", bg: "#FFAF00", copy: "Drop the paper. Mistral pulls out findings and constraints." },
-        { num: "02", label: "Work gets connected", glyph: "share", bg: "#FF7A00", copy: "Draw a task off the nodes that justify it." },
-        { num: "03", label: "Code comes back", glyph: "task", bg: "#E10500", copy: "An agent reads the task's ancestry over MCP and opens a PR." },
-      ],
+      addButtons: this.addButtons, addDoc: () => this.addNode("source"),
+      openReview: () => this.setState({ reviewOpen: true }), closeReview: () => this.setState({ reviewOpen: false }), reviewOpen: s.reviewOpen,
+      review: this.review, accounts: this.accounts, chain: this.chain,
     };
   }
 }
