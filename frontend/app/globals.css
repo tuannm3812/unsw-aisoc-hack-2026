@@ -6,6 +6,10 @@
 @theme inline {
   --container-2xl: 1360px;
   --radius: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -75,7 +79,7 @@
     --muted: #EFE9DA;
     --muted-foreground: #7A7266;
     --accent: #F3EEE1;
-    --accent-foreground: #E10500;
+    --accent-foreground: #8B0000;
 
     --destructive: #E10500;
     --destructive-foreground: #fff;
@@ -147,7 +151,7 @@
   }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-thumb { background: #C9BFA6; border: 2px solid #F3EEE1; }
+  ::-webkit-scrollbar-thumb { background: var(--muted-foreground); border: 2px solid var(--background); }
 }
 
 @utility bg-grid-paper {

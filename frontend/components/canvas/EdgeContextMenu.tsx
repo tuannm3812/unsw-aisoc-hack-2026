@@ -32,7 +32,7 @@ export function EdgeContextMenu({ x, y, currentRelation, onClose, onDelete, onCh
   return (
     <div
       ref={menuRef}
-      className="border-border bg-card animate-menu-pop fixed z-50 min-w-[200px] overflow-hidden rounded-none border-[3px] py-1 shadow-[3px_3px_0_#1B1712]"
+      className="border-border bg-card animate-menu-pop fixed z-50 min-w-[200px] overflow-hidden rounded-none border-[3px] py-1 shadow-[3px_3px_0_var(--border)]"
       style={{ left: x, top: y }}
     >
       <p className="text-muted-foreground px-3.5 py-1.5 text-2xs font-medium tracking-[0.08em] uppercase">

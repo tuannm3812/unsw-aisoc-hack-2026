@@ -5,3 +5,7 @@ stitch_extracted/
 __pycache__/
 *.db
 .env
+
+# SQLite WAL sidecar files
+*.db-wal
+*.db-shm
