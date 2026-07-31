@@ -41,10 +41,14 @@ export function Inspector() {
     [nodes, selectedNodeId],
   )
 
-  if (!node) return null
-
   return (
-    <aside className="border-border bg-card animate-rise flex w-[25rem] shrink-0 flex-col border-l">
+    <aside className="border-border bg-card flex w-[25rem] shrink-0 flex-col border-l">
+      {!node ? (
+        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+          <p className="font-[family-name:var(--font-label)] text-[10px] text-muted-foreground tracking-[0.05em]">INSPECTOR</p>
+          <p className="text-muted-foreground mt-3 text-sm leading-relaxed">Select a node to inspect its details, provenance, and connections.</p>
+        </div>
+      ) : (<>
       <header className="border-border flex items-start justify-between gap-3 border-b px-5 py-4">
         <div className="min-w-0">
           <p className="text-2xs text-muted-foreground font-medium tracking-[0.08em] uppercase">
@@ -63,6 +67,7 @@ export function Inspector() {
       </header>
 
       {node.kind === "task" ? <TaskInspector key={node.id} node={node} /> : <KnowledgeInspector key={node.id} node={node} />}
+      </>)}
     </aside>
   )
 }
