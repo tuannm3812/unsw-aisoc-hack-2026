@@ -42,7 +42,7 @@ export function NodeContextMenu({
   return (
     <div
       ref={menuRef}
-      className="border-border bg-card animate-rise fixed z-50 min-w-[180px] overflow-hidden rounded-lg border py-1 shadow-lg"
+      className="border-border bg-card animate-menu-pop fixed z-50 min-w-[180px] overflow-hidden rounded-none border-[3px] py-1 shadow-[3px_3px_0_#1B1712]"
       style={{ left: x, top: y }}
     >
       {/* Create actions — node or canvas */}

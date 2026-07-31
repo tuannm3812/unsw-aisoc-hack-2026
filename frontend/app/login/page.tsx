@@ -9,6 +9,33 @@ import type { CurrentUser } from "@/lib/types"
 
 const DEMO_PASSWORD = "spatial"
 
+const MEMBER_COLORS: Record<string, { bg: string; initials: string }> = {
+  Aisha: { bg: "#E10500", initials: "AI" },
+  Marco: { bg: "#FF6A00", initials: "MA" },
+  Priya: { bg: "#F2A100", initials: "PR" },
+}
+
+function memberChip(name: string) {
+  const first = name.split(" ")[0]
+  return MEMBER_COLORS[first] ?? { bg: "#7A7266", initials: name.split(" ").filter((p) => p !== "Dr").slice(0, 2).map((p) => p[0]).join("") }
+}
+
+function PixelIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+      <rect x="2" y="0" width="4" height="2" fill="#E10500" />
+      <rect x="1" y="2" width="2" height="2" fill="#E10500" />
+      <rect x="3" y="2" width="2" height="2" fill="#FF6A00" />
+      <rect x="5" y="2" width="2" height="2" fill="#E10500" />
+      <rect x="0" y="4" width="2" height="2" fill="#E10500" />
+      <rect x="2" y="4" width="2" height="2" fill="#F2A100" />
+      <rect x="4" y="4" width="2" height="2" fill="#E10500" />
+      <rect x="6" y="4" width="2" height="2" fill="#E10500" />
+      <rect x="2" y="6" width="4" height="2" fill="#1B1712" />
+    </svg>
+  )
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [accounts, setAccounts] = useState<CurrentUser[]>([])
@@ -42,25 +69,25 @@ export default function LoginPage() {
 
   return (
     <main className="relative flex min-h-dvh items-center justify-center px-6 py-12">
-      <div className="bg-grid-paper pointer-events-none absolute inset-0 opacity-50" />
+      <div className="bg-grid-paper pointer-events-none absolute inset-0" />
 
       <div className="animate-rise relative w-full max-w-md">
-        <div className="flex items-center gap-2.5">
-          <span className="bg-primary flex size-7 items-center justify-center rounded-md">
-            <span className="bg-primary-foreground size-2 rounded-full" />
-          </span>
-          <span className="text-sm font-medium tracking-tight">Spatial Brain</span>
+        <div className="flex items-center gap-3">
+          <PixelIcon />
+          <span className="font-pixel text-[10px] tracking-[0.05em] text-[#1B1712]">SPATIAL BRAIN</span>
         </div>
 
-        <h1 className="font-display mt-8 text-3xl leading-tight tracking-tight">
+        <h1 className="mt-8 font-sans text-3xl font-bold leading-tight">
           Pick who you are on the team.
         </h1>
         <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
           The board is already set up with all three of you on it. Everyone shares the password{" "}
-          <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs">{DEMO_PASSWORD}</code>.
+          <code className="border-[2px] border-[#1B1712] bg-background px-1.5 py-0.5 font-mono text-xs">
+            {DEMO_PASSWORD}
+          </code>.
         </p>
 
-        <div className="border-border bg-card mt-8 divide-border divide-y overflow-hidden rounded-xl border">
+        <div className="mt-8 overflow-hidden border-[3px] border-[#1B1712] bg-white shadow-[8px_8px_0_#1B1712]">
           {accounts.length === 0 && !error && (
             <div className="text-muted-foreground flex items-center gap-2.5 p-5 text-sm">
               <Loader2 className="size-4 animate-spin" />
@@ -68,35 +95,36 @@ export default function LoginPage() {
             </div>
           )}
 
-          {accounts.map((account) => (
-            <button
-              key={account.id}
-              type="button"
-              onClick={() => signIn(account.email)}
-              disabled={pending !== null}
-              className="hover:bg-accent focus-visible:ring-ring group flex w-full items-center gap-4 p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60"
-            >
-              <span className="bg-secondary text-secondary-foreground flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-medium">
-                {account.name
-                  .split(" ")
-                  .filter((part) => part !== "Dr")
-                  .slice(0, 2)
-                  .map((part) => part[0])
-                  .join("")}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">{account.name}</span>
-                <span className="text-muted-foreground block truncate text-xs">
-                  {account.discipline}
+          {accounts.map((account) => {
+            const chip = memberChip(account.name)
+            return (
+              <button
+                key={account.id}
+                type="button"
+                onClick={() => signIn(account.email)}
+                disabled={pending !== null}
+                className="group flex w-full items-center gap-4 border-b-[3px] border-[#1B1712] p-4 text-left transition-colors pixel-btn last:border-b-0 hover:bg-[#F3EEE1] focus-visible:outline-none focus-visible:bg-[#F3EEE1] disabled:opacity-60"
+              >
+                <span
+                  className="flex size-9 shrink-0 items-center justify-center border-[2px] border-[#1B1712] font-pixel text-[8px] text-white"
+                  style={{ backgroundColor: chip.bg }}
+                >
+                  {chip.initials}
                 </span>
-              </span>
-              {pending === account.email ? (
-                <Loader2 className="text-muted-foreground size-4 shrink-0 animate-spin" />
-              ) : (
-                <ArrowRight className="text-muted-foreground group-hover:text-foreground size-4 shrink-0 transition-colors" />
-              )}
-            </button>
-          ))}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-bold">{account.name}</span>
+                  <span className="text-muted-foreground block truncate text-xs">
+                    {account.discipline}
+                  </span>
+                </span>
+                {pending === account.email ? (
+                  <Loader2 className="text-muted-foreground size-4 shrink-0 animate-spin" />
+                ) : (
+                  <ArrowRight className="text-muted-foreground group-hover:text-foreground size-4 shrink-0" />
+                )}
+              </button>
+            )
+          })}
         </div>
 
         {error && (
@@ -106,8 +134,8 @@ export default function LoginPage() {
         )}
 
         <p className="text-muted-foreground mt-6 text-xs leading-relaxed">
-          Start as <span className="text-foreground">Priya</span> to run the demo end to end. She
-          is the board admin, so she can assign work into Jira.
+          Start as <span className="text-[#E10500] font-bold">Priya</span> to run the demo end to
+          end. She is the board admin, so she can assign work into Jira.
         </p>
       </div>
     </main>

@@ -145,24 +145,24 @@ export default function BoardPage() {
 
   if (loading && !board) {
     return (
-      <div className="text-muted-foreground flex h-dvh items-center justify-center gap-2.5 text-sm">
+      <div className="flex h-dvh items-center justify-center gap-3">
         <Loader2 className="size-4 animate-spin" />
-        Loading the board
+        <span className="font-bold text-sm">Loading the board</span>
       </div>
     )
   }
 
   if (error && !board) {
     return (
-      <div className="flex h-dvh flex-col items-center justify-center gap-3 px-6 text-center">
-        <p className="text-sm font-medium">This board would not load</p>
+      <div className="flex h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="font-bold text-sm">This board would not load</p>
         <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">{error}</p>
         <button
           type="button"
           onClick={() => router.push("/login")}
-          className="text-primary text-sm underline-offset-4 hover:underline"
+          className="border-[3px] border-[#1B1712] bg-white px-4 py-2 font-pixel text-[9px] pixel-btn hover:bg-[#F3EEE1] transition-colors"
         >
-          Back to sign in
+          BACK TO SIGN IN
         </button>
       </div>
     )

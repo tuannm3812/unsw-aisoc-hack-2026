@@ -1,11 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 @theme inline {
   --container-2xl: 1360px;
-  --radius: 0.5rem;
+  --radius: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -39,224 +42,154 @@
   --color-kind-constraint: var(--kind-constraint);
   --color-kind-task: var(--kind-task);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-space-grotesk), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
-  --font-display: var(--font-instrument), Georgia, serif;
+  --font-pixel: var(--font-press-start), monospace;
 
-  --text-2xs: 0.6875rem;
-  --text-xs: 0.75rem;
+  --text-2xs: 0.625rem;
+  --text-xs: 0.6875rem;
   --text-sm: 0.8125rem;
   --text-base: 0.9375rem;
   --text-lg: 1.1875rem;
   --text-xl: 1.5rem;
-  --text-2xl: 1.875rem;
-  --text-3xl: 2.375rem;
-  --text-4xl: 3rem;
-
-  --animate-accordion-down: accordion-down 0.2s ease-out;
-  --animate-accordion-up: accordion-up 0.2s ease-out;
-  --animate-rise: rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @layer base {
   :root {
-    /* Warm paper neutrals, tinted off pure white. Ink-blue accent. */
-    --background: oklch(0.96 0.005 85);
-    --foreground: oklch(0.21 0.012 250);
-    --card: oklch(1 0.002 85);
-    --card-foreground: var(--foreground);
-    --popover: oklch(1 0.002 85);
-    --popover-foreground: var(--foreground);
+    --background: #F3EEE1;
+    --foreground: #1B1712;
+    --card: #fff;
+    --card-foreground: #1B1712;
+    --popover: #fff;
+    --popover-foreground: #1B1712;
 
-    --primary: oklch(0.4 0.078 248);
-    --primary-foreground: oklch(0.985 0.004 85);
-    --secondary: oklch(0.955 0.006 85);
-    --secondary-foreground: oklch(0.28 0.014 250);
-    --muted: oklch(0.945 0.006 85);
-    --muted-foreground: oklch(0.5 0.012 250);
-    --accent: oklch(0.94 0.012 248);
-    --accent-foreground: oklch(0.3 0.05 248);
+    --primary: #E10500;
+    --primary-foreground: #fff;
+    --secondary: #F3EEE1;
+    --secondary-foreground: #1B1712;
+    --muted: #EFE9DA;
+    --muted-foreground: #7A7266;
+    --accent: #F3EEE1;
+    --accent-foreground: #8B0000;
 
-    --destructive: oklch(0.53 0.18 22);
-    --destructive-foreground: oklch(0.985 0.004 85);
-    --success: oklch(0.52 0.11 152);
-    --success-foreground: oklch(0.985 0.004 85);
-    --warning: oklch(0.68 0.13 72);
-    --warning-foreground: oklch(0.24 0.03 72);
-    --info: oklch(0.55 0.1 248);
-    --info-foreground: oklch(0.985 0.004 85);
+    --destructive: #E10500;
+    --destructive-foreground: #fff;
+    --success: #3FA34D;
+    --success-foreground: #fff;
+    --warning: #FFAF00;
+    --warning-foreground: #1B1712;
+    --info: #F2A100;
+    --info-foreground: #1B1712;
 
-    --border: oklch(0.9 0.006 85);
-    --border-strong: oklch(0.8 0.008 85);
-    --input: oklch(0.88 0.006 85);
-    --ring: oklch(0.4 0.078 248);
+    --border: #1B1712;
+    --border-strong: #1B1712;
+    --input: #E4DCC7;
+    --ring: #E10500;
 
-    /* Node kinds. Asset stays neutral because it is raw material. */
-    --kind-asset: oklch(0.47 0.014 250);
-    --kind-finding: oklch(0.47 0.1 248);
-    --kind-constraint: oklch(0.55 0.13 68);
-    --kind-task: oklch(0.45 0.13 305);
+    --kind-asset: #1B1712;
+    --kind-finding: #F2A100;
+    --kind-constraint: #FF6A00;
+    --kind-task: #E10500;
   }
 
-  .dark {
-    --background: oklch(0.19 0.008 250);
-    --foreground: oklch(0.96 0.004 85);
-    --card: oklch(0.23 0.009 250);
-    --card-foreground: var(--foreground);
-    --popover: oklch(0.24 0.009 250);
-    --popover-foreground: var(--foreground);
-
-    --primary: oklch(0.72 0.1 248);
-    --primary-foreground: oklch(0.18 0.01 250);
-    --secondary: oklch(0.28 0.01 250);
-    --secondary-foreground: oklch(0.96 0.004 85);
-    --muted: oklch(0.28 0.01 250);
-    --muted-foreground: oklch(0.68 0.01 250);
-    --accent: oklch(0.31 0.024 248);
-    --accent-foreground: oklch(0.9 0.03 248);
-
-    --destructive: oklch(0.62 0.18 22);
-    --destructive-foreground: oklch(0.18 0.01 250);
-    --success: oklch(0.66 0.13 152);
-    --success-foreground: oklch(0.18 0.01 250);
-    --warning: oklch(0.76 0.13 72);
-    --warning-foreground: oklch(0.2 0.03 72);
-    --info: oklch(0.68 0.11 248);
-    --info-foreground: oklch(0.18 0.01 250);
-
-    --border: oklch(0.32 0.01 250);
-    --border-strong: oklch(0.42 0.012 250);
-    --input: oklch(0.34 0.01 250);
-    --ring: oklch(0.72 0.1 248);
-
-    --kind-asset: oklch(0.72 0.016 250);
-    --kind-finding: oklch(0.72 0.11 248);
-    --kind-constraint: oklch(0.76 0.13 68);
-    --kind-task: oklch(0.7 0.14 305);
-  }
+  /* Dark mode disabled for pixel theme — only light mode ships */
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  ::-webkit-scrollbar {
-    width: 9px;
-    height: 9px;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/25 rounded-full border-2 border-transparent bg-clip-padding;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/45;
-  }
-
-  input,
-  textarea,
-  select,
-  button {
-    border-radius: var(--radius);
-  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #C9BFA6; border: 2px solid #F3EEE1; border-radius: 0; }
+  ::-webkit-scrollbar-thumb:hover { background: #B4A98C; }
 }
 
 @utility bg-grid-paper {
-  background-image: radial-gradient(circle, var(--border-strong) 1px, transparent 1px);
-  background-size: 26px 26px;
+  background-image: radial-gradient(circle, #D8CEB4 1.4px, transparent 1.6px);
+  background-size: 20px 20px;
+  background-position: -2px -2px;
 }
 
 @utility thin-scrollbar {
-  &::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-
-  &::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full;
-  }
+  &::-webkit-scrollbar { width: 5px; height: 5px; }
+  &::-webkit-scrollbar-track { @apply bg-transparent; }
+  &::-webkit-scrollbar-thumb { @apply bg-muted-foreground/20; border-radius: 0; }
 }
 
-@keyframes accordion-down {
-  from { height: 0; }
-  to { height: var(--radix-accordion-content-height); }
+/* Pixel primitives — use var(--border) so dark-mode / token swaps propagate */
+.pixel-btn:active { transform: translate(2px, 2px); transition: transform 0.06s steps(1); }
+.pixel-shadow { box-shadow: 3px 3px 0 var(--border); }
+.pixel-shadow-lg { box-shadow: 5px 5px 0 var(--border); }
+.pixel-shadow-xl { box-shadow: 8px 8px 0 var(--border); }
+.pixel-border { border: 3px solid var(--border); }
+.pixel-border-sm { border: 2px solid var(--border); }
+.pixel-focus:focus-visible { outline: none; border-color: var(--primary); box-shadow: 3px 3px 0 var(--primary); }
+
+.card-pixel {
+  border: 3px solid var(--border);
+  box-shadow: 3px 3px 0 var(--border);
+  background: var(--card);
+}
+.card-pixel-selected {
+  border-color: var(--primary);
+  box-shadow: 5px 5px 0 var(--primary);
+}
+.card-pixel-lineage {
+  border-color: var(--primary);
+  box-shadow: 3px 3px 0 var(--primary);
+}
+.card-pixel-focused {
+  border-color: var(--primary);
+  box-shadow: 5px 5px 0 var(--primary);
 }
 
-@keyframes accordion-up {
-  from { height: var(--radix-accordion-content-height); }
-  to { height: 0; }
+.footer-badge {
+  border: 1.5px solid var(--border);
+  padding: 1px 5px;
+  font-size: 0.625rem;
+  line-height: 1.2;
 }
 
-@keyframes rise {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes lineagePulse {
-  0%, 100% { stroke-opacity: 0.95; }
-  50% { stroke-opacity: 0.45; }
-}
+/* Animations — steps() for pixel feel */
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes menuPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.animate-menu-pop { animation: menuPop 0.12s steps(2) both; }
+@keyframes nodePop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+@keyframes edgeDraw { from { stroke-dashoffset: 200; } to { stroke-dashoffset: 0; } }
+@keyframes edgeDashWalk { to { stroke-dashoffset: -36; } }
+@keyframes lineagePulse { 0%, 100% { stroke-opacity: 0.95; } 50% { stroke-opacity: 0.45; } }
 
 /* React Flow */
 .react-flow__pane { cursor: grab; }
 .react-flow__pane:active { cursor: grabbing; }
 .react-flow__node { cursor: pointer; }
+/* Only animate first render — .node-new is added by Canvas.tsx for unseen node IDs */
+.react-flow__node.node-new > * { animation: nodePop 0.15s steps(2) both; }
 .react-flow__handle { cursor: crosshair; }
+.react-flow__edge-path { stroke: var(--border-strong); stroke-width: 2.5; stroke-linejoin: miter; }
+.react-flow__edge.edge-new .react-flow__edge-path { animation: edgeDraw 0.3s steps(3) forwards; }
+.react-flow__edge.lineage .react-flow__edge-path { stroke: var(--primary); stroke-width: 2.5; animation: lineagePulse 1.6s steps(4) infinite; }
+.react-flow__edge.dimmed .react-flow__edge-path { stroke-opacity: 0.25; }
+/* Task-status edge styles — dashed open, animated in-progress, solid done */
+.react-flow__edge.edge-open .react-flow__edge-path { stroke-dasharray: 4 4; }
+.react-flow__edge.edge-active .react-flow__edge-path { stroke-dasharray: 8 4 2 4; animation: edgeDashWalk 0.6s steps(6) infinite; }
+.react-flow__edge.edge-done .react-flow__edge-path { stroke-dasharray: none; }
+.react-flow__attribution { display: none; }
 
-.react-flow__edge-path {
-  stroke: var(--border-strong);
-  stroke-width: 1.5;
-}
+.react-flow__minimap-node.mm-asset { fill: var(--kind-asset); stroke: var(--border); stroke-width: 1.5; }
+.react-flow__minimap-node.mm-finding { fill: var(--kind-finding); stroke: var(--border); stroke-width: 1.5; }
+.react-flow__minimap-node.mm-constraint { fill: var(--kind-constraint); stroke: var(--border); stroke-width: 1.5; }
+.react-flow__minimap-node.mm-task { fill: var(--kind-task); stroke: var(--border); stroke-width: 1.5; }
 
-.react-flow__edge.lineage .react-flow__edge-path {
-  stroke: var(--primary);
-  stroke-width: 2.5;
-  animation: lineagePulse 1.6s ease-in-out infinite;
-}
+.react-flow__controls-button { background: var(--card); border-bottom: 2px solid var(--border); fill: var(--muted-foreground); border-radius: 0; }
+.react-flow__controls-button:hover { background: var(--accent); fill: var(--foreground); }
 
-.react-flow__edge.dimmed .react-flow__edge-path {
-  stroke-opacity: 0.25;
-}
-
-.react-flow__attribution {
-  display: none;
-}
-
-/* Minimap nodes are plain SVG rects, so they are coloured by class rather than
-   through the nodeColor prop, which cannot resolve a CSS variable. */
-.react-flow__minimap-node.mm-asset { fill: var(--kind-asset); }
-.react-flow__minimap-node.mm-finding { fill: var(--kind-finding); }
-.react-flow__minimap-node.mm-constraint { fill: var(--kind-constraint); }
-.react-flow__minimap-node.mm-task { fill: var(--kind-task); }
-
-.react-flow__controls-button {
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  fill: var(--muted-foreground);
-}
-
-.react-flow__controls-button:hover {
-  background: var(--accent);
-  fill: var(--foreground);
-}
+/* Toast */
+[data-sonner-toaster] [data-sonner-toast] { border-radius: 0 !important; border: 3px solid var(--border) !important; box-shadow: 3px 3px 0 var(--border) !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  .react-flow__edge.lineage .react-flow__edge-path { animation: none; }
+  .react-flow__node.node-new > *,
+  .react-flow__edge.lineage .react-flow__edge-path,
+  .react-flow__edge.edge-active .react-flow__edge-path,
+  .react-flow__edge.edge-new .react-flow__edge-path { animation: none; }
   [class*="transition-"] { transition-duration: 0.01ms !important; }
-  @keyframes rise { from, to { opacity: 1; transform: none; } }
 }

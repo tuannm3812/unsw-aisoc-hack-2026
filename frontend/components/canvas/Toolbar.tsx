@@ -111,8 +111,8 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
   function centreOfView() {
     // Drop new nodes left of centre so the inspector does not cover them.
     return screenToFlowPosition({
-      x: window.innerWidth * 0.38,
-      y: window.innerHeight * 0.4,
+      x: window.innerWidth * 0.35,
+      y: (window.innerHeight - 58) * 0.4,
     })
   }
 
@@ -131,14 +131,14 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
 
   return (
     <>
-    <div className="border-border bg-card/95 absolute bottom-5 left-5 z-10 flex items-center gap-1 rounded-xl border p-1.5 backdrop-blur">
+    <div className="absolute bottom-5 left-5 z-10 flex items-center gap-1 border-[3px] border-[#1B1712] bg-white p-1.5 shadow-[4px_4px_0_#1B1712]">
       {ADD_BUTTONS.map(({ kind, label, icon: Icon, hint }) => (
         <Tooltip key={kind}>
           <TooltipTrigger asChild>
             <button
               type="button"
               onClick={() => handleAdd(kind)}
-              className="hover:bg-accent focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="flex h-8 items-center gap-1.5 border-[2px] border-transparent px-2.5 text-xs font-bold pixel-btn hover:border-[#1B1712] hover:bg-[#F3EEE1] focus-visible:outline-none focus-visible:border-[#1B1712] transition-colors"
             >
               <Icon className="size-3.5" strokeWidth={2} />
               {label}
@@ -148,7 +148,7 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
         </Tooltip>
       ))}
 
-      <span className="bg-border mx-1 h-6 w-px" />
+      <span className="bg-[#1B1712] mx-1 h-6 w-[3px]" />
 
       <Tooltip>
         <TooltipTrigger asChild>
@@ -172,7 +172,7 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
           <button
             type="button"
             onClick={() => fileInput.current?.click()}
-            className="hover:bg-accent focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            className="flex h-8 items-center gap-1.5 border-[2px] border-transparent px-2.5 text-xs font-bold pixel-btn hover:border-[#1B1712] hover:bg-[#F3EEE1] focus-visible:outline-none focus-visible:border-[#1B1712] transition-colors"
           >
             <Upload className="size-3.5" strokeWidth={2} />
             Document
@@ -197,12 +197,12 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
         }}
       />
 
-      <span className="bg-border mx-1 h-6 w-px" />
+      <span className="bg-[#1B1712] mx-1 h-6 w-[3px]" />
 
       <div className="flex items-center gap-2 pr-1 pl-1.5">
-        <span className="text-2xs text-muted-foreground whitespace-nowrap">new links mean</span>
+        <span className="text-2xs text-muted-foreground font-mono whitespace-nowrap">new links mean</span>
         <Select value={activeRelation} onValueChange={(value) => onRelationChange(value as RelationType)}>
-          <SelectTrigger className="h-8 w-[9.5rem] border-0 bg-transparent px-2 text-xs font-medium shadow-none focus:ring-0">
+          <SelectTrigger className="h-8 w-[9.5rem] border-[2px] border-[#1B1712] bg-white px-2 text-xs font-bold shadow-none focus:border-[#E10500] focus:outline-none">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -213,7 +213,7 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
                 hint={relation.hint}
                 className="text-xs"
               >
-                <span className="font-medium">{relation.label}</span>
+                <span className="font-bold">{relation.label}</span>
               </SelectItem>
             ))}
           </SelectContent>

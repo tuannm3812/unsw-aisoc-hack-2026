@@ -9,6 +9,33 @@ import type { CurrentUser, Health } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { initials, useGraphStore } from "@/stores/graphStore"
 
+const MEMBER_COLORS: Record<string, string> = {
+  Aisha: "#E10500",
+  Marco: "#FF6A00",
+  Priya: "#F2A100",
+}
+
+function memberBg(name: string) {
+  const first = name.split(" ")[0]
+  return MEMBER_COLORS[first] ?? "#7A7266"
+}
+
+function PixelIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+      <rect x="2" y="0" width="4" height="2" fill="#E10500" />
+      <rect x="1" y="2" width="2" height="2" fill="#E10500" />
+      <rect x="3" y="2" width="2" height="2" fill="#FF6A00" />
+      <rect x="5" y="2" width="2" height="2" fill="#E10500" />
+      <rect x="0" y="4" width="2" height="2" fill="#E10500" />
+      <rect x="2" y="4" width="2" height="2" fill="#F2A100" />
+      <rect x="4" y="4" width="2" height="2" fill="#E10500" />
+      <rect x="6" y="4" width="2" height="2" fill="#E10500" />
+      <rect x="2" y="6" width="4" height="2" fill="#1B1712" />
+    </svg>
+  )
+}
+
 export function TopBar({ user, health }: { user: CurrentUser | null; health: Health | null }) {
   const router = useRouter()
   const board = useGraphStore((state) => state.board)
@@ -27,18 +54,16 @@ export function TopBar({ user, health }: { user: CurrentUser | null; health: Hea
   }
 
   return (
-    <header className="border-border bg-card flex h-14 shrink-0 items-center gap-4 border-b px-4">
+    <header className="flex h-14 shrink-0 items-center gap-4 border-b-[3px] border-[#1B1712] bg-white px-4">
       <div className="flex items-center gap-2.5">
-        <span className="bg-primary flex size-6 items-center justify-center rounded">
-          <span className="bg-primary-foreground size-1.5 rounded-full" />
-        </span>
-        <span className="hidden text-sm font-medium tracking-tight sm:inline">Spatial Brain</span>
+        <PixelIcon />
+        <span className="hidden font-pixel text-[8px] tracking-[0.05em] text-[#1B1712] sm:inline">SPATIAL BRAIN</span>
       </div>
 
-      <span className="bg-border h-6 w-px" />
+      <span className="bg-[#1B1712] h-6 w-[3px]" />
 
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium">{board?.name ?? "Board"}</p>
+        <p className="truncate text-sm font-bold">{board?.name ?? "Board"}</p>
         <p className="text-muted-foreground text-2xs truncate">
           {nodes.length} node{nodes.length === 1 ? "" : "s"} · {taskCount} task
           {taskCount === 1 ? "" : "s"}
@@ -62,15 +87,13 @@ export function TopBar({ user, health }: { user: CurrentUser | null; health: Hea
         )}
         <IntegrationDots health={health} />
 
-        <div className="flex -space-x-1.5">
+        <div className="flex items-center gap-2">
           {members.map((member) => (
             <Tooltip key={member.id}>
               <TooltipTrigger asChild>
                 <span
-                  className={cn(
-                    "bg-secondary text-secondary-foreground border-card flex size-7 items-center justify-center rounded-full border-2 text-[10px] font-medium",
-                    member.id === user?.id && "bg-primary text-primary-foreground",
-                  )}
+                  className="flex size-7 items-center justify-center border-[2px] border-[#1B1712] font-pixel text-[7px] text-white"
+                  style={{ backgroundColor: memberBg(member.name) }}
                 >
                   {initials(member.name)}
                 </span>
@@ -89,9 +112,9 @@ export function TopBar({ user, health }: { user: CurrentUser | null; health: Hea
               type="button"
               onClick={signOut}
               aria-label="Sign out"
-              className="hover:bg-accent text-muted-foreground hover:text-foreground rounded-lg p-2 transition-colors"
+              className="border-[2px] border-[#1B1712] bg-white p-2 pixel-btn hover:bg-[#F3EEE1] transition-colors"
             >
-              <LogOut className="size-4" />
+              <LogOut className="size-3.5 text-[#1B1712]" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
@@ -117,11 +140,11 @@ function IntegrationDots({ health }: { health: Health | null }) {
             <span className="flex items-center gap-1.5">
               <span
                 className={cn(
-                  "size-1.5 rounded-full",
+                  "size-2 border-[1.5px] border-[#1B1712]",
                   item.on ? "bg-success" : "bg-muted-foreground/40",
                 )}
               />
-              <span className="text-2xs text-muted-foreground">{item.label}</span>
+              <span className="text-2xs text-muted-foreground font-mono">{item.label}</span>
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">

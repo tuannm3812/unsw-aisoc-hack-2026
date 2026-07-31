@@ -6,6 +6,7 @@ import {
   BackgroundVariant,
   ConnectionLineType,
   Controls,
+  MarkerType,
   MiniMap,
   ReactFlow,
   useReactFlow,
@@ -18,6 +19,7 @@ import {
 } from "@xyflow/react"
 
 import { useToast } from "@/components/ui/use-toast"
+import { countAncestors, countDependents } from "@/lib/lineage"
 import { RELATION_LABEL, type NodeKind, type RelationType } from "@/lib/types"
 import { useGraphStore } from "@/stores/graphStore"
 
@@ -35,9 +37,29 @@ const nodeTypes: NodeTypes = {
   task: GraphNodeCard,
 } as unknown as NodeTypes
 
-const edgeTypes = {
-  custom: CustomEdge,
-} as unknown as EdgeTypes
+const edgeTypes = { default: CustomEdge } as unknown as EdgeTypes
+
+const RELATION_COLOR: Record<string, string> = {
+  supports: "#3FA34D",
+  constrains: "#FF6A00",
+  derives: "#E10500",
+  depends_on: "#1B1712",
+}
+
+function edgeStatusClass(taskStatus: string | undefined): string {
+  if (!taskStatus) return ""
+  if (taskStatus === "done") return "edge-done"
+  if (taskStatus === "in_progress" || taskStatus === "in_review") return "edge-active"
+  return "edge-open"
+}
+
+interface ContextMenuState {
+  type: "edge" | "node" | "canvas"
+  x: number
+  y: number
+  edgeId?: string
+  nodeId?: string
+}
 
 interface CanvasProps {
   activeRelation: RelationType
@@ -46,12 +68,12 @@ interface CanvasProps {
 
 export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const wrapper = useRef<HTMLDivElement>(null)
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, setCenter } = useReactFlow()
   const { toast } = useToast()
   const [dragOver, setDragOver] = useState(false)
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string; kind: string; isTask?: boolean; isDone?: boolean } | null>(null)
-  const [edgeMenu, setEdgeMenu] = useState<{ x: number; y: number; edgeId: string; relation: string } | null>(null)
-  // ponytail: kind is string not NodeKind because "" signals canvas context menu
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  // Source node of a connection drag, so dropping on empty canvas can still
+  // offer kind-appropriate create options for that source.
   const connectingSource = useRef<{ nodeId: string; kind: NodeKind } | null>(null)
 
   const nodes = useGraphStore((state) => state.nodes)
@@ -69,45 +91,35 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const persistPosition = useGraphStore((state) => state.persistPosition)
   const setDragging = useGraphStore((state) => state.setDragging)
   const addEdge = useGraphStore((state) => state.addEdge)
-  const removeEdge = useGraphStore((state) => state.removeEdge)
-  const removeNode = useGraphStore((state) => state.removeNode)
-  const patchNode = useGraphStore((state) => state.patchNode)
   const addNode = useGraphStore((state) => state.addNode)
-
-  const handleDerive = useCallback(
-    (edgeId: string, position: { x: number; y: number }) => {
-      // position is already in flow coordinates from EdgeLabelRenderer via getSmoothStepPath
-      const edge = edges.find((e) => e.id === edgeId)
-      if (!edge) return
-      void addNode("finding", "Branch Idea", position.x, position.y + 40).then((newNode) => {
-        if (newNode) void addEdge(edge.source_id, newNode.id, "derived_from")
-      })
-    },
-    [edges, addNode, addEdge],
-  )
-
-  const handleContextMenuAction = useCallback(
-    (kind: "finding" | "constraint" | "task", label: string, relation: string) => {
-      if (!contextMenu) return
-      const pos = screenToFlowPosition({ x: contextMenu.x + 20, y: contextMenu.y + 20 })
-      void addNode(kind, label, pos.x, pos.y).then((newNode) => {
-        // Canvas right-click: just create the node, no edge wiring
-        if (contextMenu.nodeId === "__canvas__" || !relation) return
-        if (newNode) void addEdge(contextMenu.nodeId, newNode.id, relation as RelationType)
-      })
-    },
-    [contextMenu, addNode, addEdge, screenToFlowPosition],
-  )
+  const removeNode = useGraphStore((state) => state.removeNode)
+  const removeEdge = useGraphStore((state) => state.removeEdge)
+  const patchNode = useGraphStore((state) => state.patchNode)
 
   const lineageActive = focusedTaskId !== null && lineageIds.size > 0
 
-  // Nodes are rebuilt from the store on every change, which would throw away the
-  // sizes React Flow measured. The minimap needs them, so they are kept here and
-  // handed back on each rebuild.
   const [measured, setMeasured] = useState<Record<string, { width: number; height: number }>>({})
 
+  const seenNodeIds = useRef<Set<string>>(new Set())
+  const seenEdgeIds = useRef<Set<string>>(new Set())
+
+  const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
+
+  // Build lineage counts per task node (grounded in / depended on).
+  const lineageCounts = useMemo(() => {
+    const counts = new Map<string, { ancestors: number; dependents: number }>()
+    for (const node of nodes) {
+      if (node.kind !== "task") continue
+      counts.set(node.id, {
+        ancestors: countAncestors(node.id, nodes, edges),
+        dependents: countDependents(node.id, edges),
+      })
+    }
+    return counts
+  }, [nodes, edges])
+
   const flowNodes = useMemo<FlowNode<GraphNodeData>[]>(() => {
-    const memberNames = new Map(members.map((member) => [member.id, member.name]))
+    const memberNames = new Map(members.map((m) => [m.id, m.name]))
     const parseStates = new Map(assets.map((asset) => [asset.id, asset.parse_state]))
 
     const pendingByAsset = new Map<string, number>()
@@ -116,30 +128,39 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
       pendingByAsset.set(candidate.asset_id, (pendingByAsset.get(candidate.asset_id) ?? 0) + 1)
     }
 
-    return nodes.map((node) => ({
-      id: node.id,
-      type: node.kind,
-      position: { x: node.x, y: node.y },
-      selected: node.id === selectedNodeId,
-      measured: measured[node.id],
-      data: {
-        node,
-        assigneeName: node.assignee_id ? memberNames.get(node.assignee_id) ?? "" : "",
-        parseState:
-          node.kind === "asset" && node.source_asset_id
-            ? parseStates.get(node.source_asset_id) ?? null
-            : null,
-        dimmed:
-          (lineageActive && !lineageIds.has(node.id)) ||
-          (!!myTaskFilter && node.kind === "task" && node.assignee_id !== myTaskFilter),
-        inLineage: lineageActive && lineageIds.has(node.id),
-        isFocusedTask: node.id === focusedTaskId,
-        depth: null,
-        pendingCandidates: node.source_asset_id
-          ? pendingByAsset.get(node.source_asset_id) ?? 0
-          : 0,
-      },
-    }))
+    return nodes.map((node) => {
+      const isNew = !seenNodeIds.current.has(node.id)
+      if (isNew) seenNodeIds.current.add(node.id)
+      const lc = lineageCounts.get(node.id)
+
+      return {
+        id: node.id,
+        type: node.kind,
+        position: { x: node.x, y: node.y },
+        selected: node.id === selectedNodeId,
+        measured: measured[node.id],
+        className: isNew ? "node-new" : undefined,
+        data: {
+          node,
+          assigneeName: node.assignee_id ? memberNames.get(node.assignee_id) ?? "" : "",
+          parseState:
+            node.kind === "asset" && node.source_asset_id
+              ? parseStates.get(node.source_asset_id) ?? null
+              : null,
+          dimmed:
+            (lineageActive && !lineageIds.has(node.id)) ||
+            (!!myTaskFilter && node.kind === "task" && node.assignee_id !== myTaskFilter),
+          inLineage: lineageActive && lineageIds.has(node.id),
+          isFocusedTask: node.id === focusedTaskId,
+          depth: null,
+          pendingCandidates: node.source_asset_id
+            ? pendingByAsset.get(node.source_asset_id) ?? 0
+            : 0,
+          ancestorCount: lc?.ancestors ?? 0,
+          dependentCount: lc?.dependents ?? 0,
+        },
+      }
+    })
   }, [
     nodes,
     members,
@@ -151,47 +172,115 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
     focusedTaskId,
     measured,
     myTaskFilter,
+    lineageCounts,
   ])
+
+  const onDerive = useCallback(
+    (edgeId: string, kind: "finding" | "constraint" | "task", position: { x: number; y: number }) => {
+      const edge = edges.find((e) => e.id === edgeId)
+      if (!edge) return
+      const label = kind === "finding" ? "New finding" : kind === "constraint" ? "New constraint" : "New task"
+      const rel = kind === "constraint" ? "constrains" : "supports"
+      // Create new node near the ⊕ location, then auto-connect from the edge source.
+      addNode(kind, label, position.x + 20, position.y + 20).then((newNode) => {
+        if (newNode) addEdge(edge.source_id, newNode.id, rel as RelationType)
+      })
+    },
+    [edges, addNode, addEdge],
+  )
 
   const flowEdges = useMemo<FlowEdge[]>(
     () =>
       edges.map((edge) => {
         const inLineage = lineageActive && lineageIds.has(edge.source_id) && lineageIds.has(edge.target_id)
+        const targetNode = nodeMap.get(edge.target_id)
+        const statusClass = targetNode?.kind === "task" ? edgeStatusClass(targetNode.task_status) : ""
+        const relColor = RELATION_COLOR[edge.relation] ?? "#1B1712"
+        const isNew = !seenEdgeIds.current.has(edge.id)
+        if (isNew) seenEdgeIds.current.add(edge.id)
+
+        const classes = [
+          isNew ? "edge-new" : "",
+          lineageActive ? (inLineage ? "lineage" : "dimmed") : "",
+          statusClass,
+        ].filter(Boolean).join(" ")
+
         return {
           id: edge.id,
           source: edge.source_id,
           target: edge.target_id,
-          type: "custom",
-          data: { onDerive: handleDerive, edgeRelation: edge.relation },
+          type: "default",
           label: RELATION_LABEL[edge.relation],
-          className: lineageActive ? (inLineage ? "lineage" : "dimmed") : undefined,
-          labelBgPadding: [5, 2] as [number, number],
-          labelBgBorderRadius: 4,
-          labelStyle: {
-            fontSize: 10,
-            fontFamily: "var(--font-mono)",
-            fill: "var(--muted-foreground)",
+          className: classes || undefined,
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 14,
+            height: 14,
+            color: inLineage ? "var(--primary)" : relColor,
           },
-          labelBgStyle: { fill: "var(--background)", fillOpacity: 0.92 },
+          style: {
+            stroke: inLineage ? "var(--primary)" : relColor,
+            strokeWidth: 2.5,
+            strokeLinejoin: "miter",
+          },
+          labelBgPadding: [6, 3] as [number, number],
+          labelBgBorderRadius: 0,
+          labelStyle: {
+            fontSize: 9,
+            fontFamily: "var(--font-pixel)",
+            fill: "#1B1712",
+          },
+          labelBgStyle: {
+            fill: "#F3EEE1",
+            stroke: "#1B1712",
+            strokeWidth: 1.5,
+            fillOpacity: 1,
+          },
+          data: { onDerive },
         }
       }),
-    [edges, lineageActive, lineageIds, handleDerive],
+    [edges, lineageActive, lineageIds, nodeMap, onDerive],
+  )
+
+  const closeContextMenu = useCallback(() => setContextMenu(null), [])
+
+  const handleEdgeContextMenu = useCallback(
+    (event: React.MouseEvent, edge: FlowEdge) => {
+      event.preventDefault()
+      setContextMenu({ type: "edge", x: event.clientX, y: event.clientY, edgeId: edge.id })
+    },
+    [],
+  )
+
+  const handleNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: FlowNode<GraphNodeData>) => {
+      event.preventDefault()
+      setContextMenu({ type: "node", x: event.clientX, y: event.clientY, nodeId: node.id })
+    },
+    [],
+  )
+
+  const handlePaneContextMenu = useCallback(
+    (event: React.MouseEvent | MouseEvent) => {
+      event.preventDefault()
+      const pos = "clientX" in event ? { x: event.clientX, y: event.clientY } : { x: (event as MouseEvent).clientX, y: (event as MouseEvent).clientY }
+      setContextMenu({ type: "canvas", x: pos.x, y: pos.y })
+    },
+    [],
   )
 
   const onNodesChange = useCallback(
     (changes: NodeChange<FlowNode<GraphNodeData>>[]) => {
-      // Nodes are derived from the store, so a drag only has to update it locally.
-      // The write to the server happens once, on drag end.
       for (const change of changes) {
         if (change.type === "position" && change.position) {
           nudgeNode(change.id, change.position.x, change.position.y)
         }
         if (change.type === "dimensions" && change.dimensions) {
           const { width, height } = change.dimensions
-          setMeasured((previous) =>
-            previous[change.id]?.width === width && previous[change.id]?.height === height
-              ? previous
-              : { ...previous, [change.id]: { width, height } },
+          setMeasured((prev) =>
+            prev[change.id]?.width === width && prev[change.id]?.height === height
+              ? prev
+              : { ...prev, [change.id]: { width, height } },
           )
         }
       }
@@ -205,7 +294,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
       const edge = await addEdge(connection.source, connection.target, activeRelation)
       if (edge) {
         toast({
-          title: `Connected as “${RELATION_LABEL[activeRelation]}”`,
+          title: `Connected as "${RELATION_LABEL[activeRelation]}"`,
           description: "The link is part of the task's context from now on.",
         })
       }
@@ -225,17 +314,16 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
     [screenToFlowPosition, onUpload],
   )
 
+  const contextEdge = contextMenu?.type === "edge" && contextMenu.edgeId
+    ? edges.find((e) => e.id === contextMenu.edgeId) ?? null
+    : null
+
   return (
     <div
       ref={wrapper}
       className="relative h-full w-full"
-      onDragOver={(event) => {
-        event.preventDefault()
-        setDragOver(true)
-      }}
-      onDragLeave={(event) => {
-        if (event.currentTarget === event.target) setDragOver(false)
-      }}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+      onDragLeave={(e) => { if (e.currentTarget === e.target) setDragOver(false) }}
       onDrop={handleDrop}
     >
       <ReactFlow
@@ -250,26 +338,10 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           void persistPosition(node.id, node.position.x, node.position.y)
         }}
         onNodeClick={(_, node) => select(node.id)}
-        onNodeContextMenu={(event, node) => {
-          event.preventDefault()
-          const graphNode = (node.data as GraphNodeData).node
-          setContextMenu({
-            x: event.clientX, y: event.clientY,
-            nodeId: node.id, kind: graphNode.kind,
-            isTask: graphNode.kind === "task",
-            isDone: graphNode.task_status === "done",
-          })
-        }}
-        onPaneClick={() => { select(null); setContextMenu(null); setEdgeMenu(null); }}
-        onEdgeContextMenu={(event, edge) => {
-          event.preventDefault()
-          const rel = ((edge.data as Record<string, unknown>)?.edgeRelation as string) ?? "supports"
-          setEdgeMenu({ x: event.clientX, y: event.clientY, edgeId: edge.id, relation: rel })
-        }}
-        onPaneContextMenu={(event) => {
-          event.preventDefault()
-          setContextMenu({ x: event.clientX, y: event.clientY, nodeId: "__canvas__", kind: "" })
-        }}
+        onNodeContextMenu={handleNodeContextMenu}
+        onEdgeContextMenu={handleEdgeContextMenu}
+        onPaneClick={() => { select(null); closeContextMenu() }}
+        onPaneContextMenu={handlePaneContextMenu}
         onConnect={onConnect}
         isValidConnection={(connection) => connection.source !== connection.target}
         onConnectStart={(_, { nodeId }) => {
@@ -282,14 +354,20 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
             const source = connectingSource.current
             const pos = event instanceof MouseEvent ? { x: event.clientX, y: event.clientY } : null
             if (source && pos) {
-              setContextMenu({ x: pos.x, y: pos.y, nodeId: source.nodeId, kind: source.kind as string, isTask: source.kind === "task" })
+              // Reuses the node-context-menu path so the picker offers options
+              // appropriate to the source node's kind.
+              setContextMenu({ type: "node", x: pos.x, y: pos.y, nodeId: source.nodeId })
             }
           }
           connectingSource.current = null
         }}
-        onNodesDelete={(deleted) => deleted.forEach((node) => removeNode(node.id))}
-        connectionLineType={ConnectionLineType.SmoothStep}
-        defaultEdgeOptions={{ type: "smoothstep" }}
+        onNodesDelete={(deleted) => deleted.forEach((n) => removeNode(n.id))}
+        connectionLineType={ConnectionLineType.Straight}
+        defaultEdgeOptions={{
+          type: "default",
+          style: { stroke: "#1B1712", strokeWidth: 2.5, strokeLinejoin: "miter" },
+          markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14, color: "#1B1712" },
+        }}
         fitView
         fitViewOptions={{ padding: 0.3, maxZoom: 1 }}
         minZoom={0.2}
@@ -297,90 +375,109 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
         proOptions={{ hideAttribution: true }}
         deleteKeyCode={["Backspace", "Delete"]}
       >
-        <Background variant={BackgroundVariant.Dots} gap={26} size={1.2} color="var(--border-strong)" />
-        {/* Top left keeps the zoom controls clear of the toolbar at bottom left. */}
+        <Background variant={BackgroundVariant.Dots} gap={26} size={1.2} color="#D8CEB4" />
         <Controls
           position="top-left"
           showInteractive={false}
-          className="!border-border !bg-card !rounded-lg !border !shadow-none"
+          className="!border-[3px] !border-[#1B1712] !bg-white !shadow-[3px_3px_0_#1B1712]"
         />
         <MiniMap
           pannable
           zoomable
           position="bottom-right"
-          className="!border-border !bg-card !rounded-lg !border"
+          className="!border-[3px] !border-[#1B1712] !bg-white"
           maskColor="rgba(120, 120, 130, 0.14)"
-          nodeClassName={(node) => `mm-${node.type ?? "asset"}`}
+          nodeClassName={(n) => `mm-${n.type ?? "asset"}`}
           nodeStrokeWidth={0}
           nodeBorderRadius={3}
         />
       </ReactFlow>
 
-      {dragOver && (
-        <div className="border-primary bg-primary/5 pointer-events-none absolute inset-3 z-20 flex items-center justify-center rounded-xl border-2 border-dashed">
-          <p className="bg-card border-border rounded-lg border px-4 py-2.5 text-sm font-medium">
-            Drop a PDF or Markdown file to read it into the graph
-          </p>
-        </div>
+      {/* Context menus */}
+      {contextMenu?.type === "edge" && contextEdge && (
+        <EdgeContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          currentRelation={contextEdge.relation}
+          onClose={closeContextMenu}
+          onDelete={() => { removeEdge(contextEdge.id); closeContextMenu() }}
+          onChangeRelation={(relation) => {
+            // No update-edge API — delete old edge and recreate with new relation.
+            removeEdge(contextEdge.id)
+            addEdge(contextEdge.source_id, contextEdge.target_id, relation)
+            closeContextMenu()
+          }}
+        />
       )}
 
-      {contextMenu && (
+      {contextMenu?.type === "node" && contextMenu.nodeId && (
         <NodeContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
-          sourceKind={contextMenu.kind}
-          isTask={contextMenu.isTask}
-          isDone={contextMenu.isDone}
-          onClose={() => setContextMenu(null)}
-          onCreate={handleContextMenuAction}
-          onDelete={() => { removeNode(contextMenu.nodeId); setContextMenu(null); }}
+          sourceKind={nodeMap.get(contextMenu.nodeId)?.kind}
+          isTask={nodeMap.get(contextMenu.nodeId)?.kind === "task"}
+          isDone={nodeMap.get(contextMenu.nodeId)?.task_status === "done"}
+          onClose={closeContextMenu}
+          onCreate={(kind, label, relation) => {
+            const src = nodeMap.get(contextMenu.nodeId!)
+            if (!src) return
+            const pos = { x: src.x + 280, y: src.y + 60 }
+            addNode(kind, label, pos.x, pos.y).then((newNode) => {
+              if (newNode && relation) addEdge(contextMenu.nodeId!, newNode.id, relation as RelationType)
+            })
+            closeContextMenu()
+          }}
+          onDelete={() => { removeNode(contextMenu.nodeId!); closeContextMenu() }}
           onFocus={() => {
-            const nodeEl = document.querySelector(`.react-flow__node[data-id="${contextMenu.nodeId}"]`)
-            if (nodeEl) nodeEl.scrollIntoView({ behavior: "smooth", block: "center" })
-            setContextMenu(null)
+            const n = nodeMap.get(contextMenu.nodeId!)
+            if (n) setCenter(n.x, n.y, { duration: 300, zoom: 0.9 })
+            closeContextMenu()
           }}
           onCopyId={() => {
-            navigator.clipboard.writeText(contextMenu.nodeId).catch(() => {})
+            navigator.clipboard.writeText(contextMenu.nodeId!)
             toast({ title: "Copied", description: "Paste this ID into your agent" })
-            setContextMenu(null)
+            closeContextMenu()
           }}
           onMarkDone={() => {
-            patchNode(contextMenu.nodeId, { task_status: "done" })
-            setContextMenu(null)
+            patchNode(contextMenu.nodeId!, { task_status: "done" })
+            closeContextMenu()
           }}
-          onDuplicate={contextMenu.kind !== "asset" ? () => {
-            const src = nodes.find((n) => n.id === contextMenu.nodeId)
+          onDuplicate={nodeMap.get(contextMenu.nodeId)?.kind !== "asset" ? () => {
+            const src = nodeMap.get(contextMenu.nodeId!)
             if (src && src.kind !== "asset") {
               void addNode(src.kind as "finding" | "constraint" | "task", `${src.title} (copy)`, src.x + 40, src.y + 40)
             }
-            setContextMenu(null)
+            closeContextMenu()
           } : undefined}
         />
       )}
 
-      {edgeMenu && (
-        <EdgeContextMenu
-          x={edgeMenu.x}
-          y={edgeMenu.y}
-          currentRelation={edgeMenu.relation as RelationType}
-          onClose={() => setEdgeMenu(null)}
-          onDelete={() => { removeEdge(edgeMenu.edgeId); setEdgeMenu(null); }}
-          onChangeRelation={async (rel) => {
-            const existing = edges.find((e) => e.id === edgeMenu.edgeId)
-            if (existing) {
-              const created = await addEdge(existing.source_id, existing.target_id, rel)
-              if (created) removeEdge(edgeMenu.edgeId)
-            }
-            setEdgeMenu(null)
+      {contextMenu?.type === "canvas" && (
+        <NodeContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={closeContextMenu}
+          onCreate={(kind, label) => {
+            const pos = screenToFlowPosition({ x: contextMenu.x, y: contextMenu.y })
+            addNode(kind, label, pos.x, pos.y)
+            closeContextMenu()
           }}
         />
+      )}
+
+      {dragOver && (
+        <div className="pointer-events-none absolute inset-3 z-20 flex items-center justify-center border-[3px] border-dashed border-[#1B1712] bg-[#F3EEE1]/70">
+          <p className="border-[3px] border-[#1B1712] bg-white px-4 py-2.5 text-sm font-bold shadow-[3px_3px_0_#1B1712]">
+            Drop a PDF or Markdown file to read it into the graph
+          </p>
+        </div>
       )}
 
       {lineageActive && (
         <div className="absolute top-4 left-1/2 z-20 -translate-x-1/2">
           <button
             type="button"
-            onClick={() => { useGraphStore.getState().clearLineage(); select(null); }}
+            onClick={() => { useGraphStore.getState().clearLineage(); select(null) }}
             className="bg-card border-border hover:bg-accent rounded-lg border px-3 py-1.5 text-xs font-medium shadow-sm transition-colors"
           >
             Stop highlighting
@@ -391,7 +488,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
       {nodes.length === 0 && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="max-w-sm text-center">
-            <p className="text-sm font-medium">This board is empty</p>
+            <p className="text-sm font-bold">This board is empty</p>
             <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
               Drop a research PDF anywhere, or add a node from the toolbar.
             </p>

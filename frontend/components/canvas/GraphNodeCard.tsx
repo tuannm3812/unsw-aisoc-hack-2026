@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { detectEffort, detectBlocked, detectDueDate, detectPriority } from "@/lib/lineage"
 import type { GraphNode, NodeKind, ParseState } from "@/lib/types"
 
 export interface GraphNodeData extends Record<string, unknown> {
@@ -25,6 +26,8 @@ export interface GraphNodeData extends Record<string, unknown> {
   depth: number | null
   /** Proposals from this source that nobody has accepted or dismissed yet. */
   pendingCandidates: number
+  ancestorCount: number
+  dependentCount: number
 }
 
 const KIND_META: Record<
@@ -57,13 +60,11 @@ const KIND_META: Record<
   },
 }
 
-// A merged pull request is the payoff of the whole demo, so it reads differently
-// from one that is still open.
 const PR_BADGE: Record<string, string> = {
-  open: "bg-success/15 text-success hover:bg-success/25",
-  draft: "bg-secondary text-muted-foreground hover:bg-accent",
-  merged: "bg-kind-task/15 text-kind-task hover:bg-kind-task/25",
-  closed: "bg-secondary text-muted-foreground hover:bg-accent",
+  open: "bg-success text-white hover:bg-success",
+  draft: "bg-muted text-muted-foreground hover:bg-muted",
+  merged: "bg-[#E10500] text-white hover:bg-[#E10500]",
+  closed: "bg-muted text-muted-foreground hover:bg-muted",
 }
 
 const PR_BADGE_LABEL: Record<string, string> = {
@@ -74,21 +75,27 @@ const PR_BADGE_LABEL: Record<string, string> = {
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
-  P0: "bg-destructive/15 text-destructive",
-  P1: "bg-warning/20 text-warning-foreground",
-  P2: "bg-info/15 text-info-foreground",
-  P3: "bg-secondary text-muted-foreground",
-  P4: "bg-secondary/50 text-muted-foreground/70",
+  P0: "bg-[#E10500] text-white",
+  P1: "bg-[#FF6A00] text-white",
+  P2: "bg-[#F2A100] text-[#1B1712]",
+  P3: "bg-[#F3EEE1] text-[#1B1712]",
+  P4: "bg-[#F3EEE1]/60 text-muted-foreground",
 }
 
-function detectPriority(node: GraphNode): string | null {
-  const text = `${node.title} ${node.body}`.toLowerCase()
-  if (text.includes("p0") || text.includes("urgent") || text.includes("critical")) return "P0"
-  if (text.includes("p1") || text.includes("high") || text.includes("blocker")) return "P1"
-  if (text.includes("p2") || text.includes("medium")) return "P2"
-  if (text.includes("p3") || text.includes("low")) return "P3"
-  if (text.includes("p4") || text.includes("nice") || text.includes("later")) return "P4"
-  return null
+const MEMBER_COLORS: Record<string, string> = {
+  Aisha: "#E10500",
+  Marco: "#FF6A00",
+  Priya: "#F2A100",
+}
+
+function memberChip(name: string) {
+  if (!name) return { bg: "#7A7266", initials: "?" }
+  const first = name.split(" ")[0]
+  if (MEMBER_COLORS[first]) {
+    const parts = name.split(" ").filter((p) => p !== "Dr")
+    return { bg: MEMBER_COLORS[first], initials: parts.slice(0, 2).map((p) => p[0]).join("") }
+  }
+  return { bg: "#7A7266", initials: "?" }
 }
 
 function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData }) {
@@ -101,35 +108,50 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
     isFocusedTask,
     depth,
     pendingCandidates,
+    ancestorCount,
   } = data
   const meta = KIND_META[node.kind]
   const Icon = meta.icon
   const isTask = node.kind === "task"
   const toReview = node.kind === "asset" ? pendingCandidates : 0
-  const priority = isTask ? detectPriority(node) : null
+  const priority = isTask ? detectPriority(node.title, node.body) : null
+  const effort = isTask ? detectEffort(node.title, node.body) : null
+  const blocked = isTask ? detectBlocked(node.title, node.body) : null
+  const dueDate = isTask ? detectDueDate(node.title, node.body) : null
+  const assigneeChip = isTask && assigneeName ? memberChip(assigneeName) : null
+
+  const cardClass = cn(
+    "group w-[264px] rounded-none transition-[opacity,box-shadow,border-color] duration-200",
+    dimmed && "pointer-events-none opacity-25",
+    inLineage && !isFocusedTask && "card-pixel-lineage",
+    isFocusedTask && "card-pixel-focused",
+    selected && !inLineage && !isFocusedTask && "card-pixel-selected",
+    !selected && !inLineage && !isFocusedTask && "card-pixel",
+  )
 
   return (
-    <div
-      className={cn(
-        "group bg-card w-[264px] rounded-xl border border-l-3 transition-[opacity,box-shadow,border-color] duration-200",
-        meta.accent,
-        dimmed && "pointer-events-none opacity-25",
-        inLineage && !isFocusedTask && "ring-primary/60 border-primary/30 ring-2",
-        isFocusedTask && "ring-primary ring-2",
-        selected && !inLineage && "ring-ring ring-2",
-      )}
-    >
+    <div className={cardClass}>
+      {/* Kind colour top bar */}
+      <div
+        className="h-[4px] w-full"
+        style={{
+          backgroundColor:
+            node.kind === "finding" ? "#F2A100" :
+            node.kind === "constraint" ? "#FF6A00" :
+            node.kind === "task" ? "#E10500" : "#1B1712",
+        }}
+      />
       <Handle
         type="target"
         position={Position.Left}
-        className="!border-border-strong !bg-background !size-2.5 !border opacity-0 transition-opacity group-hover:opacity-100"
+        className="!border-[#1B1712] !bg-[#F3EEE1] !size-2.5 !border-[2px] opacity-0 transition-opacity group-hover:opacity-100"
       />
 
       <div className="px-3.5 pt-3 pb-3">
         <div className="flex items-center justify-between gap-2">
-          <div className={cn("flex items-center gap-1.5", meta.text)}>
-            <Icon className="size-3.5" strokeWidth={2} />
-            <span className="text-2xs font-medium tracking-[0.08em] uppercase">{meta.label}</span>
+          <div className="flex items-center gap-1.5">
+            <Icon className="size-3.5" strokeWidth={2} style={{ color: node.kind === "finding" ? "#F2A100" : node.kind === "constraint" ? "#FF6A00" : node.kind === "task" ? "#E10500" : "#1B1712" }} />
+            <span className="font-pixel text-[7px] tracking-[0.05em] uppercase" style={{ color: node.kind === "finding" ? "#F2A100" : node.kind === "constraint" ? "#FF6A00" : node.kind === "task" ? "#E10500" : "#1B1712" }}>{meta.label}</span>
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -158,7 +180,7 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
           </div>
         </div>
 
-        <p className="mt-2 line-clamp-3 text-sm leading-snug font-medium">{node.title}</p>
+        <p className="mt-2 line-clamp-3 text-sm leading-snug font-bold">{node.title}</p>
 
         {node.body && !node.source_quote && (
           <p className="text-muted-foreground mt-1.5 line-clamp-2 text-xs leading-relaxed">
@@ -167,14 +189,14 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
         )}
 
         {node.source_quote && (
-          <blockquote className="border-border-strong text-muted-foreground mt-2.5 line-clamp-3 border-l-2 pl-2.5 font-mono text-[10.5px] leading-relaxed">
+          <blockquote className="border-[#1B1712] text-muted-foreground mt-2.5 line-clamp-3 border-l-[3px] pl-2.5 font-mono text-[10.5px] leading-relaxed">
             {node.source_quote}
           </blockquote>
         )}
       </div>
 
       {(isTask || node.source_page !== null || toReview > 0 || Boolean(node.decision_state) || (node.alignment_payload?.conflicts?.length ?? 0) > 0) && (
-        <div className="border-border flex items-center gap-2 border-t px-3.5 py-2">
+        <div className="flex items-center gap-2 border-t-[3px] border-[#1B1712] px-3.5 py-2">
           {node.source_page !== null && (
             <span className="text-2xs text-muted-foreground font-mono">p.{node.source_page}</span>
           )}
@@ -201,14 +223,32 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
           {isTask && (
             <>
               {priority && (
-                <span className={cn("text-2xs rounded px-1.5 py-0.5 font-mono font-semibold", PRIORITY_COLORS[priority])}>
+                <span className={cn("footer-badge font-mono font-semibold", PRIORITY_COLORS[priority])}>
                   {priority}
                 </span>
               )}
-              {assigneeName ? (
-                <span className="text-2xs text-muted-foreground truncate">{assigneeName}</span>
+              {effort && (
+                <span className="footer-badge bg-[#F3EEE1] text-[#1B1712] font-mono">{effort}</span>
+              )}
+              {blocked && (
+                <span className="footer-badge bg-[#E10500] text-white font-bold">Blocked</span>
+              )}
+              {dueDate && (
+                <span className="footer-badge bg-[#F3EEE1] text-[#1B1712] font-mono">due {dueDate}</span>
+              )}
+              {ancestorCount > 0 && (
+                <span className="footer-badge bg-[#F2A100]/15 text-[#8A5C00] font-mono" title={`Grounded in ${ancestorCount} upstream node${ancestorCount === 1 ? "" : "s"}`}>←{ancestorCount}</span>
+              )}
+              {assigneeChip ? (
+                <span
+                  className="flex size-[22px] shrink-0 items-center justify-center border-[1.5px] border-[#1B1712] font-pixel text-[6px] text-white"
+                  style={{ backgroundColor: assigneeChip.bg }}
+                  title={assigneeName}
+                >
+                  {assigneeChip.initials}
+                </span>
               ) : (
-                <span className="text-2xs text-muted-foreground/70">Unassigned</span>
+                <span className="flex size-[22px] shrink-0 items-center justify-center border-[1.5px] border-[#1B1712] bg-[#7A7266] font-pixel text-[6px] text-white" title="Unassigned">?</span>
               )}
 
               <span className="ml-auto flex shrink-0 items-center gap-1.5">
@@ -216,7 +256,7 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
                   <Loader2 className="text-muted-foreground size-3 animate-spin" />
                 )}
                 {node.jira_issue_key && (
-                  <span className="text-2xs bg-secondary text-secondary-foreground rounded px-1.5 py-0.5 font-mono font-medium">
+                  <span className="footer-badge bg-[#1B1712] text-white font-mono font-bold">
                     {node.jira_issue_key}
                   </span>
                 )}
@@ -228,13 +268,11 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
                     href={node.pr_url}
                     target="_blank"
                     rel="noreferrer"
-                    // The canvas swallows clicks to pan and select, so the link
-                    // has to claim this one for itself.
                     onClick={(event) => event.stopPropagation()}
                     onMouseDown={(event) => event.stopPropagation()}
                     title={node.pr_title || node.pr_url}
                     className={cn(
-                      "text-2xs flex items-center gap-1 rounded px-1.5 py-0.5 font-medium transition-colors",
+                      "footer-badge flex items-center gap-1 font-bold transition-colors",
                       PR_BADGE[node.pr_state] ?? PR_BADGE.open,
                     )}
                   >
@@ -251,7 +289,7 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
       <Handle
         type="source"
         position={Position.Right}
-        className="!border-border-strong !bg-background !size-2.5 !border opacity-0 transition-opacity group-hover:opacity-100"
+        className="!border-[#1B1712] !bg-[#F3EEE1] !size-2.5 !border-[2px] opacity-0 transition-opacity group-hover:opacity-100"
       />
     </div>
   )

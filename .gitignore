@@ -47,6 +47,7 @@ demo/*.mov
 _remote_pull/
 frontend-prototype/
 stitch_extracted/
+.review-tmp/
 
 # Playwright MCP debug output — never commit (was committed by mistake, see cleanup commit)
 .playwright-mcp/
