@@ -314,7 +314,10 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           connectingSource.current = null
         }}
         deleteKeyCode={["Backspace", "Delete"]}
-        onNodesDelete={(deleted) => { deleted.forEach((node) => removeNode(node.id)) }}
+        onNodesDelete={(deleted) => {
+          if (deleted.length > 0 && !confirm(`Delete ${deleted.length} node${deleted.length > 1 ? "s" : ""}?`)) return
+          deleted.forEach((node) => removeNode(node.id))
+        }}
         connectionLineType={ConnectionLineType.SmoothStep}
         defaultEdgeOptions={{ type: "smoothstep" }}
         fitView
@@ -359,7 +362,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           isDone={contextMenu.isDone}
           onClose={() => setContextMenu(null)}
           onCreate={handleContextMenuAction}
-          onDelete={() => { removeNode(contextMenu.nodeId); setContextMenu(null); }}
+          onDelete={() => { if (confirm("Delete this node?")) { removeNode(contextMenu.nodeId); setContextMenu(null); } }}
           onFocus={() => {
             const node = nodes.find((n) => n.id === contextMenu.nodeId)
             if (node) setCenter(node.x + 132, node.y + 50, { duration: 300 })
