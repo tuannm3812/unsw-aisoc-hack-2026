@@ -213,7 +213,7 @@
 }
 
 @keyframes edgeDashWalk {
-  to { stroke-dashoffset: -24; }
+  to { stroke-dashoffset: -36; }
 }
 
 /* React Flow */
@@ -272,7 +272,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .react-flow__edge.lineage .react-flow__edge-path { animation: none; }
+  .react-flow__edge.lineage .react-flow__edge-path,
+  .react-flow__edge.edge-active .react-flow__edge-path { animation: none; }
   [class*="transition-"] { transition-duration: 0.01ms !important; }
   @keyframes rise { from, to { opacity: 1; transform: none; } }
 }
