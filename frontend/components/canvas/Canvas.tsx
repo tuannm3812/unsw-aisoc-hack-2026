@@ -183,7 +183,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           labelBgPadding: [5, 2] as [number, number],
           labelBgBorderRadius: 4,
           labelStyle: {
-            fontSize: 10,
+            fontSize: 11,
             fontFamily: "var(--font-mono)",
             fill: "var(--muted-foreground)",
           },
@@ -310,7 +310,8 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           }
           connectingSource.current = null
         }}
-        onNodesDelete={(deleted) => deleted.forEach((node) => removeNode(node.id))}
+        deleteKeyCode={["Backspace", "Delete"]}
+        onNodesDelete={(deleted) => { deleted.forEach((node) => removeNode(node.id)) }}
         connectionLineType={ConnectionLineType.SmoothStep}
         defaultEdgeOptions={{ type: "smoothstep" }}
         fitView
@@ -318,7 +319,6 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
         minZoom={0.2}
         maxZoom={1.8}
         proOptions={{ hideAttribution: true }}
-        deleteKeyCode={["Backspace", "Delete"]}
       >
         <Background variant={BackgroundVariant.Dots} gap={26} size={1.2} color="var(--border-strong)" />
         {/* Top left keeps the zoom controls clear of the toolbar at bottom left. */}

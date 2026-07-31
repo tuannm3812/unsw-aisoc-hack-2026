@@ -76,7 +76,7 @@ export function Toolbar({ activeRelation, onRelationChange, onUpload }: ToolbarP
   const addNode = useGraphStore((state) => state.addNode)
   const nodes = useGraphStore((state) => state.nodes)
   const fileInput = useRef<HTMLInputElement>(null)
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
   const [reviewOpen, setReviewOpen] = useState(false)
   const [reviewLoading, setReviewLoading] = useState(false)
   const [reviewData, setReviewData] = useState<{
