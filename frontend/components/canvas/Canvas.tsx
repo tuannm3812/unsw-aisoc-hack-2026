@@ -18,6 +18,7 @@ import {
 } from "@xyflow/react"
 
 import { useToast } from "@/components/ui/use-toast"
+import { getAncestorIds } from "@/lib/lineage"
 import { RELATION_LABEL, type NodeKind, type RelationType } from "@/lib/types"
 import { useGraphStore } from "@/stores/graphStore"
 
@@ -64,6 +65,8 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
   const lineageIds = useGraphStore((state) => state.lineageIds)
 
   const select = useGraphStore((state) => state.select)
+  const focusLineage = useGraphStore((state) => state.focusLineage)
+  const clearLineage = useGraphStore((state) => state.clearLineage)
   const myTaskFilter = useGraphStore((state) => state.myTaskFilter)
   const nudgeNode = useGraphStore((state) => state.nudgeNode)
   const persistPosition = useGraphStore((state) => state.persistPosition)
@@ -259,7 +262,16 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           setDragging(null)
           void persistPosition(node.id, node.position.x, node.position.y)
         }}
-        onNodeClick={(_, node) => select(node.id)}
+        onNodeClick={(_, node) => {
+          select(node.id)
+          const graphNode = (node.data as GraphNodeData).node
+          if (graphNode.kind === "task") {
+            const ancestorIds = getAncestorIds(node.id, nodes, edges)
+            focusLineage(node.id, ancestorIds)
+          } else {
+            clearLineage()
+          }
+        }}
         onNodeContextMenu={(event, node) => {
           event.preventDefault()
           const graphNode = (node.data as GraphNodeData).node

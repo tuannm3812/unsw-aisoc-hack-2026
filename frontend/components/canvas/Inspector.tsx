@@ -408,25 +408,6 @@ function TaskInspector({ node }: { node: GraphNode }) {
           )}
         </section>
 
-        <section>
-          <h3 className="text-2xs text-muted-foreground mb-2.5 font-medium tracking-[0.08em] uppercase">
-            Alignment
-          </h3>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={checkAlignment}
-            disabled={checkingAlignment}
-            className="h-8 gap-2 text-xs"
-          >
-            {checkingAlignment && <Loader2 className="size-3.5 animate-spin" />}
-            Check Alignment
-          </Button>
-          <p className="text-muted-foreground mt-2 text-xs leading-relaxed">
-            Mistral scans connected context for contradictions that could derail this task.
-          </p>
-        </section>
-
         <JiraBlock node={node} />
         <PullRequestBlock node={node} />
       </TabsContent>
@@ -509,6 +490,19 @@ function TaskInspector({ node }: { node: GraphNode }) {
         value="alignment"
         className="thin-scrollbar mt-0 flex-1 space-y-5 overflow-y-auto px-5 py-5"
       >
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={checkAlignment}
+          disabled={checkingAlignment}
+          className="h-8 gap-2 text-xs w-full"
+        >
+          {checkingAlignment && <Loader2 className="size-3.5 animate-spin" />}
+          Scan for contradictions
+        </Button>
+        {!alignResult && !checkingAlignment && (
+          <p className="text-muted-foreground text-xs">Mistral scans connected context for contradictions that could derail this task.</p>
+        )}
         {alignResult ? (
           alignResult.conflicts.length > 0 ? (
             <div className="space-y-4">

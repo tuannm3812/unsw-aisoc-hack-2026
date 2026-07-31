@@ -36,6 +36,33 @@ export function countAncestors(
 }
 
 /**
+ * Return the IDs of all upstream ancestors reachable via context relations.
+ */
+export function getAncestorIds(
+  taskId: string,
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+  max = 60,
+): string[] {
+  const adjacency = new Map<string, string[]>()
+  for (const e of edges) {
+    if (!CONTEXT_RELATIONS.has(e.relation)) continue
+    const list = adjacency.get(e.source_id) ?? []
+    list.push(e.target_id)
+    adjacency.set(e.source_id, list)
+  }
+  const visited = new Set<string>()
+  const queue = [taskId]
+  while (queue.length > 0 && visited.size < max) {
+    const current = queue.shift()!
+    for (const n of (adjacency.get(current) ?? [])) {
+      if (!visited.has(n) && n !== taskId) { visited.add(n); queue.push(n) }
+    }
+  }
+  return Array.from(visited)
+}
+
+/**
  * Count of downstream tasks that depend on this node.
  */
 export function countDependents(
