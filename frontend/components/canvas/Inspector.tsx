@@ -166,7 +166,7 @@ function KnowledgeInspector({ node }: { node: GraphNode }) {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => removeNode(node.id)}
+        onClick={() => { if (confirm("Delete this node?")) removeNode(node.id) }}
         className="text-muted-foreground hover:text-destructive -ml-3 h-8 gap-2 text-xs"
       >
         <Trash2 className="size-3.5" />

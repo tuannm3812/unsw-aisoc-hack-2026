@@ -60,7 +60,7 @@ export default function LoginPage() {
           <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs">{DEMO_PASSWORD}</code>.
         </p>
 
-        <div className="border-border bg-card mt-8 divide-border divide-y overflow-hidden rounded-xl border">
+        <div className="border-[3px] border-[#1B1712] bg-card mt-8 divide-y divide-[#E4DCC7] overflow-hidden shadow-[5px_5px_0_#1B1712]">
           {accounts.length === 0 && !error && (
             <div className="text-muted-foreground flex items-center gap-2.5 p-5 text-sm">
               <Loader2 className="size-4 animate-spin" />

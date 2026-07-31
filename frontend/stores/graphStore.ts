@@ -30,6 +30,8 @@ interface GraphState {
   myTaskFilter: string | null
   setMyTaskFilter: (userId: string | null) => void
 
+  lastSync: number | null
+
   loading: boolean
   error: string | null
 
@@ -76,6 +78,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   myTaskFilter: null,
   setMyTaskFilter: (userId) => set({ myTaskFilter: userId }),
+
+  lastSync: null,
 
   loading: false,
   error: null,
@@ -141,6 +145,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     })
 
     set({
+      lastSync: Date.now(),
       board: payload.board,
       members: payload.members,
       nodes,

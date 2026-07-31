@@ -153,11 +153,11 @@ export const KIND_LABEL: Record<NodeKind, string> = {
 }
 
 export const RELATION_LABEL: Record<RelationType, string> = {
-  derived_from: "derived from",
-  supports: "supports",
-  constrains: "constrains",
-  implements: "implements",
-  assigned_to: "assigned to",
+  derived_from: "↙ derived from",
+  supports: "↝ supports",
+  constrains: "⊸ constrains",
+  implements: "→ implements",
+  assigned_to: "→ assigned to",
 }
 
 // Relations a user can draw, with the direction that reads correctly on the canvas.
