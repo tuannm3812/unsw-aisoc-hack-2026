@@ -6,6 +6,7 @@ import {
   BackgroundVariant,
   ConnectionLineType,
   Controls,
+  MarkerType,
   MiniMap,
   ReactFlow,
   useReactFlow,
@@ -30,6 +31,19 @@ const nodeTypes: NodeTypes = {
   constraint: GraphNodeCard,
   task: GraphNodeCard,
 } as unknown as NodeTypes
+
+const RELATION_COLOR: Record<string, string> = {
+  supports: "#3FA34D",
+  constrains: "#FF6A00",
+  derives: "#E10500",
+  depends_on: "#1B1712",
+}
+
+const TASK_STATUS_DASH: Record<string, string> = {
+  open: "4 4",
+  in_progress: "2 4",
+  done: "none",
+}
 
 interface CanvasProps {
   activeRelation: RelationType
@@ -59,10 +73,9 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
 
   const lineageActive = focusedTaskId !== null && lineageIds.size > 0
 
-  // Nodes are rebuilt from the store on every change, which would throw away the
-  // sizes React Flow measured. The minimap needs them, so they are kept here and
-  // handed back on each rebuild.
   const [measured, setMeasured] = useState<Record<string, { width: number; height: number }>>({})
+
+  const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
 
   const flowNodes = useMemo<FlowNode<GraphNodeData>[]>(() => {
     const memberNames = new Map(members.map((member) => [member.id, member.name]))
@@ -93,30 +106,51 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
     () =>
       edges.map((edge) => {
         const inLineage = lineageActive && lineageIds.has(edge.source_id) && lineageIds.has(edge.target_id)
+        const targetNode = nodeMap.get(edge.target_id)
+        const taskDash = targetNode?.kind === "task" && targetNode.task_status
+          ? TASK_STATUS_DASH[targetNode.task_status]
+          : undefined
+        const relColor = RELATION_COLOR[edge.relation] ?? "#1B1712"
+
         return {
           id: edge.id,
           source: edge.source_id,
           target: edge.target_id,
-          type: "smoothstep",
+          type: "default",
           label: RELATION_LABEL[edge.relation],
           className: lineageActive ? (inLineage ? "lineage" : "dimmed") : undefined,
-          labelBgPadding: [5, 2] as [number, number],
-          labelBgBorderRadius: 4,
-          labelStyle: {
-            fontSize: 10,
-            fontFamily: "var(--font-mono)",
-            fill: "var(--muted-foreground)",
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 14,
+            height: 14,
+            color: inLineage ? "var(--primary)" : relColor,
           },
-          labelBgStyle: { fill: "var(--background)", fillOpacity: 0.92 },
+          style: {
+            stroke: inLineage ? "var(--primary)" : relColor,
+            strokeWidth: 2.5,
+            strokeLinejoin: "miter",
+            strokeDasharray: taskDash ?? "none",
+          },
+          labelBgPadding: [6, 3] as [number, number],
+          labelBgBorderRadius: 0,
+          labelStyle: {
+            fontSize: 9,
+            fontFamily: "var(--font-pixel)",
+            fill: "#1B1712",
+          },
+          labelBgStyle: {
+            fill: "#F3EEE1",
+            stroke: "#1B1712",
+            strokeWidth: 1.5,
+            fillOpacity: 1,
+          },
         }
       }),
-    [edges, lineageActive, lineageIds],
+    [edges, lineageActive, lineageIds, nodeMap],
   )
 
   const onNodesChange = useCallback(
     (changes: NodeChange<FlowNode<GraphNodeData>>[]) => {
-      // Nodes are derived from the store, so a drag only has to update it locally.
-      // The write to the server happens once, on drag end.
       for (const change of changes) {
         if (change.type === "position" && change.position) {
           nudgeNode(change.id, change.position.x, change.position.y)
@@ -140,7 +174,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
       const edge = await addEdge(connection.source, connection.target, activeRelation)
       if (edge) {
         toast({
-          title: `Connected as “${RELATION_LABEL[activeRelation]}”`,
+          title: `Connected as "${RELATION_LABEL[activeRelation]}"`,
           description: "The link is part of the task's context from now on.",
         })
       }
@@ -187,8 +221,12 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
         onPaneClick={() => select(null)}
         onConnect={onConnect}
         onNodesDelete={(deleted) => deleted.forEach((node) => removeNode(node.id))}
-        connectionLineType={ConnectionLineType.SmoothStep}
-        defaultEdgeOptions={{ type: "smoothstep" }}
+        connectionLineType={ConnectionLineType.Straight}
+        defaultEdgeOptions={{
+          type: "default",
+          style: { stroke: "#1B1712", strokeWidth: 2.5, strokeLinejoin: "miter" },
+          markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14, color: "#1B1712" },
+        }}
         fitView
         fitViewOptions={{ padding: 0.3, maxZoom: 1 }}
         minZoom={0.2}
@@ -196,18 +234,17 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
         proOptions={{ hideAttribution: true }}
         deleteKeyCode={["Backspace", "Delete"]}
       >
-        <Background variant={BackgroundVariant.Dots} gap={26} size={1.2} color="var(--border-strong)" />
-        {/* Top left keeps the zoom controls clear of the toolbar at bottom left. */}
+        <Background variant={BackgroundVariant.Dots} gap={26} size={1.2} color="#D8CEB4" />
         <Controls
           position="top-left"
           showInteractive={false}
-          className="!border-[3px] !border-[#1B1712] !bg-card !shadow-[3px_3px_0_#1B1712]"
+          className="!border-[3px] !border-[#1B1712] !bg-white !shadow-[3px_3px_0_#1B1712]"
         />
         <MiniMap
           pannable
           zoomable
           position="bottom-right"
-          className="!border-[3px] !border-[#1B1712] !bg-card"
+          className="!border-[3px] !border-[#1B1712] !bg-white"
           maskColor="rgba(120, 120, 130, 0.14)"
           nodeClassName={(node) => `mm-${node.type ?? "asset"}`}
           nodeStrokeWidth={0}
@@ -216,8 +253,8 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
       </ReactFlow>
 
       {dragOver && (
-        <div className="border-primary bg-primary/5 pointer-events-none absolute inset-3 z-20 flex items-center justify-center rounded-xl border-2 border-dashed">
-          <p className="bg-card border-border rounded-lg border px-4 py-2.5 text-sm font-medium">
+        <div className="pointer-events-none absolute inset-3 z-20 flex items-center justify-center border-[3px] border-dashed border-[#1B1712] bg-[#F3EEE1]/70">
+          <p className="border-[3px] border-[#1B1712] bg-white px-4 py-2.5 text-sm font-bold shadow-[3px_3px_0_#1B1712]">
             Drop a PDF or Markdown file to read it into the graph
           </p>
         </div>
@@ -226,7 +263,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
       {nodes.length === 0 && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="max-w-sm text-center">
-            <p className="text-sm font-medium">This board is empty</p>
+            <p className="text-sm font-bold">This board is empty</p>
             <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
               Drop a research PDF anywhere, or add a node from the toolbar.
             </p>

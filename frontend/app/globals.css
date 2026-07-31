@@ -115,9 +115,39 @@
   &::-webkit-scrollbar-thumb { @apply bg-muted-foreground/20; border-radius: 0; }
 }
 
-/* Pixel button: press = translate */
+/* Pixel primitives — use var(--border) so dark-mode / token swaps propagate */
 .pixel-btn:active { transform: translate(2px, 2px); transition: transform 0.06s steps(1); }
-.pixel-shadow { box-shadow: 3px 3px 0 #1B1712; }
+.pixel-shadow { box-shadow: 3px 3px 0 var(--border); }
+.pixel-shadow-lg { box-shadow: 5px 5px 0 var(--border); }
+.pixel-shadow-xl { box-shadow: 8px 8px 0 var(--border); }
+.pixel-border { border: 3px solid var(--border); }
+.pixel-border-sm { border: 2px solid var(--border); }
+.pixel-focus:focus-visible { outline: none; border-color: var(--primary); box-shadow: 3px 3px 0 var(--primary); }
+
+.card-pixel {
+  border: 3px solid var(--border);
+  box-shadow: 3px 3px 0 var(--border);
+  background: var(--card);
+}
+.card-pixel-selected {
+  border-color: var(--primary);
+  box-shadow: 5px 5px 0 var(--primary);
+}
+.card-pixel-lineage {
+  border-color: var(--primary);
+  box-shadow: 3px 3px 0 var(--primary);
+}
+.card-pixel-focused {
+  border-color: var(--primary);
+  box-shadow: 5px 5px 0 var(--primary);
+}
+
+.footer-badge {
+  border: 1.5px solid var(--border);
+  padding: 1px 5px;
+  font-size: 0.625rem;
+  line-height: 1.2;
+}
 
 /* Animations — steps() for pixel feel */
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
