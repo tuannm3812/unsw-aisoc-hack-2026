@@ -56,10 +56,10 @@ def _seed_task_with_pr(pr_url: str, jira_key: str = "SB-99") -> str:
 
 
 def test_github_webhook_updates_pr_state():
+    client = _client()
     suffix = new_id("pr")
     pr_url = f"https://github.com/acme/repo/pull/{suffix}"
     task_id = _seed_task_with_pr(pr_url)
-    client = _client()
     response = client.post(
         "/api/webhooks/github",
         headers={"X-GitHub-Event": "pull_request", "X-GitHub-Delivery": "d1"},
@@ -89,10 +89,10 @@ def test_github_webhook_updates_pr_state():
 
 
 def test_jira_webhook_maps_status():
+    client = _client()
     suffix = new_id("pr")
     jira_key = f"SB-{suffix[-6:]}"
     task_id = _seed_task_with_pr(f"https://github.com/acme/repo/pull/{suffix}", jira_key=jira_key)
-    client = _client()
     response = client.post(
         "/api/webhooks/jira",
         headers={"X-Spatial-Secret": "spatial-jira-demo"},
