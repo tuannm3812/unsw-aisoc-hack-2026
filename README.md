@@ -4,7 +4,7 @@
 
 A research paper becomes a Jira issue becomes a pull request — and every hop stays visible on one canvas.
 
-Built for the [UNSW AiSoc × Atlassian × Mistral hackathon](https://aisoc-atlassian-mistral.devpost.com/). Event rules, judging criteria, and pitch narrative live in [`STRATEGY.md`](STRATEGY.md). The original product design spec (Context Canvas) lives in [`docs/superpowers/specs/2026-07-31-context-canvas-design.md`](docs/superpowers/specs/2026-07-31-context-canvas-design.md); this README describes **what shipped**.
+Built for the [UNSW AiSoc × Atlassian × Mistral hackathon](https://aisoc-atlassian-mistral.devpost.com/). Event rules, judging criteria, and pitch narrative live in [`STRATEGY.md`](STRATEGY.md). The original product design spec (Context Canvas) lives in [`docs/DESIGN_SPEC.md`](docs/DESIGN_SPEC.md); this README describes **what shipped**.
 
 ## The problem we solve
 

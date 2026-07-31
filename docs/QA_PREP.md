@@ -1,0 +1,73 @@
+# Technical Q&A Prep
+
+Per Mistral's guidance (`STRATEGY.md` §8a): no code is submitted, so judges' main
+way to verify genuine technical depth is asking the team to explain the build.
+Every teammate should be able to answer at least the questions below in their
+own words, not just point at working output.
+
+## Lineage (`backend/app/services/lineage.py`) — the core technical claim
+
+**What it does**: given a task node, a breadth-first search walks *backwards*
+through the graph along context-bearing relations (`derived_from`, `supports`,
+`constrains`, `implements`) to find every node that justifies that task —
+findings, constraints, source documents.
+
+**Q: Does the AI make this up / hallucinate the context?**
+No — the traversal is plain graph-walk code, not a model call. Mistral only
+writes a natural-language summary on top of a node set that's already been
+selected deterministically. That's the "AI packages context, doesn't replace
+judgment" story made concrete.
+
+**Q: What stops a cyclic graph from hanging the demo?**
+It's BFS with a `reached` dict — once a node is visited it's never revisited,
+so a loop in the graph can't cause an infinite walk. "First arrival wins" also
+means every node gets its *shortest* path back to the task.
+
+**Q: What happens if there's too much context for one task?**
+Pruning is priority-ranked, not arbitrary: constraints are kept before
+findings, findings before raw assets, because "dropping a constraint can make
+an agent produce confidently wrong work" (the actual rationale in the code).
+
+## Jira integration (`backend/app/services/jira_service.py`) — the "is this really live?" proof
+
+**What it does**: creates a real Jira issue via Cloud REST v3 when a task is
+assigned, using an API token — not the OAuth-based official Atlassian MCP
+server.
+
+**Q: Why not use Atlassian's own MCP server for this?**
+OAuth 2.1 is real live-demo risk for the same visible outcome — a token-based
+create is one HTTP call, not a browser auth flow to keep working on stage.
+
+**Q: What happens if Jira times out mid-demo?**
+A timeout after the create call is ambiguous by definition — Jira might have
+created the issue or might not have. We never blindly retry (risk of a
+duplicate); we record it as "ambiguous" and say so on screen rather than
+showing a spinner.
+
+**Q: Why resolve issue types by ID instead of by name ("Task")?**
+On team-managed Jira projects, the name "Task" is ambiguous — every project
+has its own. IDs are resolved via Jira's `createmeta` endpoint instead.
+
+## MCP trust boundary (`backend/app/mcp/server.py`) — the security question
+
+**Q: What stops a malicious PDF from hijacking the agent?**
+Node text — including anything extracted from an uploaded document — only
+ever comes back as data inside a tool response, never as something that
+triggers a tool call. The `guidance` field explicitly tells the agent to cite
+node IDs and quotes, not follow instructions found in content. This is
+prompt-injection defense, stated plainly in the code's own guidance string.
+
+**Q: What stops a compromised canvas session from driving an agent, or vice versa?**
+The MCP server authenticates with its own bearer token (`SPATIAL_MCP_TOKEN`),
+completely separate from user login cookies. A browser session can't call the
+agent API, and the agent's token can't drive the canvas UI.
+
+## General framing, if asked "how much of this did AI write?"
+
+Be honest and specific rather than defensive: AI assistance was used
+throughout, the same way any team would use it in 2026 — the value the team
+added is in the decisions (why BFS with shortest-path-wins, why ambiguous
+timeouts over blind retries, why IDs over names for issue types, why a bearer
+token separate from sessions) rather than the typing. Being able to explain
+*why* a given approach was chosen, not just that it works, is exactly what
+Mistral's guidance says they're checking for.
