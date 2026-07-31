@@ -13,7 +13,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { countAncestors } from "@/lib/lineage"
+import { countAncestors, detectPriority } from "@/lib/lineage"
 import { useGraphStore } from "@/stores/graphStore"
 import type { GraphNode, NodeKind, ParseState } from "@/lib/types"
 
@@ -58,22 +58,12 @@ const PRIORITY_COLORS: Record<string, string> = {
   P4: "bg-secondary/50 text-muted-foreground/70",
 }
 
-function detectPriority(node: GraphNode): string | null {
-  const text = `${node.title} ${node.body}`.toLowerCase()
-  if (text.includes("p0") || text.includes("urgent") || text.includes("critical")) return "P0"
-  if (text.includes("p1") || text.includes("high") || text.includes("blocker")) return "P1"
-  if (text.includes("p2") || text.includes("medium")) return "P2"
-  if (text.includes("p3") || text.includes("low")) return "P3"
-  if (text.includes("p4") || text.includes("nice") || text.includes("later")) return "P4"
-  return null
-}
-
 function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData }) {
   const { node, assigneeName, parseState, dimmed, inLineage, isFocusedTask, depth } = data
   const meta = KIND_META[node.kind]
   const Icon = meta.icon
   const isTask = node.kind === "task"
-  const priority = isTask ? detectPriority(node) : null
+  const priority = isTask ? detectPriority(node.title, node.body) : null
   const storeNodes = useGraphStore((s) => s.nodes)
   const storeEdges = useGraphStore((s) => s.edges)
   const groundedCount = useMemo(

@@ -62,6 +62,19 @@ export function getAncestorIds(
 /**
  * Count of downstream tasks that depend on this node.
  */
+/**
+ * Detect priority from title/body text. Returns null if no priority found.
+ */
+export function detectPriority(title: string, body: string): string | null {
+  const text = `${title} ${body}`.toLowerCase()
+  if (/\bp0\b|\burgent\b|\bcritical\b/.test(text)) return "P0"
+  if (/\bp1\b|\bhigh\b|\bblocker\b/.test(text)) return "P1"
+  if (/\bp2\b|\bmedium\b/.test(text)) return "P2"
+  if (/\bp3\b|\blow\b/.test(text)) return "P3"
+  if (/\bp4\b|\bnice\b|\blater\b/.test(text)) return "P4"
+  return null
+}
+
 export function countDependents(
   nodeId: string,
   edges: GraphEdge[],
