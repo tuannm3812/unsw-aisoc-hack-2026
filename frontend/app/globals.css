@@ -161,13 +161,16 @@
 .react-flow__pane { cursor: grab; }
 .react-flow__pane:active { cursor: grabbing; }
 .react-flow__node { cursor: pointer; }
-.react-flow__node > * { animation: nodePop 0.15s steps(2) both; }
+/* Only animate first render — .node-new is added by Canvas.tsx for unseen node IDs */
+.react-flow__node.node-new > * { animation: nodePop 0.15s steps(2) both; }
 .react-flow__handle { cursor: crosshair; }
 .react-flow__edge-path { stroke: var(--border-strong); stroke-width: 2.5; stroke-linejoin: miter; }
-.react-flow__edge.lineage .react-flow__edge-path { stroke: var(--primary); stroke-width: 2.5; animation: lineagePulse 1.6s ease-in-out infinite; }
+.react-flow__edge.edge-new .react-flow__edge-path { animation: edgeDraw 0.3s steps(3) forwards; }
+.react-flow__edge.lineage .react-flow__edge-path { stroke: var(--primary); stroke-width: 2.5; animation: lineagePulse 1.6s steps(4) infinite; }
 .react-flow__edge.dimmed .react-flow__edge-path { stroke-opacity: 0.25; }
-.react-flow__edge.edge-active .react-flow__edge-path { stroke-dasharray: 8 4 2 4; animation: edgeDashWalk 0.6s linear infinite; }
+/* Task-status edge styles — dashed open, animated in-progress, solid done */
 .react-flow__edge.edge-open .react-flow__edge-path { stroke-dasharray: 4 4; }
+.react-flow__edge.edge-active .react-flow__edge-path { stroke-dasharray: 8 4 2 4; animation: edgeDashWalk 0.6s steps(6) infinite; }
 .react-flow__edge.edge-done .react-flow__edge-path { stroke-dasharray: none; }
 .react-flow__attribution { display: none; }
 
@@ -183,7 +186,9 @@
 [data-sonner-toaster] [data-sonner-toast] { border-radius: 0 !important; border: 3px solid var(--border) !important; box-shadow: 3px 3px 0 var(--border) !important; }
 
 @media (prefers-reduced-motion: reduce) {
+  .react-flow__node.node-new > *,
   .react-flow__edge.lineage .react-flow__edge-path,
-  .react-flow__edge.edge-active .react-flow__edge-path { animation: none; }
+  .react-flow__edge.edge-active .react-flow__edge-path,
+  .react-flow__edge.edge-new .react-flow__edge-path { animation: none; }
   [class*="transition-"] { transition-duration: 0.01ms !important; }
 }

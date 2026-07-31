@@ -39,10 +39,12 @@ const RELATION_COLOR: Record<string, string> = {
   depends_on: "#1B1712",
 }
 
-const TASK_STATUS_DASH: Record<string, string> = {
-  open: "4 4",
-  in_progress: "2 4",
-  done: "none",
+/** Task status → edge CSS class for dash pattern. */
+function edgeStatusClass(taskStatus: string | undefined): string {
+  if (!taskStatus) return ""
+  if (taskStatus === "done") return "edge-done"
+  if (taskStatus === "in_progress" || taskStatus === "in_review") return "edge-active"
+  return "edge-open" // open / assigned — work not started
 }
 
 interface CanvasProps {
@@ -75,31 +77,41 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
 
   const [measured, setMeasured] = useState<Record<string, { width: number; height: number }>>({})
 
+  // Gate nodePop / edgeDraw to first appearance only — avoids re-animating on every store change.
+  const seenNodeIds = useRef<Set<string>>(new Set())
+  const seenEdgeIds = useRef<Set<string>>(new Set())
+
   const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
 
   const flowNodes = useMemo<FlowNode<GraphNodeData>[]>(() => {
     const memberNames = new Map(members.map((member) => [member.id, member.name]))
     const parseStates = new Map(assets.map((asset) => [asset.id, asset.parse_state]))
 
-    return nodes.map((node) => ({
-      id: node.id,
-      type: node.kind,
-      position: { x: node.x, y: node.y },
-      selected: node.id === selectedNodeId,
-      measured: measured[node.id],
-      data: {
-        node,
-        assigneeName: node.assignee_id ? memberNames.get(node.assignee_id) ?? "" : "",
-        parseState:
-          node.kind === "asset" && node.source_asset_id
-            ? parseStates.get(node.source_asset_id) ?? null
-            : null,
-        dimmed: lineageActive && !lineageIds.has(node.id),
-        inLineage: lineageActive && lineageIds.has(node.id),
-        isFocusedTask: node.id === focusedTaskId,
-        depth: null,
-      },
-    }))
+    return nodes.map((node) => {
+      const isNew = !seenNodeIds.current.has(node.id)
+      if (isNew) seenNodeIds.current.add(node.id)
+
+      return {
+        id: node.id,
+        type: node.kind,
+        position: { x: node.x, y: node.y },
+        selected: node.id === selectedNodeId,
+        measured: measured[node.id],
+        className: isNew ? "node-new" : undefined,
+        data: {
+          node,
+          assigneeName: node.assignee_id ? memberNames.get(node.assignee_id) ?? "" : "",
+          parseState:
+            node.kind === "asset" && node.source_asset_id
+              ? parseStates.get(node.source_asset_id) ?? null
+              : null,
+          dimmed: lineageActive && !lineageIds.has(node.id),
+          inLineage: lineageActive && lineageIds.has(node.id),
+          isFocusedTask: node.id === focusedTaskId,
+          depth: null,
+        },
+      }
+    })
   }, [nodes, members, assets, selectedNodeId, lineageActive, lineageIds, focusedTaskId, measured])
 
   const flowEdges = useMemo<FlowEdge[]>(
@@ -107,10 +119,16 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
       edges.map((edge) => {
         const inLineage = lineageActive && lineageIds.has(edge.source_id) && lineageIds.has(edge.target_id)
         const targetNode = nodeMap.get(edge.target_id)
-        const taskDash = targetNode?.kind === "task" && targetNode.task_status
-          ? TASK_STATUS_DASH[targetNode.task_status]
-          : undefined
+        const statusClass = targetNode?.kind === "task" ? edgeStatusClass(targetNode.task_status) : ""
         const relColor = RELATION_COLOR[edge.relation] ?? "#1B1712"
+        const isNew = !seenEdgeIds.current.has(edge.id)
+        if (isNew) seenEdgeIds.current.add(edge.id)
+
+        const classes = [
+          isNew ? "edge-new" : "",
+          lineageActive ? (inLineage ? "lineage" : "dimmed") : "",
+          statusClass,
+        ].filter(Boolean).join(" ")
 
         return {
           id: edge.id,
@@ -118,7 +136,7 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
           target: edge.target_id,
           type: "default",
           label: RELATION_LABEL[edge.relation],
-          className: lineageActive ? (inLineage ? "lineage" : "dimmed") : undefined,
+          className: classes || undefined,
           markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 14,
@@ -129,7 +147,6 @@ export function Canvas({ activeRelation, onUpload }: CanvasProps) {
             stroke: inLineage ? "var(--primary)" : relColor,
             strokeWidth: 2.5,
             strokeLinejoin: "miter",
-            strokeDasharray: taskDash ?? "none",
           },
           labelBgPadding: [6, 3] as [number, number],
           labelBgBorderRadius: 0,
