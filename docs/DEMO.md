@@ -85,16 +85,19 @@ Show the Jira comment carrying the same link.
 | Brief looks thin | It says `generated_by: lineage-fallback`. The key is missing or rate limited. The structured lineage is still real, and that is the part you are claiming. |
 | No network at all | Play the recording. |
 
-## Recording the fallback
+## Recording the submission video
 
-Record the run above end to end, once you have rehearsed it twice and the timing is comfortable. Keep it, unedited, at `demo/fallback.mp4`.
+**This recording is the primary judged artifact, not a wifi-failure backup.** Per organizer confirmation (Shreya, 2026-07-31 12:51pm; Nick @ Mistral, 2:12pm): every team submits exactly one video demo (MP4 upload or YouTube link) plus an optional prototype link — no code is submitted. Only teams selected for the Top Teams Pitch (Sat 2:00-2:30pm) also present live; everyone else is judged on this video alone. Treat it accordingly: script it, rehearse it, record it properly, don't leave it for the last hour.
+
+Record the run above end to end, once you have rehearsed it twice and the timing is comfortable. Keep it, unedited, at `demo/submission.mp4`.
 
 - 1080p, whole screen, cursor visible.
 - Real network for steps 2, 5, 6 and 7. A recording of the mocked path proves nothing.
 - Do not cut the parse wait or the agent thinking. That the wait is short is part of the claim.
 - Say the words out loud while recording. If you have to narrate live over silent video you will talk over the beat that matters.
+- Mistral's guidance is that they'll probe whether the team can explain the technical build, not just show it working — consider a brief "how it works" narration beat (lineage as a graph walk, not a prompt; Jira as a real outbound create) rather than only a feature walkthrough. See `STRATEGY.md` §8a.
 
-Note in your submission that the video is a fallback and the live demo is the real artifact.
+If selected for the live Top Teams Pitch, the same rehearsed run works live — the video isn't wasted effort, it's the dress rehearsal for that too.
 
 ## Questions you will get
 
