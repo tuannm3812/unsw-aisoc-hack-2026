@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<span style="display:inline-flex;line-height:0">{{ svg }}</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  grids = {
+    finding: { rows: ["..#####...",".#.....#..","#...#...#.","#..#.#..#.","#.#...#.#.","#.......#.",".#.....#..","..#####.#.",".......###","........##"]},
+    constraint: { rows: ["..#####...",".#.....#..",".#.....#..","#########.","#########.","###...###.","###...###.","###...###.","#########.","#########."]},
+    task: { rows: ["##########","#........#","#......###","#.....##.#","#.#..##..#","#.##.##..#","#.####...#","#..##....#","#........#","##########"]},
+    document: { rows: ["######....","#....#....","#....##...","#.....#...","#.###.#...","#.....#...","#.###.#...","#.....#...","#.###.#...","#######..."]},
+    plus: { rows: ["...#...","...#...","...#...","#######","...#...","...#...","...#..."]},
+    minus: { rows: [".......",".......",".......","#######",".......",".......","......."]},
+    expand: { rows: ["###...###","#.......#","#.......#",".........",".........",".........","#.......#","#.......#","###...###"]},
+    upload: { rows: ["....#....","...###...","..#.#.#..",".#..#..#.","....#....",".........","#.......#","#.......#","#########"]},
+    chart: { rows: [".......#.",".......#.","...#...#.","...#...#.","...#.#.#.",".#.#.#.#.",".#.#.#.#.",".#.#.#.#.","#########"]},
+    logout: { rows: ["#####....","#........","#...#....","#...##...","#.######.","#...##...","#...#....","#........","#####...."]},
+    arrow: { rows: [".........","....#....",".....#...","......#..","#########","......#..",".....#...","....#....","........."]},
+    share: { rows: ["##.....##","##.....##",".#.....#.","..#...#..","...###...","..#...#..",".#.....#.","##.....##","##.....##"]},
+    flame: { colors: {y:"#FFD21E",O:"#FFAF00",o:"#FF7A00",r:"#F44D00",R:"#E10500"}, rows: ["....y....","...yy....","...yOy...","..yOOy...","..OOOoy..",".OOooooO.",".OoorooO.","OoorRrooO","OorRRRroO",".orRRRro.","..orRro.."]},
+  };
+  renderVals() {
+    const glyph = this.props.glyph || "finding";
+    const size = parseInt(this.props.size) || 18;
+    const color = this.props.color || "#1B1712";
+    const g = this.grids[glyph] || this.grids.finding;
+    const rows = g.rows;
+    const cmap = g.colors;
+    const W = Math.max.apply(null, rows.map((r) => r.length));
+    const H = rows.length;
+    const rects = [];
+    rows.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const ch = row[x];
+        if (ch === "." || ch === " ") continue;
+        const fill = (cmap && cmap[ch]) || color;
+        rects.push(React.createElement("rect", { key: x + "-" + y, x, y, width: 1, height: 1, fill }));
+      }
+    });
+    const svg = React.createElement("svg", { width: size, height: size, viewBox: "0 0 " + W + " " + H, shapeRendering: "crispEdges", style: { display: "block", imageRendering: "pixelated" }}, rects);
+    return { svg };
+  }
+}
+</script>
+</body>
+</html>
