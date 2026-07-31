@@ -1,0 +1,47 @@
+# Secrets — never commit
+.env
+.env.local
+.env*.local
+key.txt
+*.key
+secrets*
+
+# Python
+backend/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Data and generated artefacts
+backend/storage/*.db
+backend/storage/*.db-wal
+backend/storage/*.db-shm
+backend/storage/uploads/
+backend/storage/cache/
+
+# Node / Next.js
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts
+frontend/tsconfig.tsbuildinfo
+
+# Vercel / deploy (if used later)
+.vercel/
+
+# Logs / OS / editor
+*.log
+npm-debug.log*
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+Thumbs.db
+
+# Demo recordings (large; keep locally)
+demo/*.mp4
+demo/*.mov
+
+# Scratch from tooling
+_remote_pull/
