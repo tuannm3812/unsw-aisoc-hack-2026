@@ -86,6 +86,7 @@ The design spec imagined a Next.js monolith on Vercel with Neon, Conflict Detect
 | Jira push | Shipped (on assign; live Cloud REST v3) |
 | Conflict Detector / Task Spec button | Not shipped — cut for reliability; lineage + Jira + PR close the story |
 | Next monolith / Neon / Vercel Blob | Not used — FastAPI + SQLite + local uploads for a one-command local demo |
+| Persona: Jamie, generic startup PM/designer/2 engineers | Replaced with Priya (PM) / Dr Aisha Khan (research scientist) / Marco (engineer) — a more specific research-to-engineering handoff story that covers all four verbs in the official problem statement (make sense of information, present ideas, align on decisions, review work), not just some of them |
 
 Stretch cut on purpose: real-time multiplayer, inbound Jira sync, GitHub PR polling, embeddings. See design spec §3 and `STRATEGY.md` §6 (MVP first).
 

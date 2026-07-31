@@ -133,7 +133,7 @@ Direct quote from Nick @ Mistral: *"No code submission required - focus should b
 
 Implications:
 - Since no code is submitted, judges' main way to verify technical depth is **asking the team to explain the build** — live, in Q&A, or on the video. A team that can't explain their own architecture reads as "AI did this without human oversight," which directly undercuts the "Use of AI" guidance (§3) and likely hurts Technical Execution scoring even though no code is inspected.
-- **Every team member should be able to explain at least one part of the system in their own words** — not just the person who wrote it. Assign explainable ownership (e.g. "Jamie can explain the Task Spec Generation prompt and why it's structured that way") rather than letting the build stay a black box only one person understands.
+- **Every team member should be able to explain at least one part of the system in their own words** — not just the person who wrote it. Assign explainable ownership (e.g. "one teammate can explain why the lineage walk is cycle-safe and depth-capped, another can explain why Jira timeouts are recorded as ambiguous instead of retried") rather than letting the build stay a black box only one person understands. See `docs/QA_PREP.md` for the specific questions to prepare for.
 - The video demo should probably include a brief "how it works" narration beat, not just a feature walkthrough — since it's the primary artifact for teams not selected for the live pitch, it needs to carry the technical-understanding signal on its own.
 
 ## 9. Open Questions to Confirm With Organizers

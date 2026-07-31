@@ -5,11 +5,13 @@ Event: UNSW AiSoc x Atlassian x Mistral Hackathon (see `STRATEGY.md` for full ev
 
 Revision note: stack (§4) updated from an initial FastAPI + separate React proposal to a Next.js monolith on Vercel, based on a teammate's Google Stitch UI proposal — adopted for lower cross-service risk in a 24hr build. Scope (§3) keeps MCP as co-equal to Task Spec Generation, per team decision, rather than dropping MCP. Conflict Detector (§3, §5, §6) added as the pitch's "wow moment," chosen specifically to cover "align on decisions" from the official problem statement, which the original scope didn't have a standout beat for. Jira push (§3, §5, §6) promoted from stretch to committed Phase 1 scope, since this hackathon is explicitly Atlassian x Mistral — the pitch benefits from literally showing both sponsors' tech working together, not just Mistral.
 
+**This document is the original design intent, not what shipped.** The persona below (Jamie) was superseded during the actual build by Priya (PM) / Dr Aisha Khan (research scientist) / Marco (engineer) — see `README.md` for the current persona and "What shipped vs the design spec" for the full list of changes, and `docs/DEMO.md` for the actual pitch narrative to use. Priya/Aisha/Marco is the one to pitch with: it covers all four verbs in the official problem statement (make sense of information, present ideas, align on decisions, review work) more directly than the persona originally drafted here.
+
 ## 1. Problem & Fit
 
 Official problem statement: "How might AI help multi-disciplinary teams make sense of information, present ideas, align on decisions, and review work more effectively?"
 
-**Persona**: Jamie, a PM on a 4-person startup team (PM + designer + 2 engineers) shipping a feature this sprint.
+**Persona** *(superseded — see note above)*: Jamie, a PM on a 4-person startup team (PM + designer + 2 engineers) shipping a feature this sprint.
 
 **Pain point**: The context behind a decision lives scattered across a Slack thread, a Figma comment, a design doc, and old PR descriptions. When a new task needs that context, someone manually hunts across all of it, or the reasoning behind a decision gets forgotten and re-litigated.
 
