@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "spatial-brain": {
+      "command": "backend/.venv/Scripts/python.exe",
+      "args": ["-m", "app.mcp.server"],
+      "cwd": "backend",
+      "env": {
+        "SPATIAL_API_URL": "http://127.0.0.1:8010",
+        "SPATIAL_MCP_TOKEN": "dev-mcp-token",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  }
+}
