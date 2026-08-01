@@ -1,5 +1,7 @@
 # Spatial Brain
 
+**Team Kollab** — UNSW AiSoc × Atlassian × Mistral hackathon 2026
+
 > How might AI help multi-disciplinary teams make sense of information, present ideas, align on decisions, and review work more effectively?
 
 **Different teams. Different information.** Design whiteboards, Engineering PRs, Science PDFs, Ops spreadsheets — one shared canvas. A Mistral agent roster senses, aligns, presents, and reviews; humans still decide what becomes true.

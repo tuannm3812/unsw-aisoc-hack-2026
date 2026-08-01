@@ -241,6 +241,39 @@
     text-wrap: balance;
   }
 
+  .shot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    flex: 1;
+    min-height: 0;
+  }
+  .shot {
+    border: 2.5px solid var(--ink);
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    flex: 1;
+    min-height: 0;
+    display: block;
+  }
+  .shot .cap {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.03em;
+    color: var(--cream);
+    padding: 8px 12px;
+    flex-shrink: 0;
+    border-top: 1.5px solid var(--muted);
+  }
+
   .diagram {
     font-family: var(--mono);
     font-size: 12.5px;
@@ -290,7 +323,7 @@
   }
 </style>
 
-<div class="brand">Spatial Brain — Pitch</div>
+<div class="brand">Spatial Brain — Team Kollab</div>
 
 <div class="deck" id="deck">
 
@@ -298,7 +331,7 @@
     <div class="card">
       <div class="bar red"></div>
       <div class="content" style="align-items:flex-start; justify-content:center;">
-        <div class="eyebrow" style="--accent:var(--red)">UNSW &times; Mistral AI &times; Atlassian — 2026</div>
+        <div class="eyebrow" style="--accent:var(--red)">UNSW &times; Mistral AI &times; Atlassian — 2026 &middot; Team Kollab</div>
         <h1 style="font-size:clamp(52px,8vw,96px)">SPATIAL<br>BRAIN</h1>
         <p class="lede">A research paper becomes a Jira issue becomes a pull request &mdash; and every hop stays visible on one canvas.</p>
       </div>
@@ -392,6 +425,21 @@
 
   <section class="slide">
     <div class="card">
+      <div class="bar orange"></div>
+      <div class="content">
+        <div class="eyebrow" style="--accent:var(--orange)">What It Actually Looks Like</div>
+        <div class="shot-grid">
+          <div class="shot"><img src="pitch-screens/sign-in.jpg" alt="Sign in screen"><div class="cap">Sign in &mdash; one-click persona picker for the demo</div></div>
+          <div class="shot"><img src="pitch-screens/canvas.jpg" alt="Canvas overview"><div class="cap">The canvas &mdash; typed nodes, colour-coded, connected by relation</div></div>
+          <div class="shot"><img src="pitch-screens/inspector.jpg" alt="Task inspector"><div class="cap">Inspector &mdash; owner, status, Jira sync, PR tracking</div></div>
+          <div class="shot"><img src="pitch-screens/context-menu.jpg" alt="Context menu"><div class="cap">Right-click to create &mdash; context-aware node creation</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="card">
       <div class="bar amber"></div>
       <div class="content">
         <div class="eyebrow" style="--accent:var(--amber)">Why We&rsquo;re Different</div>
@@ -442,7 +490,7 @@
       <div class="content" style="align-items:flex-start;">
         <div class="eyebrow" style="--accent:var(--red)">Closing</div>
         <p class="closing-line">Nothing here is a new place to work.<br>It is the missing edge between the places people already work.</p>
-        <p class="lede muted">Spatial Brain &mdash; Priya, Dr Aisha Khan, Marco &amp; team.<br>UNSW &times; Mistral AI &times; Atlassian, 2026.</p>
+        <p class="lede muted">Spatial Brain &mdash; Team Kollab.<br>UNSW &times; Mistral AI &times; Atlassian, 2026.</p>
       </div>
     </div>
   </section>

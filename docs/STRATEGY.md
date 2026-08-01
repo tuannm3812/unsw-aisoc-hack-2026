@@ -1,5 +1,7 @@
 # UNSW AiSoc Hackathon 2026 — Strategy
 
+Team: **Kollab**
+
 Sources: `INFORMATION SESSION.pdf` (Info Session and Workshop deck, read 2026-07-31); DevPost rules; organizer Slack announcements; Atlassian's opening presentation (§1b, checked 2026-07-31).
 
 ## 1. Event Timeline
