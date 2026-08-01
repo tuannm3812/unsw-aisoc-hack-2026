@@ -56,6 +56,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export const api = {
   health: () => request<Health>("/api/health"),
+  verifyMistral: () => request<{ ok: boolean }>("/api/integrations/mistral/verify"),
 
   demoAccounts: () => request<CurrentUser[]>("/api/auth/demo-accounts"),
   login: (email: string, password: string) =>

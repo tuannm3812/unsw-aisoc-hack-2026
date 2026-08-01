@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { LogOut } from "lucide-react"
 
@@ -45,6 +46,10 @@ export function TopBar({ user, health }: { user: CurrentUser | null; health: Hea
   const setMyTaskFilter = useGraphStore((state) => state.setMyTaskFilter)
 
   const taskCount = nodes.filter((node) => node.kind === "task").length
+  const lastSync = useGraphStore((state) => state.lastSync)
+  const [, tick] = useState(0)
+  useEffect(() => { const i = setInterval(() => tick((t) => t + 1), 1000); return () => clearInterval(i) }, [])
+  const ago = lastSync ? Math.round((Date.now() - lastSync) / 1000) : -1
 
   async function signOut() {
     await api.logout().catch(() => undefined)
@@ -65,8 +70,8 @@ export function TopBar({ user, health }: { user: CurrentUser | null; health: Hea
       <div className="min-w-0">
         <p className="truncate text-sm font-bold">{board?.name ?? "Board"}</p>
         <p className="text-muted-foreground text-2xs truncate">
-          {nodes.length} node{nodes.length === 1 ? "" : "s"} · {taskCount} task
-          {taskCount === 1 ? "" : "s"}
+          {nodes.length} node{nodes.length === 1 ? "" : "s"} · {taskCount} task{taskCount === 1 ? "" : "s"}
+          {ago >= 0 && <span className="ml-1.5 opacity-60">· synced {ago === 0 ? "just now" : `${ago}s ago`}</span>}
         </p>
       </div>
 

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { memo } from "react"
 import { Handle, Position, type NodeProps } from "@xyflow/react"
@@ -109,6 +109,7 @@ function GraphNodeCardImpl({ data, selected }: NodeProps & { data: GraphNodeData
     depth,
     pendingCandidates,
     ancestorCount,
+    dependentCount,
   } = data
   const meta = KIND_META[node.kind]
   const Icon = meta.icon
