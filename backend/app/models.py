@@ -188,6 +188,9 @@ class Node(Base):
     confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     extraction_revision: Mapped[int] = mapped_column(Integer, default=0)
 
+    # Governance — constraint nodes carry machine-verifiable rules
+    rule_definition: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
     # Task-only fields
     assignee_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     task_status: Mapped[str] = mapped_column(String(40), default="open")

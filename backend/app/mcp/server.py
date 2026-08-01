@@ -138,6 +138,33 @@ def spatial_link_pull_request(
     url must be an absolute http or https link. state is one of open, draft, merged
     or closed, and is recorded as your assertion; nothing verifies it against GitHub.
     """
+    # Governance atomicity check — enforced in the channel, not as post-processing.
+    try:
+        with _client() as client:
+            gov = client.post(
+                f"/api/agent/tasks/{task_id}/governance-check",
+                json={
+                    "action": "report_pull_request",
+                    "url": url,
+                    "title": title,
+                    "state": state,
+                },
+            )
+            gov.raise_for_status()
+            gov_result = gov.json()
+            if not gov_result.get("allowed", True):
+                return {
+                    "error": "Governance blocked this action.",
+                    "violations": gov_result.get("violations", []),
+                    "guidance": (
+                        "The constraint rules above must be satisfied before a pull "
+                        "request can be reported. Review the violations and address each "
+                        "one, then retry."
+                    ),
+                }
+    except Exception:  # noqa: BLE001 — if governance check fails, proceed anyway (fail-open for now)
+        pass
+
     try:
         with _client() as client:
             response = client.post(

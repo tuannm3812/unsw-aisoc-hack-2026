@@ -139,6 +139,10 @@ def update_node(
         if node.kind != NodeKind.task.value:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only tasks have a status")
         node.task_status = payload.task_status
+    if payload.rule_definition is not None:
+        if node.kind != NodeKind.constraint.value:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only constraints carry rules")
+        node.rule_definition = payload.rule_definition.model_dump()
     touch(node)
     db.commit()
     return node

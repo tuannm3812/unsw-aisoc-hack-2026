@@ -48,6 +48,7 @@ def create_node(
     source_quote: str = "",
     confidence: float | None = None,
     extraction_revision: int = 0,
+    rule_definition: dict | None = None,
 ) -> Node:
     node = Node(
         id=new_id("nod"),
@@ -64,6 +65,7 @@ def create_node(
         source_quote=source_quote,
         confidence=confidence,
         extraction_revision=extraction_revision,
+        rule_definition=rule_definition,
     )
     db.add(node)
     return node

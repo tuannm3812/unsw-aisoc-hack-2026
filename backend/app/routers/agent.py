@@ -21,6 +21,7 @@ from ..db import get_db
 from ..models import Board, Node, NodeKind, User
 from ..schemas import PullRequestReport, TaskContextOut
 from ..services.context import task_context
+from ..services.governance import check_constraints
 from ..services.graph import log_activity
 from ..services.jira_service import JiraError, jira_service
 from ..services.notify import notify
@@ -111,6 +112,58 @@ async def get_context(
     )
 
 
+@router.post("/tasks/{task_id}/governance-check")
+def governance_check(
+    task_id: str,
+    payload: dict,
+    db: Session = Depends(get_db),
+) -> dict:
+    """Evaluate all constraint rules that apply to this task.
+
+    Called by the MCP server before accepting a write. Returns allowed:false with
+    violation details when constraints block the action, so the agent can self-correct
+    rather than having its work silently dropped.
+    """
+    task = _task_or_404(db, task_id)
+    result = check_constraints(db, task)
+
+    if not result.allowed and result.violations:
+        log_activity(
+            db,
+            board_id=task.board_id,
+            actor="governance",
+            action="governance.blocked",
+            subject_id=task.id,
+            detail={
+                "action": payload.get("action", "unknown"),
+                "violations": [
+                    {
+                        "constraint_id": v.constraint_id,
+                        "constraint_title": v.constraint_title,
+                        "rule": f"{v.rule_field} {v.rule_operator} {v.rule_value}",
+                        "actual": str(v.actual_value),
+                    }
+                    for v in result.violations
+                ],
+            },
+        )
+        db.commit()
+
+    return {
+        "allowed": result.allowed,
+        "checked_constraints": result.checked_constraints,
+        "violations": [
+            {
+                "constraint_id": v.constraint_id,
+                "constraint_title": v.constraint_title,
+                "rule": f"{v.rule_field} {v.rule_operator} {v.rule_value}",
+                "actual": v.actual_value,
+            }
+            for v in result.violations
+        ],
+    }
+
+
 @router.post("/tasks/{task_id}/pull-request")
 async def report_pull_request(
     task_id: str,
@@ -124,6 +177,39 @@ async def report_pull_request(
     but does not undo the write.
     """
     task = _task_or_404(db, task_id)
+
+    # Governance atomicity — enforced BEFORE the write, in the channel.
+    gov = check_constraints(db, task)
+    if not gov.allowed:
+        log_activity(
+            db,
+            board_id=task.board_id,
+            actor="governance",
+            action="governance.blocked",
+            subject_id=task.id,
+            detail={
+                "action": "report_pull_request",
+                "violations": [
+                    {"constraint": v.constraint_title, "rule": f"{v.rule_field} {v.rule_operator} {v.rule_value}"}
+                    for v in gov.violations
+                ],
+            },
+        )
+        db.commit()
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                "error": "Governance constraints block this action.",
+                "violations": [
+                    {
+                        "constraint": v.constraint_title,
+                        "rule": f"{v.rule_field} {v.rule_operator} {v.rule_value}",
+                        "actual": v.actual_value,
+                    }
+                    for v in gov.violations
+                ],
+            },
+        )
 
     task.pr_url = payload.url
     task.pr_title = payload.title

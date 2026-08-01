@@ -70,6 +70,7 @@ class NodeOut(BaseModel):
     alignment_payload: dict | None = None
     present_payload: dict | None = None
     review_checklist: list | None = None
+    rule_definition: dict | None = None
     created_by: str
     revision: int
     updated_at: datetime
@@ -140,12 +141,33 @@ class NodeCreate(BaseModel):
     y: float = 0.0
 
 
+class ConstraintRule(BaseModel):
+    """A single machine-verifiable rule on a constraint node.
+
+    Supported operators: >=, <=, ==, !=, exists, missing.
+    The field is checked against the relevant node's attribute.
+    """
+
+    field: str = Field(min_length=1, max_length=60)
+    operator: str = Field(pattern="^(>=|<=|==|!=|exists|missing)$")
+    value: str | int | float | bool | None = None
+
+
+class RuleDefinition(BaseModel):
+    """Container for the rules a constraint node enforces."""
+
+    applies_to: list[str] = Field(default_factory=lambda: ["task"])
+    rules: list[ConstraintRule] = Field(default_factory=list, max_length=20)
+    block_message: str = Field(default="", max_length=500)
+
+
 class NodeUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=400)
     body: str | None = None
     task_status: str | None = None
     decision_state: str | None = None
     decision_rationale: str | None = None
+    rule_definition: RuleDefinition | None = None
 
 
 class NodeMove(BaseModel):
