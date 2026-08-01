@@ -21,10 +21,6 @@ class Settings(BaseSettings):
     session_secret: str = "dev-only-change-me"
     session_cookie: str = "spatial_session"
 
-    # Team access — a shared password so startup teams can jump in without
-    # individual accounts. Set to empty to disable.
-    team_password: str = "spatial-team"
-
     # Mistral. Pinned rather than using -latest so demo behaviour does not drift
     # mid-rehearsal. Check both names with GET /api/integrations/mistral/verify,
     # since Mistral retires dated snapshots and a retired name fails the whole call.

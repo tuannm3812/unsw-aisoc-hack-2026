@@ -1,8 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight, Key, Loader2, Users } from "lucide-react"
+import { ArrowRight, Loader2 } from "lucide-react"
 
 import { api } from "@/lib/api"
 import type { CurrentUser } from "@/lib/types"
@@ -41,9 +41,6 @@ export default function LoginPage() {
   const [accounts, setAccounts] = useState<CurrentUser[]>([])
   const [pending, setPending] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [teamPw, setTeamPw] = useState("")
-  const [teamLoading, setTeamLoading] = useState(false)
-  const teamRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     api
@@ -70,25 +67,6 @@ export default function LoginPage() {
     }
   }
 
-  const teamSignIn = useCallback(async () => {
-    if (!teamPw.trim()) return
-    setTeamLoading(true)
-    setError(null)
-    try {
-      await api.teamLogin(teamPw.trim())
-      const boards = await api.boards()
-      if (boards.length === 0) {
-        setError("No board is seeded yet. Run the seed script in the backend.")
-        setTeamLoading(false)
-        return
-      }
-      router.push(`/board/${boards[0].id}`)
-    } catch (err) {
-      setError((err as Error).message)
-      setTeamLoading(false)
-    }
-  }, [teamPw, router])
-
   return (
     <main className="relative flex min-h-dvh items-center justify-center px-6 py-12">
       <div className="bg-grid-paper pointer-events-none absolute inset-0" />
@@ -100,52 +78,17 @@ export default function LoginPage() {
         </div>
 
         <h1 className="mt-8 font-sans text-3xl font-bold leading-tight">
-          Your team&rsquo;s spatial brain.
+          Pick who you are on the team.
         </h1>
         <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
-          One password for the whole startup. Below that, pick your role if you need a
-          specific persona for the demo.
+          The board is already set up with all three of you on it. Everyone shares the password{" "}
+          <code className="border-[2px] border-[#1B1712] bg-background px-1.5 py-0.5 font-mono text-xs">
+            {DEMO_PASSWORD}
+          </code>.
         </p>
 
         <div className="mt-8 overflow-hidden border-[3px] border-[#1B1712] bg-white shadow-[8px_8px_0_#1B1712]">
-          <form
-          onSubmit={(e) => { e.preventDefault(); teamSignIn() }}
-          className="mt-8 border-[3px] border-[#1B1712] bg-white p-5 shadow-[8px_8px_0_#1B1712]"
-        >
-          <div className="flex items-center gap-2">
-            <Key className="size-4 text-[#1B1712]" strokeWidth={2} />
-            <span className="font-pixel text-[8px] tracking-[0.05em] uppercase">Team Access</span>
-          </div>
-          <p className="text-muted-foreground mt-2 text-xs leading-relaxed">
-            Your startup team shares one password. No accounts, no invites — just type it and go.
-          </p>
-          <div className="mt-3 flex gap-2">
-            <input
-              ref={teamRef}
-              type="password"
-              value={teamPw}
-              onChange={(e) => setTeamPw(e.target.value)}
-              placeholder="Team password"
-              className="h-10 flex-1 border-[2px] border-[#1B1712] bg-background px-3 text-sm font-mono placeholder:text-muted-foreground/50 focus:border-[#E10500] focus:outline-none"
-            />
-            <button
-              type="submit"
-              disabled={!teamPw.trim() || teamLoading}
-              className="flex h-10 items-center gap-2 border-[2px] border-[#1B1712] bg-[#1B1712] px-4 text-sm font-bold text-white pixel-btn hover:bg-[#E10500] hover:border-[#E10500] disabled:opacity-50 transition-colors"
-            >
-              {teamLoading ? <Loader2 className="size-4 animate-spin" /> : <Users className="size-4" />}
-              Join
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-8 flex items-center gap-3">
-          <span className="bg-[#1B1712] h-px flex-1" />
-          <span className="font-pixel text-[8px] text-muted-foreground tracking-[0.05em]">or pick your role</span>
-          <span className="bg-[#1B1712] h-px flex-1" />
-        </div>
-
-        {accounts.length === 0 && !error && (
+          {accounts.length === 0 && !error && (
             <div className="text-muted-foreground flex items-center gap-2.5 p-5 text-sm">
               <Loader2 className="size-4 animate-spin" />
               Loading the team
