@@ -1,0 +1,485 @@
+<title>Spatial Brain — Pitch Deck</title>
+<style>
+  :root {
+    --cream: #F3EEE1;
+    --ink: #1B1712;
+    --red: #E10500;
+    --amber: #F2A100;
+    --orange: #FF6A00;
+    --white: #FFFFFF;
+    --dot: #D8CEB4;
+    --muted: #6B6355;
+
+    --display: 'Space Grotesk', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--cream);
+    background-image: radial-gradient(var(--dot) 1.5px, transparent 1.8px);
+    background-size: 22px 22px;
+    color: var(--ink);
+    font-family: var(--display);
+  }
+
+  .deck {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4.5vh 4vw;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(14px);
+    transition: opacity 0.32s ease, transform 0.32s ease;
+  }
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .slide { transition: opacity 0.01s linear; transform: none; }
+  }
+
+  .card {
+    width: 100%;
+    max-width: 1180px;
+    height: 100%;
+    max-height: 780px;
+    background: var(--white);
+    border: 3px solid var(--ink);
+    box-shadow: 10px 10px 0 var(--ink);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .bar { height: 8px; width: 100%; flex-shrink: 0; }
+  .bar.red { background: var(--red); }
+  .bar.amber { background: var(--amber); }
+  .bar.orange { background: var(--orange); }
+  .bar.ink { background: var(--ink); }
+
+  .content {
+    flex: 1;
+    min-height: 0;
+    padding: 48px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 22px;
+    overflow-y: auto;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    background: var(--accent, var(--red));
+    border: 1.5px solid var(--ink);
+    flex-shrink: 0;
+  }
+
+  h1 {
+    font-size: clamp(38px, 5vw, 64px);
+    line-height: 1.02;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h2 {
+    font-size: clamp(26px, 3.2vw, 38px);
+    line-height: 1.12;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: clamp(16px, 1.6vw, 20px);
+    line-height: 1.55;
+    color: var(--ink);
+    max-width: 68ch;
+  }
+  .muted { color: var(--muted); }
+
+  .quote {
+    font-size: clamp(22px, 2.6vw, 32px);
+    line-height: 1.35;
+    font-weight: 600;
+    text-wrap: balance;
+    border-left: 4px solid var(--accent, var(--red));
+    padding-left: 22px;
+  }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1.5px solid var(--ink);
+    padding: 4px 9px;
+    background: var(--cream);
+  }
+
+  .persona-row { display: flex; gap: 18px; flex-wrap: wrap; }
+  .persona {
+    flex: 1;
+    min-width: 220px;
+    border: 2.5px solid var(--ink);
+    padding: 16px 18px;
+    background: var(--cream);
+  }
+  .persona .role {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .persona .name { font-size: 20px; font-weight: 700; margin-top: 2px; }
+
+  .pillars { display: flex; flex-direction: column; gap: 0; border-top: 2.5px solid var(--ink); }
+  .pillar {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1.5px solid #E4DDCB;
+    align-items: baseline;
+  }
+  .pillar:last-child { border-bottom: none; }
+  .pillar .verb {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent, var(--red));
+  }
+  .pillar .move { font-size: 16px; line-height: 1.4; }
+
+  .steps { display: flex; flex-direction: column; gap: 10px; }
+  .step { display: grid; grid-template-columns: 40px 1fr; gap: 16px; align-items: start; }
+  .step .n {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--white);
+    background: var(--ink);
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step .body b { font-size: 15px; }
+  .step .body span { display: block; font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+
+  .compare { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .compare .col { border: 2px solid var(--ink); padding: 14px 16px; background: var(--cream); }
+  .compare .col.us { background: var(--ink); color: var(--white); }
+  .compare .col h3 {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 8px;
+  }
+  .compare .col p { font-size: 13.5px; line-height: 1.5; margin: 0; }
+
+  .claims { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .claim { border: 2px solid var(--ink); padding: 14px 16px; }
+  .claim .k {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .claim p { font-size: 14.5px; line-height: 1.5; margin: 6px 0 0; }
+
+  .criteria { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .crit { border: 2px solid var(--ink); padding: 12px 14px; text-align: left; }
+  .crit .pct { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+  .crit .name { font-size: 12.5px; font-weight: 700; margin-top: 4px; }
+  .signal {
+    margin-top: 6px;
+    border: 2.5px dashed var(--orange);
+    padding: 14px 18px;
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  .signal b { color: var(--orange); font-family: var(--mono); text-transform: uppercase; font-size: 12px; letter-spacing: 0.06em; }
+
+  .closing-line {
+    font-size: clamp(22px, 2.8vw, 32px);
+    font-weight: 700;
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+
+  .diagram {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.9;
+    background: var(--ink);
+    color: var(--cream);
+    padding: 16px 20px;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  footer.nav {
+    position: absolute;
+    bottom: 22px;
+    right: 34px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    z-index: 10;
+  }
+  .navbtn {
+    width: 30px; height: 30px;
+    border: 2px solid var(--ink);
+    background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .navbtn:hover { background: var(--ink); color: var(--white); }
+  .navbtn:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+  .count { tabular-nums: on; font-variant-numeric: tabular-nums; }
+
+  .brand {
+    position: absolute;
+    top: 22px;
+    left: 34px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    z-index: 10;
+  }
+</style>
+
+<div class="brand">Spatial Brain — Pitch</div>
+
+<div class="deck" id="deck">
+
+  <section class="slide active">
+    <div class="card">
+      <div class="bar red"></div>
+      <div class="content" style="align-items:flex-start; justify-content:center;">
+        <div class="eyebrow" style="--accent:var(--red)">UNSW &times; Mistral AI &times; Atlassian — 2026</div>
+        <h1 style="font-size:clamp(52px,8vw,96px)">SPATIAL<br>BRAIN</h1>
+        <p class="lede">A research paper becomes a Jira issue becomes a pull request &mdash; and every hop stays visible on one canvas.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="card">
+      <div class="bar ink"></div>
+      <div class="content">
+        <div class="eyebrow" style="--accent:var(--ink)">The Official Problem Statement</div>
+        <p class="quote" style="--accent:var(--ink)">&ldquo;How might AI help multi-disciplinary teams make sense of information, present ideas, align on decisions, and review work more effectively?&rdquo;</p>
+        <div>
+          <div class="eyebrow" style="--accent:var(--ink); margin-bottom:8px;">What the problem includes</div>
+          <div class="tag-row">
+            <span class="tag">Design</span><span class="tag">Engineering</span><span class="tag">Product</span><span class="tag">Operations</span><span class="tag">Business</span><span class="tag">Law</span><span class="tag">Science</span>
+          </div>
+          <div class="tag-row" style="margin-top:8px;">
+            <span class="tag">Pull requests</span><span class="tag">Whiteboard photos</span><span class="tag">Recordings</span><span class="tag">Documents</span><span class="tag">PDFs</span><span class="tag">Spreadsheets</span><span class="tag">Raw data</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="card">
+      <div class="bar amber"></div>
+      <div class="content">
+        <div class="eyebrow" style="--accent:var(--amber)">Who This Is For</div>
+        <div class="persona-row">
+          <div class="persona"><div class="role">Product Manager</div><div class="name">Priya Raman</div></div>
+          <div class="persona"><div class="role">Research Scientist</div><div class="name">Dr Aisha Khan</div></div>
+          <div class="persona"><div class="role">Software Engineer</div><div class="name">Marco Silva</div></div>
+        </div>
+        <p class="lede"><b>The pain:</b> Cross-disciplinary work loses its reasoning in the handoff. A scientist&rsquo;s finding is retyped into a ticket, the ticket loses the constraint that made it necessary, and the engineer implements something subtly wrong.</p>
+        <p class="quote" style="--accent:var(--amber)">AI should package and pressure-test context &mdash; not replace judgment.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="card">
+      <div class="bar red"></div>
+      <div class="content">
+        <div class="eyebrow" style="--accent:var(--red)">The Solution, One Sentence</div>
+        <h2>A shared semantic canvas where multi-modal ingest and a Mistral specialist roster cover make&#8209;sense / present / align / review &mdash; while Spatial Brain stays the system of record.</h2>
+        <div class="diagram">Canvas (Next.js) &mdash;&mdash;&mdash; FastAPI &mdash;&mdash;&mdash; SQLite (system of record)
+                        &#9474;
+                        &#9500;&#9472; Multimodal extract &rarr; candidates &rarr; human promote
+                        &#9500;&#9472; Align / Present / Review graph tools
+                        &#9500;&#9472; Mistral Agents (Coordinator + specialists)
+                        &#9500;&#9472; Lineage assembler &rarr; MCP tools &rarr; coding agent
+                        &#9492;&#9472; Jira outbound + GitHub/Jira inbound webhooks</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="card">
+      <div class="bar orange"></div>
+      <div class="content">
+        <div class="eyebrow" style="--accent:var(--orange)">Four Pillars &mdash; Mapped to the Problem Statement</div>
+        <div class="pillars">
+          <div class="pillar" style="--accent:var(--amber)"><div class="verb">Make sense</div><div class="move">PDF / whiteboard photo / CSV &rarr; candidates &rarr; human promote</div></div>
+          <div class="pillar" style="--accent:var(--red)"><div class="verb">Present ideas</div><div class="move">Present Mode + stakeholder brief + generated one-pager</div></div>
+          <div class="pillar" style="--accent:var(--orange)"><div class="verb">Align on decisions</div><div class="move">Check alignment + decision trail &mdash; decided / deferred / rejected</div></div>
+          <div class="pillar" style="--accent:var(--ink)"><div class="verb">Review work</div><div class="move">Jira assign + PR badge + constraint checklist + inbound webhooks</div></div>
+          <div class="pillar" style="--accent:var(--muted)"><div class="verb">+ Recommend</div><div class="move">From a finding or constraint, Mistral auto-creates linked task nodes</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="card">
+      <div class="bar ink"></div>
+      <div class="content">
+        <div class="eyebrow" style="--accent:var(--ink)">Live Demo, Six Beats</div>
+        <div class="steps">
+          <div class="step"><div class="n">1</div><div class="body"><b>Science &middot; PDF</b> &mdash; make sense<span>Drop the paper. Mistral proposes findings and constraints; promote a few.</span></div></div>
+          <div class="step"><div class="n">2</div><div class="body"><b>Design &middot; whiteboard</b> &mdash; make sense<span>Drop a photo of a sketch. Same review UI, different input.</span></div></div>
+          <div class="step"><div class="n">3</div><div class="body"><b>Ops &middot; spreadsheet</b> &mdash; make sense<span>Drop a CSV. The data analyst path proposes metric constraints.</span></div></div>
+          <div class="step"><div class="n">4</div><div class="body"><b>Product &middot; align</b> &mdash; align on decisions<span>Check alignment on the recovery task &mdash; the Arbiter flags the OTP&#8209;vs&#8209;magic&#8209;links contradiction.</span></div></div>
+          <div class="step"><div class="n">5</div><div class="body"><b>All &middot; present</b> &mdash; present ideas<span>Present Mode walks claim &rarr; quote &rarr; implication &rarr; task, with a generated one-pager.</span></div></div>
+          <div class="step"><div class="n">6</div><div class="body"><b>Engineering &middot; review</b> &mdash; review work<span>Assign to Marco &rarr; real Jira issue. Link a PR. Run the constraint checklist.</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="card">
+      <div class="bar amber"></div>
+      <div class="content">
+        <div class="eyebrow" style="--accent:var(--amber)">Why We&rsquo;re Different</div>
+        <div class="compare">
+          <div class="col"><h3>Heptabase</h3><p>Human-curated notes with AI assistance layered on top. No agent-facing API &mdash; the knowledge stays inside the app.</p></div>
+          <div class="col"><h3>Agent&#8209;MCP</h3><p>Built for AI coding agents collaborating in one codebase. Developer-only, not multi-disciplinary humans.</p></div>
+          <div class="col"><h3>Atlassian&rsquo;s Jira MCP</h3><p>Exposes <i>existing</i> Jira data to agents. Doesn&rsquo;t generate the reasoning behind a ticket in the first place.</p></div>
+        </div>
+        <p class="lede" style="margin-top:4px;"><b>Spatial Brain:</b> AI extracts automatically, with citations. Multi-disciplinary humans <i>and</i> agents. Generates the context, then writes it into Jira &mdash; upstream of every competitor listed here.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="card">
+      <div class="bar ink"></div>
+      <div class="content">
+        <div class="eyebrow" style="--accent:var(--ink)">Four Claims We Can Defend Live</div>
+        <div class="claims">
+          <div class="claim"><div class="k">01 &middot; Lineage</div><p>A graph walk, not an LLM guessing. Plain BFS in <code>lineage.py</code> &mdash; Mistral only summarizes a set that&rsquo;s already deterministically selected.</p></div>
+          <div class="claim"><div class="k">02 &middot; Provenance</div><p>Every extracted fact carries a verbatim quote, page number, confidence score, and whether a human or a model asserted it.</p></div>
+          <div class="claim"><div class="k">03 &middot; The loop closes</div><p>An agent doesn&rsquo;t just read context via MCP &mdash; it writes back. A reported PR shows up as a badge on the canvas and a Jira comment.</p></div>
+          <div class="claim"><div class="k">04 &middot; Real integrations</div><p>A real Jira Cloud issue via actual REST calls, with ambiguous-timeout handling &mdash; not a mock, not a screenshot.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="card">
+      <div class="bar red"></div>
+      <div class="content">
+        <div class="eyebrow" style="--accent:var(--red)">Scored Against the Official Rubric</div>
+        <div class="criteria">
+          <div class="crit"><div class="pct">30%</div><div class="name">Value + Human Insight</div></div>
+          <div class="crit"><div class="pct">30%</div><div class="name">Technical Execution</div></div>
+          <div class="crit"><div class="pct">20%</div><div class="name">Creativity + Design</div></div>
+          <div class="crit"><div class="pct">20%</div><div class="name">Feasibility + Scalability</div></div>
+        </div>
+        <div class="signal"><b>Hidden Signals Award</b> &mdash; &ldquo;Uncover a non-obvious pattern, contradiction, anomaly, or connection.&rdquo; That&rsquo;s <i>exactly</i> what Check Alignment does, live, on stage.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="card">
+      <div class="bar red"></div>
+      <div class="content" style="align-items:flex-start;">
+        <div class="eyebrow" style="--accent:var(--red)">Closing</div>
+        <p class="closing-line">Nothing here is a new place to work.<br>It is the missing edge between the places people already work.</p>
+        <p class="lede muted">Spatial Brain &mdash; Priya, Dr Aisha Khan, Marco &amp; team.<br>UNSW &times; Mistral AI &times; Atlassian, 2026.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="nav">
+  <button class="navbtn" id="prev" aria-label="Previous slide">&#8592;</button>
+  <span><span class="count" id="count">01</span> / <span id="total">10</span></span>
+  <button class="navbtn" id="next" aria-label="Next slide">&#8594;</button>
+</footer>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  let i = 0;
+  const countEl = document.getElementById('count');
+  document.getElementById('total').textContent = String(slides.length).padStart(2, '0');
+
+  function render() {
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    countEl.textContent = String(i + 1).padStart(2, '0');
+  }
+  function go(delta) {
+    i = Math.min(slides.length - 1, Math.max(0, i + delta));
+    render();
+  }
+  document.getElementById('prev').addEventListener('click', () => go(-1));
+  document.getElementById('next').addEventListener('click', () => go(1));
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+  });
+  document.getElementById('deck').addEventListener('click', (e) => {
+    if (e.target.closest('.navbtn')) return;
+    const rect = document.getElementById('deck').getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    go(x > rect.width / 2 ? 1 : -1);
+  });
+  render();
+</script>

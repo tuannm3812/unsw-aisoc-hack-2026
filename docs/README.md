@@ -6,6 +6,7 @@
 | [`../README.md`](../README.md) | What shipped: how to run, demo path, architecture, verify. |
 | [`DEMO.md`](DEMO.md) | Live demo runbook — script, failure table, recording notes. |
 | [`PITCH.md`](PITCH.md) | Selling points, competitor comparison, judging-criteria tie-in — for video narration. |
+| [`PITCH_DECK.html`](PITCH_DECK.html) / [`PITCH_DECK.pdf`](PITCH_DECK.pdf) | 10-slide visual pitch deck (open the `.html` for the interactive version with arrow-key navigation, `.pdf` for a static export). |
 | [`MCP.md`](MCP.md) | Attach Cursor (or any MCP client); tool list; trust boundary. |
 | [`QA_PREP.md`](QA_PREP.md) | Answers to the technical questions judges are likely to ask — per Mistral's "explain how it was built" guidance. |
 | [`DESIGN_SPEC.md`](DESIGN_SPEC.md) | Original product design spec (Context Canvas). Compare with README "What shipped vs the design spec". |
