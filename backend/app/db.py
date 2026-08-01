@@ -40,6 +40,7 @@ def _ensure_sqlite_columns() -> None:
             "alignment_payload": "JSON",
             "present_payload": "JSON",
             "review_checklist": "JSON",
+            "rule_definition": "JSON",
         }
     }
     with engine.begin() as conn:

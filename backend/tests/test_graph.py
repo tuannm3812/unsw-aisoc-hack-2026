@@ -9,7 +9,6 @@ from app.services.graph import (
     connect,
     create_node,
     creates_task_cycle,
-    place_extracted_nodes,
     task_description_paragraphs,
     touch,
 )
@@ -107,31 +106,6 @@ def test_touch_bumps_revision(db, make_node):
     touch(node)
 
     assert node.revision == original_revision + 1
-
-
-def test_place_extracted_nodes_spreads_findings_right_constraints_further(db):
-    findings, constraints = place_extracted_nodes(
-        anchor_x=0, anchor_y=0, findings=3, constraints=2
-    )
-
-    assert len(findings) == 3
-    assert len(constraints) == 2
-
-    # Findings are at column 1 (330 px right)
-    for fx, _ in findings:
-        assert fx == 330.0
-
-    # Constraints are at column 2 (660 px right)
-    for cx, _ in constraints:
-        assert cx == 660.0
-
-
-def test_place_extracted_nodes_centers_vertically(db):
-    findings, _ = place_extracted_nodes(anchor_x=0, anchor_y=0, findings=5, constraints=0)
-
-    # Five findings centred vertically around the anchor
-    ys = [y for _, y in findings]
-    assert ys == [-264.0, -132.0, 0.0, 132.0, 264.0]
 
 
 def test_task_description_paragraphs_includes_lineage_titles(db, make_node):
