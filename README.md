@@ -133,6 +133,32 @@ demo/                               PDF for the live upload step
 start.ps1 / start.sh                one-command local bring-up (Windows / macOS/Linux)
 ```
 
+## Privacy & Security
+
+Spatial Brain is designed for startup teams that share a board with AI coding agents. Every design decision below answers the question "would a real team trust this with their research?"
+
+### Data classification
+
+| Tier | Contains | Storage | Retention |
+|------|----------|---------|-----------|
+| Public | Board name, task titles | DB plaintext | Board lifetime |
+| Internal | Node bodies, source quotes | DB plaintext | Board lifetime |
+| Sensitive | Uploaded PDFs, extracted findings | `storage/uploads/{board_id}/` | 90 days default |
+| Auth | Emails, password hashes (bcrypt), session tokens | DB, httpOnly cookie | Session: 24h |
+
+### Architecture guarantees
+
+- **Upload isolation**: documents live in per-board directories. Cross-board access requires explicit `Membership`, enforced at `board_for_user()` on every request.
+- **Agent boundary**: MCP agents authenticate with a revocable bearer token, never receive raw uploaded files, and see only text extracted by Mistral OCR — a PDF can never authorise a tool call.
+- **PII redaction**: `services/privacy.py` strips email addresses, API keys, and Slack tokens from text before it reaches agent context (`redact_pii()`).
+- **Secure deletion**: deleted uploads are zero-filled before unlink (`secure_unlink()`), defeating casual disk recovery.
+- **Right to deletion**: `DELETE /api/boards/{id}/nodes/{id}` cascades to edges. Full board deletion removes all assets, nodes, edges, and candidates in one transaction.
+- **Team access**: one shared password for the whole startup. No per-user accounts needed to get started. Session cookies are httpOnly + SameSite=lax.
+
+### Scaling posture
+
+For multi-tenant SaaS: each board gets its own encrypted SQLite shard with per-tenant keys. The current single-server architecture is a demo constraint, not a design limitation. The `board_for_user()` membership gate and per-board storage layout are already structured for sharding.
+
 ## Docs index
 
 See [`docs/README.md`](docs/README.md) for the full reading order for teammates and judges.

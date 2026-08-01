@@ -64,6 +64,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
+  teamLogin: (password: string) =>
+    request<CurrentUser>("/api/auth/team-login", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
   logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
   me: () => request<CurrentUser>("/api/auth/me"),
 
