@@ -51,7 +51,16 @@ export function Inspector() {
 
   if (edge) return <EdgeInspector edge={edge} nodes={nodes} />
 
-  if (!node) return null
+  if (!node) {
+    return (
+      <aside className="border-border bg-card flex w-[25rem] shrink-0 flex-col border-l">
+        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+          <p className="font-pixel text-[10px] text-muted-foreground tracking-[0.05em]">INSPECTOR</p>
+          <p className="text-muted-foreground mt-3 text-sm leading-relaxed">Select a node to inspect its details, provenance, and connections.</p>
+        </div>
+      </aside>
+    )
+  }
 
   return (
     <aside className="border-border bg-card animate-rise flex w-[25rem] shrink-0 flex-col border-l">

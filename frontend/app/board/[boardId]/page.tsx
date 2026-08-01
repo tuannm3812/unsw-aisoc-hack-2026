@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { ReactFlowProvider } from "@xyflow/react"
 import { Loader2 } from "lucide-react"
 
+import { ActivityPanel } from "@/components/canvas/ActivityPanel"
 import { Canvas } from "@/components/canvas/Canvas"
 import { AgentActivityStrip } from "@/components/canvas/AgentActivityStrip"
 import { Inspector } from "@/components/canvas/Inspector"
@@ -53,6 +54,7 @@ export default function BoardPage() {
         if (err instanceof ApiError && err.status === 401) router.replace("/login")
       })
     api.health().then(setHealth).catch(() => setHealth(null))
+    api.verifyMistral().then((v) => setHealth((h) => h ? { ...h, mistral_configured: v.ok } : h)).catch(() => {})
   }, [router])
 
   useEffect(() => {
@@ -172,10 +174,17 @@ export default function BoardPage() {
     <TooltipProvider delayDuration={350}>
       <div className="flex h-dvh flex-col overflow-hidden">
         <TopBar user={user} health={health} />
+        {health && (!health.mistral_configured || !health.jira_configured) && (
+          <div className="bg-warning/10 border-b-[3px] border-warning flex items-center gap-3 px-4 py-2">
+            <span className="text-xs">⚠️</span>
+            <span className="text-xs">Demo mode —{!health.mistral_configured && " Mistral not configured"} {!health.mistral_configured && !health.jira_configured && "·"} {!health.jira_configured && " Jira not configured"}. Set keys in .env for full features.</span>
+          </div>
+        )}
         <div className="flex min-h-0 flex-1">
           <ReactFlowProvider>
             <div className="relative min-w-0 flex-1">
               <Canvas activeRelation={activeRelation} onUpload={handleUpload} />
+              <ActivityPanel />
               <Toolbar
                 activeRelation={activeRelation}
                 onRelationChange={setActiveRelation}
