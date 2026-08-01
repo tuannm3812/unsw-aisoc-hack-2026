@@ -293,7 +293,18 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           (edge) => edge.source_id !== nodeId && edge.target_id !== nodeId,
         ),
         selectedNodeId: state.selectedNodeId === nodeId ? null : state.selectedNodeId,
+        selectedEdgeId: state.selectedEdgeId === nodeId ? null : state.selectedEdgeId,
         focusedTaskId: state.focusedTaskId === nodeId ? null : state.focusedTaskId,
+        lineageIds: (() => {
+          if (state.focusedTaskId === nodeId) return new Set<string>()
+          if (state.lineageIds.has(nodeId)) {
+            const next = new Set([...state.lineageIds].filter((id) => id !== nodeId))
+            // ponytail: if all ancestors were deleted, clear lineage highlight.
+            if (next.size === 0) return next // focusedTaskId left set → shows nothing; caller should clearLineage()
+            return next
+          }
+          return state.lineageIds
+        })(),
       }))
     } catch (error) {
       set({ error: (error as Error).message })

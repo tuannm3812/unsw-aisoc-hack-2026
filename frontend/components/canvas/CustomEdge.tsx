@@ -47,7 +47,7 @@ export function CustomEdge({
         {!menuOpen && (
           <button
             className="nodrag nopan absolute cursor-pointer flex size-5 items-center justify-center border-[2px] border-[#1B1712] bg-white text-[11px] font-bold leading-none opacity-[0.01] hover:opacity-100 hover:bg-[#E10500] hover:text-white hover:scale-125 transition-all"
-            style={{ left: labelX, top: shiftedLabelY, transform: "translate(-50%, -50%)" }}
+            style={{ left: labelX, top: shiftedLabelY, transform: "translate(-50%, -50%)", pointerEvents: "all" }}
             onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
             title="Branch from here"
           >⊕</button>
@@ -55,7 +55,7 @@ export function CustomEdge({
         {menuOpen && (
           <div ref={menuRef}
             className="nodrag nopan animate-menu-pop absolute z-50 min-w-[140px] rounded-none border-[3px] border-[#1B1712] bg-white shadow-[3px_3px_0_#1B1712] py-0.5"
-            style={{ left: labelX, top: shiftedLabelY, transform: "translate(-50%, -50%)" }}>
+            style={{ left: labelX, top: shiftedLabelY, transform: "translate(-50%, -50%)", pointerEvents: "all" }}>
             {(["finding", "constraint", "task"] as const).map((kind) => (
               <button key={kind}
                 className="hover:bg-[#F3EEE1] flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-bold transition-colors"
